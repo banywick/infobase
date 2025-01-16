@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form id="search-form" method="post">
+        {% csrf_token %}
+        <input type="text" name="query" placeholder="Enter search query">
+        <input type="checkbox" name="search_by_code" value="true"> Search by Code<br>
+        <input type="checkbox" name="search_by_comment" value="true"> Search by Comment<br>
+        <input type="checkbox" name="search_by_analogs" value="true"> Search by Analogs<br>
+        <button type="submit">Search</button>
+    </form>
+    
+    <script src='{% static "finder/js/search_finder_input.js"%}'></script>   
+</body>
+</html>
