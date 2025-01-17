@@ -5,4 +5,9 @@ class RemainsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Remains()
         fields = '__all__'
-        # fields = ['article']
+
+
+class ProjectListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Remains()
+        fields = ['project']
