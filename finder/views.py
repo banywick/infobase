@@ -2,8 +2,8 @@ import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
 from .utils.add_session_data import SessionManager
+from .utils.metiz import process_metiz_query
 from .models import Remains
 from .serializers import RemainsSerializer
 from django.db.models import Q
@@ -34,7 +34,7 @@ class HomeView(TemplateView):
 
 
 class ProductSearchView(APIView):
-    """Посковые фильтры, условия поиска"""
+    """Поисковые фильтры, условия поиска"""
     def post(self, request, *args, **kwargs):
         query = request.data.get('query', '')
         search_by_code = request.data.get('search_by_code', False)
@@ -42,17 +42,35 @@ class ProductSearchView(APIView):
         search_by_analogs = request.data.get('search_by_analogs', False)
 
         # Попытка получить данные из кэша
-        queryset = get_cached_remains_queryset()
+        # queryset = get_cached_remains_queryset()
+        queryset = queryset = Remains.objects.all()
 
-        # Добавляем условия в зависимости от выбранных чекбоксов
-        if search_by_code:
-            queryset = queryset.filter(Q(code__icontains=query))
-        elif search_by_comment:
-            queryset = queryset.filter(Q(comment__icontains=query))
-        # elif search_by_analogs:
-        #     queryset = queryset.filter(Q(analogs__icontains=query))
-        else:
-            queryset = queryset.filter(Q(title__icontains=query))
+        # Разделение ввода на слова
+        values = query.split()
+
+        # Создание Q-объектов для каждого слова
+        q_objects = Q()
+        for value in values:
+            current_q = Q()
+            if search_by_code:
+                q_objects &= Q(code__icontains=value)
+            if search_by_comment:
+                q_objects &= Q(comment__icontains=value) 
+            if search_by_analogs:
+                q_objects &= Q(analogs__icontains=value)
+            # По умолчанию ищем по title или comment
+            current_q &= (Q(title__icontains=value) | Q(comment__icontains=value) | Q(article__icontains=value))
+            q_objects &= current_q 
+
+            # Дополнительная логика для метизов
+            metiz_all, replace_a = process_metiz_query(value)
+            current_q &= metiz_all
+            current_q &= replace_a
+
+            q_objects &= current_q
+
+        # Применение фильтров
+        queryset = queryset.filter(q_objects)
 
         serializer = RemainsSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)  
