@@ -41,74 +41,31 @@ class Review(models.Model):
         verbose_name_plural = 'Отзывы'  
 
 
-
-# class StandartsName(models.Model):
-#     STANDARD_CHOICES = [
-#         ('DIN', 'DIN'),
-#         ('GOST', 'ГОСТ'),
-#         ('ISO', 'ISO'),
-#     ]
-
-#     name = models.CharField(
-#         max_length=255,
-#         choices=STANDARD_CHOICES,
-#         verbose_name='Стандарт'
-#     )
-#     title = models.CharField(
-#         null=True, blank=True,
-#         max_length=255,
-#         verbose_name='Название'
-#     )
-    
-
-#     def __str__(self):
-#         return self.name
-
-#     class Meta:
-#         verbose_name = 'Стандарт'
-#         verbose_name_plural = 'Стандарты'
-
-
-# class StandartsValue(models.Model):
-#     standarts_name = models.ForeignKey(StandartsName, on_delete=models.CASCADE, related_name='values_st', verbose_name='Стандарт')
-#     value = models.CharField(null=True, blank=True, max_length=255, verbose_name='Значение')
-
-#     def __str__(self):
-#         return self.value
-
-#     class Meta:
-#         verbose_name = 'Значение стандарта'
-#         verbose_name_plural = 'Значение стандартов' 
-
-
-class CategoryProduct(models.Model):
-    category_product =  models.CharField(max_length=255, verbose_name='Категория')
+class Standard(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.category_product
+        return self.code
 
-    class Meta:
-        verbose_name = 'Категория товара'
-        verbose_name_plural = 'Категории товаров' 
-
-class Product(models.Model):
-    name = models.CharField(max_length=255, verbose_name='Название')
+class Item(models.Model):
+    TYPE_CHOICES = [
+        ('bolt', 'Болт'),
+        ('nut', 'Гайка'),
+        ('washer', 'Шайба'),
+        ('ring', 'Кольцо'),
+        ('screw', 'Винт'),
+        ('pin', 'Шпилька'),
+        ('split_pin', 'Шплинт'),
+        ('dowel', 'Штифт'),
+        ('key', 'Шпонка'),
+        ('rivet', 'Заклепка'),
+        ('threaded_insert', 'Вставка (втулка) резьбовая (сменная)'),
+        ('clamp', 'Хомут'),
+        ('half_ring', 'Полукольцо'),
+    ]
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    standards = models.ManyToManyField(Standard, related_name='items')
 
     def __str__(self):
-        return self.name
-    
-    class Meta:
-        verbose_name = 'Товар'
-        verbose_name_plural = 'Товары' 
-
-class Analog(models.Model):
-    product = models.ForeignKey(Product, related_name='analogs', on_delete=models.CASCADE, verbose_name='Название или стандарт')
-    category = models.ForeignKey(CategoryProduct, related_name='category', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Категория')  # Стандарт, например, "GOST", "DIN", "ISO"
-    analog_name = models.CharField(max_length=255, verbose_name='Аналог названия')  # Код аналога
-
-    def __str__(self):
-        return f"{self.product.name} = {self.analog_name} = {self.category} "
-    
-    class Meta:
-        verbose_name = 'Аналоги'
-        verbose_name_plural = 'Аналоги' 
+        return f"{self.get_type_display()} {self.id}"
