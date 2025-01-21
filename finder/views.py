@@ -1,10 +1,11 @@
 import logging
+from turtle import st
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .utils.add_session_data import SessionManager
 from .utils.metiz import process_metiz_query
-from .models import Remains
+from .models import  Metiz, Remains, Standard
 from .serializers import RemainsSerializer
 from django.db.models import Q
 from django.views.generic import TemplateView
@@ -45,6 +46,10 @@ class ProductSearchView(APIView):
         # queryset = get_cached_remains_queryset()
         queryset = queryset = Remains.objects.all()
 
+        # standarts = ItemStandarts.objects.filter(Q(type='bolt') & Q(type_standarts='GOST'))
+        # for i in standarts:
+        #     print(i.type_standarts, i.number)
+
         # Разделение ввода на слова
         values = query.split()
 
@@ -57,7 +62,13 @@ class ProductSearchView(APIView):
             if search_by_comment:
                 q_objects &= Q(comment__icontains=value) 
             if search_by_analogs:
-                q_objects &= Q(analogs__icontains=value)
+                q_objects &= Q(title__icontains=value)
+
+                standards = Standard.objects.prefetch_related('metizes').filter(id=1)
+                for i in standards:
+                    print(i.number)
+                
+               
             # По умолчанию ищем по title или comment
             current_q &= (Q(title__icontains=value) | Q(comment__icontains=value) | Q(article__icontains=value))
             q_objects &= current_q 
