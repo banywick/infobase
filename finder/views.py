@@ -40,9 +40,17 @@ class ProductSearchView(APIView):
         query = request.data.get('query', '')
         search_by_code = request.data.get('search_by_code', False)
         search_by_comment = request.data.get('search_by_comment', False)
-         # Получаем текущие проекты из сессии или создаем пустой словарь, если их нет
+
+        # Получаем текущие проекты из сессии или создаем пустой словарь, если их нет
         current_projects = request.session.get('selected_projects', {})
-        print(current_projects)
+
+        # Извлекаем значения из словаря
+        project_values = list(current_projects.values())
+
+        # Создаем Q объекты на основе этих значений
+        q_objects_projects = Q()
+        for value in project_values:
+            q_objects_projects |= Q(project=value)
 
         # Попытка получить данные из кэша
         # queryset = get_cached_remains_queryset()
@@ -61,13 +69,16 @@ class ProductSearchView(APIView):
                 q_objects &= Q(code__icontains=value)
             if search_by_comment:
                 q_objects &= Q(comment__icontains=value) 
-            # По умолчанию ищем по title или comment
-            current_q &= (Q(title__icontains=value) | Q(comment__icontains=value) | Q(article__icontains=value))
+
+            # По умолчанию ищем по title или comment и выбранный проект
+            current_q &= (Q(title__icontains=value)
+                        | Q(comment__icontains=value)
+                        | Q(article__icontains=value))
+                        # | Q(project__icontains=q_objects_projects))
             q_objects &= current_q 
 
-            get_projets_session = request.session.get('selected_projects')
 
-            # Дополнительная логика для метизов
+            # # Дополнительная логика для метизов
             metiz_all, replace_a = process_metiz_query(value)
             current_q &= metiz_all
             current_q &= replace_a
@@ -75,7 +86,7 @@ class ProductSearchView(APIView):
             q_objects &= current_q
 
         # Применение фильтров
-        queryset = queryset.filter(q_objects)[:100]
+        queryset = queryset.filter(q_objects & q_objects_projects)[:200]
 
         serializer = RemainsSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)  
@@ -90,6 +101,13 @@ class RemainsDetailView(APIView):
         # Получаем все позиции с указанным артикулом
         positions = Remains.objects.filter(article=article)
 
+        # Получаем первый объект из QuerySet
+        first_position = positions.first()
+
+        # Извлекаем значение поля title и base_unit из первого объекта
+        title = first_position.title if first_position else None
+        base_unit = first_position.base_unit if first_position else None
+
         # Суммируем количество по одинаковым артикулам
         total_quantity = positions.aggregate(total_quantity=Sum('quantity'))['total_quantity']
 
@@ -103,11 +121,12 @@ class RemainsDetailView(APIView):
         # Создаем словарь с данными для ответа
         data = {
             'article': article,
+            'title': title,
+            'base_unit': base_unit,
             'total_quantity': total_quantity,
             'projects': list(projects),
             'party': list(partys)
         }
-
         return Response(data, status=status.HTTP_200_OK)    
 
 class ProjectListView(APIView):
@@ -151,5 +170,3 @@ class ClearSelectedProjectsView(APIView):
         # Используем метод из SessionManager для очистки значений
         SessionManager.clear_selected_projects(request)
         return Response({"message": "Selected projects cleared successfully."}, status=status.HTTP_200_OK)    
-
-        return Response({'message': 'Project removed from session'}, status=status.HTTP_200_OK)

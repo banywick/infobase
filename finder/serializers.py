@@ -4,7 +4,7 @@ from .models import Remains
 class RemainsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Remains()
-        fields = '__all__'
+        exclude = ['price']
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
