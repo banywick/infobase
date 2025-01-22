@@ -10,4 +10,4 @@ class RemainsSerializer(serializers.ModelSerializer):
 class ProjectListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Remains()
-        fields = ['project']
+        fields = ['id', 'project']

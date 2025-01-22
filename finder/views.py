@@ -1,11 +1,10 @@
 import logging
-from turtle import st
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .utils.add_session_data import SessionManager
 from .utils.metiz import process_metiz_query
-from .models import  Metiz, Remains, Standard
+from .models import Remains
 from .serializers import RemainsSerializer
 from django.db.models import Q
 from django.views.generic import TemplateView
@@ -34,24 +33,25 @@ class HomeView(TemplateView):
     template_name = 'index.html'
 
 
+
 class ProductSearchView(APIView):
     """Поисковые фильтры, условия поиска"""
     def post(self, request, *args, **kwargs):
         query = request.data.get('query', '')
         search_by_code = request.data.get('search_by_code', False)
         search_by_comment = request.data.get('search_by_comment', False)
-        search_by_analogs = request.data.get('search_by_analogs', False)
+         # Получаем текущие проекты из сессии или создаем пустой словарь, если их нет
+        current_projects = request.session.get('selected_projects', {})
+        print(current_projects)
 
         # Попытка получить данные из кэша
         # queryset = get_cached_remains_queryset()
         queryset = queryset = Remains.objects.all()
 
-        # standarts = ItemStandarts.objects.filter(Q(type='bolt') & Q(type_standarts='GOST'))
-        # for i in standarts:
-        #     print(i.type_standarts, i.number)
-
         # Разделение ввода на слова
         values = query.split()
+        if not values:
+            return Response({'message': 'empty input'}, status=status.HTTP_200_OK)
 
         # Создание Q-объектов для каждого слова
         q_objects = Q()
@@ -61,17 +61,11 @@ class ProductSearchView(APIView):
                 q_objects &= Q(code__icontains=value)
             if search_by_comment:
                 q_objects &= Q(comment__icontains=value) 
-            if search_by_analogs:
-                q_objects &= Q(title__icontains=value)
-
-                standards = Standard.objects.prefetch_related('metizes').filter(id=1)
-                for i in standards:
-                    print(i.number)
-                
-               
             # По умолчанию ищем по title или comment
             current_q &= (Q(title__icontains=value) | Q(comment__icontains=value) | Q(article__icontains=value))
             q_objects &= current_q 
+
+            get_projets_session = request.session.get('selected_projects')
 
             # Дополнительная логика для метизов
             metiz_all, replace_a = process_metiz_query(value)
@@ -81,7 +75,7 @@ class ProductSearchView(APIView):
             q_objects &= current_q
 
         # Применение фильтров
-        queryset = queryset.filter(q_objects)
+        queryset = queryset.filter(q_objects)[:100]
 
         serializer = RemainsSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)  
@@ -121,7 +115,7 @@ class ProjectListView(APIView):
     def get(self, request):
 
         # Получаем все уникальные проекты
-        unique_projects = Remains.objects.values('project').distinct()
+        unique_projects = Remains.objects.all().distinct('project')
 
         # Сериализуем данные
         serializer = ProjectListSerializer(unique_projects, many=True)
@@ -130,13 +124,32 @@ class ProjectListView(APIView):
     
 
 class AddProjectsToSessionView(APIView):
+    """Добавление проектов в сессию по id"""
     def post(self, request):
-        projects = request.data.get('projects', [])
-        SessionManager.add_projects_to_session(request, projects)
+        projects_ids = request.data.get('projects_ids')# Список выбранных id проектов
+        SessionManager.add_projects_to_session(request, projects_ids)
         return Response({'message': 'Projects added to session'}, status=status.HTTP_200_OK)
     
 
 class GetSessionDataView(APIView):
+    """Получение выбранных проектов из сессии"""
     def get(self, request):
         session_data = request.session.get('selected_projects', [])
         return Response({'selected_projects': session_data}, status=status.HTTP_200_OK)    
+    
+class RemoveProjectFromSessionView(APIView):
+    """Частичное удаление проекта с сессии по id"""
+    def post(self, request, *args, **kwargs):
+        project_id = request.data.get('project_id')
+        if not project_id:
+            return Response({'error': 'Project ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        SessionManager.remove_project_from_session(request, project_id)
+
+class ClearSelectedProjectsView(APIView):
+    """Удаление выбранных проектов из сессии"""
+    def post(self, request, *args, **kwargs):
+        # Используем метод из SessionManager для очистки значений
+        SessionManager.clear_selected_projects(request)
+        return Response({"message": "Selected projects cleared successfully."}, status=status.HTTP_200_OK)    
+
+        return Response({'message': 'Project removed from session'}, status=status.HTTP_200_OK)
