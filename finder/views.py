@@ -2,6 +2,8 @@ import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from finder.utils.filters_q import create_q_objects, create_q_objects_for_query, get_current_projects
 from .utils.add_session_data import SessionManager
 from .utils.metiz import process_metiz_query
 from .models import Remains
@@ -41,20 +43,14 @@ class ProductSearchView(APIView):
         search_by_code = request.data.get('search_by_code', False)
         search_by_comment = request.data.get('search_by_comment', False)
 
-        # Получаем текущие проекты из сессии или создаем пустой словарь, если их нет
-        current_projects = request.session.get('selected_projects', {})
-
-        # Извлекаем значения из словаря
-        project_values = list(current_projects.values())
+        # Получаем текущие проекты из сессии
+        current_projects = get_current_projects(request)
 
         # Создаем Q объекты на основе этих значений
-        q_objects_projects = Q()
-        for value in project_values:
-            q_objects_projects |= Q(project=value)
+        q_objects_projects = create_q_objects(current_projects, 'project')
 
         # Попытка получить данные из кэша
-        # queryset = get_cached_remains_queryset()
-        queryset = queryset = Remains.objects.all()
+        queryset = Remains.objects.all()
 
         # Разделение ввода на слова
         values = query.split()
@@ -62,28 +58,7 @@ class ProductSearchView(APIView):
             return Response({'message': 'empty input'}, status=status.HTTP_200_OK)
 
         # Создание Q-объектов для каждого слова
-        q_objects = Q()
-        for value in values:
-            current_q = Q()
-            if search_by_code:
-                q_objects &= Q(code__icontains=value)
-            if search_by_comment:
-                q_objects &= Q(comment__icontains=value) 
-
-            # По умолчанию ищем по title или comment и выбранный проект
-            current_q &= (Q(title__icontains=value)
-                        | Q(comment__icontains=value)
-                        | Q(article__icontains=value))
-                        # | Q(project__icontains=q_objects_projects))
-            q_objects &= current_q 
-
-
-            # # Дополнительная логика для метизов
-            metiz_all, replace_a = process_metiz_query(value)
-            current_q &= metiz_all
-            current_q &= replace_a
-
-            q_objects &= current_q
+        q_objects = create_q_objects_for_query(values, search_by_code, search_by_comment)
 
         # Применение фильтров
         queryset = queryset.filter(q_objects & q_objects_projects)[:200]
