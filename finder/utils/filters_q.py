@@ -4,6 +4,7 @@ from .metiz import process_metiz_query
 def get_current_projects(request):
     """
     Получает текущие проекты из сессии пользователя.
+    преобразовывает dict в list
 
     Args:
         request (HttpRequest): Объект запроса.
@@ -46,9 +47,11 @@ def create_q_objects_for_query(values, search_by_code, search_by_comment):
     for value in values:
         current_q = Q()
         if search_by_code:
-            q_objects &= Q(code__icontains=value)
+            q_objects &= Q(code__startswith=value)
+            return q_objects
         if search_by_comment:
             q_objects &= Q(comment__icontains=value)
+            return q_objects
 
         # По умолчанию ищем по title или comment
         current_q &= (Q(title__icontains=value)
@@ -57,8 +60,8 @@ def create_q_objects_for_query(values, search_by_code, search_by_comment):
 
         # Дополнительная логика для метизов
         metiz_all, replace_a = process_metiz_query(value)
-        current_q &= metiz_all
-        current_q &= replace_a
+        current_q |= metiz_all
+        current_q |= replace_a
 
         q_objects &= current_q
     return q_objects

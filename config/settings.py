@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework',
     'finder',
+    'common',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +58,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Ваше middleware для сбора IP-адресов
+    'common.middleware.UniqueIPMiddleware',
+    #Счетчик запросов
+    'common.middleware.RequestCounterMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

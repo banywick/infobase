@@ -18,5 +18,4 @@ def process_metiz_query(value):
     if re.match(r"^[aа][24]\b", value):
         variant1 = value.lower().replace("а", "a")  # Меняем кирилицу на латиницу A4, A2
         replace_a = Q(title__icontains=value) | Q(title__icontains=variant1)
-
     return metiz_all, replace_a

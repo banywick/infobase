@@ -2,10 +2,8 @@ import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
 from finder.utils.filters_q import create_q_objects, create_q_objects_for_query, get_current_projects
 from .utils.add_session_data import SessionManager
-from .utils.metiz import process_metiz_query
 from .models import Remains
 from .serializers import RemainsSerializer
 from django.db.models import Q
@@ -46,7 +44,7 @@ class ProductSearchView(APIView):
         # Получаем текущие проекты из сессии
         current_projects = get_current_projects(request)
 
-        # Создаем Q объекты на основе этих значений
+        # Создаем Q объекты из проектов на основе этих значений
         q_objects_projects = create_q_objects(current_projects, 'project')
 
         # Попытка получить данные из кэша
