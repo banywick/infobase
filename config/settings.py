@@ -33,6 +33,7 @@ DEBUG = True
 
 
 ALLOWED_HOSTS = []
+CSRF_COOKIE_SECURE = False  # Установите True в производственной среде
 
 
 # Application definition
@@ -63,6 +64,17 @@ MIDDLEWARE = [
     #Счетчик запросов
     'common.middleware.RequestCounterMiddleware',
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
+}
 
 ROOT_URLCONF = 'config.urls'
 

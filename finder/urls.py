@@ -3,6 +3,9 @@ from .views import *
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),#Главная страница
+    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+    path('register/', RegisterView.as_view(), name='register'),
     path('products/', ProductSearchView.as_view(), name='product_filter'),#Поисковой движок
     path('details/<str:article>/', RemainsDetailView.as_view(), name='position-detail'),#Детализация
     path('projects/', ProjectListView.as_view(), name='project-list'),#Все проекты

@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 
 class Remains(models.Model):
     comment = models.CharField(max_length=50, null=True, verbose_name='Комментарий')
@@ -39,5 +38,8 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'  
+
+
+ 
 
     

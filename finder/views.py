@@ -1,16 +1,20 @@
 import logging
+from urllib import request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from finder.utils.filters_q import create_q_objects, create_q_objects_for_query, get_current_projects
 from .utils.add_session_data import SessionManager
 from .models import Remains
-from .serializers import RemainsSerializer
+from .serializers import RegisterSerializer, RemainsSerializer, UserSerializer
 from django.db.models import Q
 from django.views.generic import TemplateView
 from django.core.cache import cache
 from django.db.models import Sum
 from .serializers import ProjectListSerializer
+from rest_framework import generics, permissions
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +30,39 @@ def get_cached_remains_queryset():
         logger.info("Добавлен в КЭШ!!!!!")
 
     return queryset
+
+
+class LoginView(generics.GenericAPIView):
+    """Авторизация"""
+    serializer_class = UserSerializer
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        print(request.data)
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return Response(UserSerializer(user).data)
+        else:
+            return Response({"error": "Неверный логин или пароль"}, status=400)
+        
+
+class RegisterView(generics.CreateAPIView):
+    """Регистрация"""
+    queryset = User.objects.all()
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = RegisterSerializer
+        
+
+class LogoutView(APIView):
+    """Выход из системы"""
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        return Response({"detail": "Successfully logged out."})
+
 
 class HomeView(TemplateView):
     """Главня станица"""
