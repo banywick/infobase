@@ -6,7 +6,7 @@ document.getElementById('search-form').addEventListener('submit', function(event
         data[key] = value;
     });
 
-    fetch('/products/', {
+    fetch('/finder/products/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

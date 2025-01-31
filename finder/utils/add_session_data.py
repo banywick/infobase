@@ -1,4 +1,4 @@
-from finder.models import Remains
+from .project_utils import ProjectUtils
 
 
 class SessionManager:
@@ -16,20 +16,10 @@ class SessionManager:
         и добавляет в сессию пользователя. Если в сессии уже есть проекты, новые проекты
         добавляются к существующим.
         """
-        # Получаем проекты из базы данных по их ID
-        projects = Remains.objects.filter(id__in=projects_ids).values_list('id', 'project')
 
-        # Преобразуем QuerySet в словарь
-        projects_dict = {project_id: project_name for project_id, project_name in projects}
-        print(projects_dict)
-
-        # Получаем текущие проекты из сессии или создаем пустой словарь, если их нет
+        projects_dict = ProjectUtils.get_projects_dict(projects_ids)
         current_projects = request.session.get('selected_projects', {})
-
-        # Добавляем новые проекты к текущим, объединяем словари
         updated_projects = {**current_projects, **projects_dict}
-
-        # Сохраняем обновленный словарь проектов в сессии
         request.session['selected_projects'] = updated_projects
 
     @staticmethod

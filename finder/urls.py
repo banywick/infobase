@@ -3,11 +3,9 @@ from .views import *
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),#Главная страница
-    path('login/', LoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('register/', RegisterView.as_view(), name='register'),
     path('products/', ProductSearchView.as_view(), name='product_filter'),#Поисковой движок
-    path('details/<str:article>/', RemainsDetailView.as_view(), name='position-detail'),#Детализация
+    path('all_products_filter_project/', AllProdSelectedFilter.as_view(), name='product_filter_project'),#Поисковой движок
+    path('details/<int:id>/', RemainsDetailView.as_view(), name='position-detail'),#Детализация
     path('projects/', ProjectListView.as_view(), name='project-list'),#Все проекты
     path('get_session_filter_projects/', GetSessionDataView.as_view(), name='get-session-data'),# Все проекты
     path('add_projects_to_session/', AddProjectsToSessionView.as_view(), name='add-projects-to-session'), #Добавление в сессию
