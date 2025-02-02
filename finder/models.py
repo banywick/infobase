@@ -40,6 +40,44 @@ class Review(models.Model):
         verbose_name_plural = 'Отзывы'  
 
 
- 
+
+
+
+class ProjectStatus(models.Model):
+    # Choice field для project_name
+    project_name = models.CharField(max_length=255, verbose_name="Название проекта")
+
+    # Choice field для color
+    COLOR_CHOICES = [
+        ('red', 'Red'),
+        ('green', 'Green'),
+        ('gray', 'Gray'),  # Значение по умолчанию
+    ]
+    color = models.CharField(
+        max_length=50,
+        choices=COLOR_CHOICES,
+        default='gray',  # Значение по умолчанию
+        verbose_name="Цвет точки (CSS-класс или hex-код)"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Динамически заполняем choices для project_name
+        self._meta.get_field('project_name').choices = self.get_project_choices()
+
+    @staticmethod
+    def get_project_choices():
+        # Получаем уникальные значения project_name из другой таблицы
+        from .models import Remains  # Импортируем модель Remains
+        projects = Remains.objects.values_list('project', flat=True).distinct()
+        return [(project, project) for project in projects]
+
+    def __str__(self):
+        return f"{self.project_name} - {self.color}"
+
+    class Meta:
+        verbose_name = "Статус проекта"
+        verbose_name_plural = "Статусы проектов"
+
 
     

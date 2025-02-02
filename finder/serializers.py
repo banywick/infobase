@@ -3,6 +3,7 @@ from .models import Remains
 
 
 class RemainsSerializer(serializers.ModelSerializer):
+    status_color = serializers.CharField(read_only=True)  # Аннотированное поле
     class Meta:
         model = Remains()
         exclude = ['price']

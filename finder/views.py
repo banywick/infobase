@@ -64,8 +64,8 @@ class ProductSearchView(APIView):
         # Создаем Q объекты из проектов на основе этих значений
         q_objects_projects = create_q_objects(current_projects, 'project')
 
-        # Попытка получить данные из кэша
-        queryset = Remains.objects.all()
+        # Аннатированные данные проект с цветом
+        queryset = ProjectUtils.get_annotated_remains()
 
         # Разделение ввода на слова
         values = query.split()
