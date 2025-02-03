@@ -1,4 +1,5 @@
 from .project_utils import ProjectUtils
+from django.forms.models import model_to_dict
 
 
 class SessionManager:
@@ -69,6 +70,29 @@ class SessionManager:
         # Сохраняем обновленный словарь проектов в сессии
         request.session['selected_projects'] = current_projects
 
+    # @staticmethod
+    def add_fix_positions_to_session(request, fixed_position_id):
+
+        # Получаем аннатированные данные со статусом
+        annotated_remains = ProjectUtils.get_annotated_remains()
+
+
+        # Ищем экземпляр в базе по id(fixed_positin_id)
+        try:
+            fixed_position = annotated_remains.get(id=fixed_position_id)
+        except annotated_remains.model.DoesNotExist:
+            return None
+        
+        # Преобразуем экземпляр модели в словарь
+        fixed_position_dict = model_to_dict(fixed_position)
+
+        # Добавляем аннотированные поля в словарь
+        fixed_position_dict['status_color'] = fixed_position.status_color
+
+        # Логика добавления в сессию
+        current_positions = request.session.get('selected_instance', {})
+        current_positions[fixed_position_id] = fixed_position_dict
+        request.session['selected_instance'] = current_positions
 
 
         

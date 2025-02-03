@@ -1,5 +1,5 @@
 import logging
-from operator import pos
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -59,6 +59,7 @@ class ProductSearchView(APIView):
         search_by_comment = request.data.get('search_by_comment', False)
 
         # Получаем текущие проекты из сессии
+        # По которым будем делать фильтрацию
         current_projects = get_current_projects(request)
 
         # Создаем Q объекты из проектов на основе этих значений
@@ -80,7 +81,7 @@ class ProductSearchView(APIView):
 
         serializer = RemainsSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)  
-    
+
 class AllProdSelectedFilter(APIView):
     """
     APIView для фильтрации позиций на основе выбранных проектов.
@@ -438,6 +439,40 @@ class ClearSelectedProjectsView(APIView):
         return Response({"message": "Selected projects cleared successfully."}, status=status.HTTP_200_OK)    
     
 
+class AddFixPositionToSession(APIView):
+    """Добавление в сессию пользователя закрепленных позиций"""
+    def post(self, request, fixed_position_id):
+
+        # #Получение по id(fixed_positin_id) аннатированного экзепляра remains c статусом
+        SessionManager.add_fix_positions_to_session(request, fixed_position_id)
+
+        # Фиксированные экземпляры
+        session_data = request.session.get('selected_instance', [])
+        print(session_data['100'])
+        # print(session_data.keys)
+        
+        return Response(session_data, status=status.HTTP_200_OK)  
+class RemoveFixPositionToSession(APIView):
+    """Удаление по ID экземпляра из сессии пользователя закрепленных позиций"""
+    def post(self, request, fixed_position_id):
+        fixed_position_id_str = str(fixed_position_id)
+        # #Получение по id(fixed_positin_id) аннатированного экзепляра remains c статусом
+        # SessionManager.add_fix_positions_to_session(request, fixed_positin_id)
+
+        # Фиксированные экземпляры
+        # session_data = request.session.get('selected_instance', [])
+
+        # Получаем текущие проекты из сессии или создаем пустой словарь, если их нет
+        current_projects = request.session.get('selected_instance', {})
+        # Удаляем проект по его ID, если он существует
+        if fixed_position_id_str in current_projects:
+            del current_projects['id']
+            request.session['selected_instance'] = current_projects    
+
+        
+            return Response({"message": "Fix position remove successfully."}, status=status.HTTP_200_OK)  
+        print(current_projects,'###')    
+        return Response(current_projects, status=status.HTTP_200_OK)  
 
 
 
