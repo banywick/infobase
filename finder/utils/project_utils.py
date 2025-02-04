@@ -1,4 +1,3 @@
-from django.db import models
 from finder.models import Remains, ProjectStatus
 from django.db.models import Case, When, Value, CharField
 
@@ -20,6 +19,17 @@ class ProjectUtils:
     
     @staticmethod
     def get_annotated_remains():
+        """
+        Возвращает аннотированный QuerySet объектов Remains с добавленным полем 'status_color'.
+
+        Этот метод выполняет следующие шаги:
+        1. Получает все статусы из модели ProjectStatus.
+        2. Создает условия для аннотации с использованием Case/When, основываясь на проектах и их цветах.
+        3. Аннотирует QuerySet объектов Remains, добавляя поле 'status_color', которое определяет цвет статуса.
+
+        Возвращает:
+            QuerySet: Аннотированный QuerySet объектов Remains с добавленным полем 'status_color'.
+        """
         # Получаем все статусы из ProjectStatus
         statuses = ProjectStatus.objects.all()
 

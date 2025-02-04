@@ -440,39 +440,110 @@ class ClearSelectedProjectsView(APIView):
     
 
 class AddFixPositionToSession(APIView):
-    """Добавление в сессию пользователя закрепленных позиций"""
+    """
+    Представление для добавления фиксированной позиции в сессию пользователя.
+
+    Этот класс предоставляет метод POST для добавления фиксированной позиции в сессию пользователя.
+    Метод использует SessionManager для выполнения этой операции.
+
+    Методы:
+        post(request, fixed_position_id):
+            Обрабатывает POST-запрос для добавления фиксированной позиции в сессию пользователя.
+
+    Аргументы:
+        request (HttpRequest): Объект запроса Django.
+        fixed_position_id (int): Идентификатор фиксированной позиции, которую нужно добавить в сессию.
+
+    Возвращает:
+        Response: Объект ответа с сообщением об успешном добавлении фиксированной позиции.
+    """
     def post(self, request, fixed_position_id):
+        """
+        Обрабатывает POST-запрос для добавления фиксированной позиции в сессию пользователя.
+
+        Аргументы:
+            request (HttpRequest): Объект запроса Django.
+            fixed_position_id (int): Идентификатор фиксированной позиции, которую нужно добавить в сессию.
+
+        Возвращает:
+            Response: Объект ответа с сообщением об успешном добавлении фиксированной позиции.
+        """    
 
         # #Получение по id(fixed_positin_id) аннатированного экзепляра remains c статусом
         SessionManager.add_fix_positions_to_session(request, fixed_position_id)
-
-        # Фиксированные экземпляры
-        session_data = request.session.get('selected_instance', [])
-        print(session_data['100'])
-        # print(session_data.keys)
         
-        return Response(session_data, status=status.HTTP_200_OK)  
-class RemoveFixPositionToSession(APIView):
-    """Удаление по ID экземпляра из сессии пользователя закрепленных позиций"""
-    def post(self, request, fixed_position_id):
-        fixed_position_id_str = str(fixed_position_id)
-        # #Получение по id(fixed_positin_id) аннатированного экзепляра remains c статусом
-        # SessionManager.add_fix_positions_to_session(request, fixed_positin_id)
+        return Response({"message": "Fix position add successfully."}, status=status.HTTP_200_OK)  
 
-        # Фиксированные экземпляры
-        # session_data = request.session.get('selected_instance', [])
+class RemoveFixPositionToSession(APIView):
+    """
+    Представление для удаления фиксированной позиции из сессии пользователя по её идентификатору.
+
+    Этот класс предоставляет метод POST для удаления фиксированной позиции из сессии пользователя.
+    Метод использует идентификатор фиксированной позиции для выполнения этой операции.
+
+    Методы:
+        post(request, fixed_position_id):
+            Обрабатывает POST-запрос для удаления фиксированной позиции из сессии пользователя.
+
+    Аргументы:
+        request (HttpRequest): Объект запроса Django.
+        fixed_position_id (int): Идентификатор фиксированной позиции, которую нужно удалить из сессии.
+
+    Возвращает:
+        Response: Объект ответа с сообщением об успешном удалении фиксированной позиции.
+    """
+    def post(self, request, fixed_position_id):
+        """
+        Обрабатывает POST-запрос для удаления фиксированной позиции из сессии пользователя.
+
+        Аргументы:
+            request (HttpRequest): Объект запроса Django.
+            fixed_position_id (int): Идентификатор фиксированной позиции, которую нужно удалить из сессии.
+
+        Возвращает:
+            Response: Объект ответа с сообщением об успешном удалении фиксированной позиции.
+        """
+        # Меняем тип на string
+        fixed_position_id_str = str(fixed_position_id)
 
         # Получаем текущие проекты из сессии или создаем пустой словарь, если их нет
         current_projects = request.session.get('selected_instance', {})
         # Удаляем проект по его ID, если он существует
         if fixed_position_id_str in current_projects:
-            del current_projects['id']
+            del current_projects[fixed_position_id_str]
             request.session['selected_instance'] = current_projects    
-
-        
             return Response({"message": "Fix position remove successfully."}, status=status.HTTP_200_OK)  
-        print(current_projects,'###')    
-        return Response(current_projects, status=status.HTTP_200_OK)  
+    
+class GetFixPositionsToSession(APIView):
+    """
+    Представление для получения фиксированных позиций из сессии пользователя.
+
+    Этот класс предоставляет метод GET для получения всех фиксированных позиций,
+    сохраненных в сессии пользователя.
+
+    Методы:
+        get(request):
+            Обрабатывает GET-запрос для получения всех фиксированных позиций из сессии пользователя.
+
+    Аргументы:
+        request (HttpRequest): Объект запроса Django.
+
+    Возвращает:
+        Response: Объект ответа с данными фиксированных позиций, сохраненных в сессии пользователя.
+    """
+    def get(self, request):
+        """
+        Обрабатывает GET-запрос для получения всех фиксированных позиций из сессии пользователя.
+
+        Аргументы:
+            request (HttpRequest): Объект запроса Django.
+
+        Возвращает:
+            Response: Объект ответа с данными фиксированных позиций, сохраненных в сессии пользователя.
+        """
+        current_projects = request.session.get('selected_instance', {})
+        return Response(current_projects, status=status.HTTP_200_OK) 
+
 
 
 
