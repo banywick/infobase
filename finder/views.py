@@ -1,12 +1,10 @@
 import logging
-from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from finder.utils.filters_q import create_q_objects, create_q_objects_for_query, get_current_projects
 from .utils.add_session_data import SessionManager
 from .models import Remains
-from django.db.models import Q
 from django.views.generic import TemplateView
 from django.core.cache import cache
 from django.db.models import Sum
@@ -31,7 +29,7 @@ def get_cached_remains_queryset():
 class HomeView(TemplateView):
     """Главня станица"""
     logger.info("HELLLOO")
-    template_name = 'index.html'
+    template_name = 'finder/index.html'
 
 class ProductSearchView(APIView):
     """

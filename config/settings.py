@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'finder',
     'common',
+    'notes',
 ]
 
 MIDDLEWARE = [

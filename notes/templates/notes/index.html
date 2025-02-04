@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заметки</title>
+    <link rel="stylesheet" href="{% static 'notes/css/style_notes.css'%}">
+</head>
+<body>
+    <div class="container">
+        <button id="addNoteButton">Добавить заметку</button>
+        <div id="noteForm" class="hidden">
+            <textarea id="noteText" placeholder="Введите текст заметки..."></textarea>
+            <div class="button-group">
+                <button id="saveNoteButton">Сохранить</button>
+                <button id="editNoteButton">Редактировать</button>
+                <button id="deleteNoteButton">Удалить</button>
+            </div>
+        </div>
+    </div>
+    <script src='{% static "notes/js/notes.js"%}'></script>
+</html>
+
+
+
+
+
+

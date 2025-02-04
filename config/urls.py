@@ -40,6 +40,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('finder/', include('finder.urls')),
     path('auth/', include('auth.urls')),
+    path('notes/', include('notes.urls')),
     # path('comers/', include('comers.urls')),
     # path('sahr/', include('sahr.urls')),
     # path('inventory/', include('inventory.urls')),
