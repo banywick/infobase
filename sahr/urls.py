@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
     path("", SahrView.as_view(), name="sahr_home"),
     path("sahr_find/", SahrFindFilter.as_view(), name = 'find_positions'),
+    path("get_all_positions/", GetSahrAllPositions.as_view(), name = 'all_positions'),
     path("add_position/", AddPositions.as_view(), name = 'add_position'),
     path("edit_position/<int:id>/", EditPosition.as_view(), name = 'edit_position'),
     path("remove_position/<int:id>/", RemovePosition.as_view(), name = 'remove_position'),

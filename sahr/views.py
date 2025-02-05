@@ -10,12 +10,16 @@ from rest_framework.response import Response
 
 
 class BasePositionView(generics.GenericAPIView):
-    queryset = Data_Table.objects.all()
+    queryset = Data_Table.objects.all()[:100]
     serializer_class = SahrDataTableSerializer
     lookup_field = 'id'
 
 class SahrView(TemplateView):
     template_name = 'sahr/index.html'
+
+class GetSahrAllPositions(BasePositionView, generics.ListAPIView):
+    pass
+
 
 
 class SahrFindFilter(APIView):
