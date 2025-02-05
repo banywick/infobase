@@ -5,13 +5,13 @@ from .models import Remains
 class RemainsSerializer(serializers.ModelSerializer):
     status_color = serializers.CharField(read_only=True)  # Аннотированное поле
     class Meta:
-        model = Remains()
+        model = Remains
         exclude = ['price']
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Remains()
+        model = Remains
         fields = ['id', 'project']
 
 

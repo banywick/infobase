@@ -28,7 +28,6 @@ def get_cached_remains_queryset():
 
 class HomeView(TemplateView):
     """Главня станица"""
-    logger.info("HELLLOO")
     template_name = 'finder/index.html'
 
 class ProductSearchView(APIView):

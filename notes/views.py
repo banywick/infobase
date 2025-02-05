@@ -4,6 +4,11 @@ from rest_framework.response import Response
 from .models import Note
 from .serializers import NoteSerializer
 
+class BaseNotePositionView(generics.GenericAPIView):
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+    lookup_field = 'id'
+
 class NotesView(TemplateView):
     """
     Представление для отображения страницы заметок.
@@ -16,7 +21,7 @@ class NotesView(TemplateView):
     """
     template_name = 'notes/index.html'
 
-class AddNoteView(generics.CreateAPIView):
+class AddNoteView(BaseNotePositionView, generics.CreateAPIView):
     """
     Представление для создания новой заметки.
 
@@ -28,8 +33,37 @@ class AddNoteView(generics.CreateAPIView):
         queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
         serializer_class (Serializer): Сериализатор, используемый для валидации и сохранения данных.
     """
-    queryset = Note.objects.all()
-    serializer_class = NoteSerializer
+    pass
+
+class GetAllNotes(BaseNotePositionView, generics.ListAPIView):
+    """
+    Представление для получения всех заметок.
+
+    Этот класс наследуется от ListAPIView и используется для обработки GET-запросов
+    на получение всех заметок. Он использует сериализатор NoteSerializer для сериализации данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для сериализации данных.
+    """
+    pass
+
+class EditNote(BaseNotePositionView, generics.RetrieveUpdateAPIView):
+    """
+    Представление для редактирования заметки.
+
+    Этот класс наследуется от UpdateAPIView и используется для обработки PUT- и PATCH-запросов
+    на редактирование заметок. Он использует сериализатор NoteSerializer для валидации и сохранения данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для валидации и сохранения данных.
+        lookup_field (str): Поле, используемое для поиска объекта.
+
+    Methods:
+        update(request, *args, **kwargs): Обновляет объект и возвращает ответ с обновленными данными.
+    """
+    pass
 
 class RemoveNote(generics.DestroyAPIView):
     """
@@ -65,55 +99,3 @@ class RemoveNote(generics.DestroyAPIView):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'message': 'successfully deleted'}, status=status.HTTP_200_OK)
-
-class GetAllNotes(generics.ListAPIView):
-    """
-    Представление для получения всех заметок.
-
-    Этот класс наследуется от ListAPIView и используется для обработки GET-запросов
-    на получение всех заметок. Он использует сериализатор NoteSerializer для сериализации данных.
-
-    Attributes:
-        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
-        serializer_class (Serializer): Сериализатор, используемый для сериализации данных.
-    """
-    queryset = Note.objects.all()
-    serializer_class = NoteSerializer
-
-class EditNote(generics.UpdateAPIView):
-    """
-    Представление для редактирования заметки.
-
-    Этот класс наследуется от UpdateAPIView и используется для обработки PUT- и PATCH-запросов
-    на редактирование заметок. Он использует сериализатор NoteSerializer для валидации и сохранения данных.
-
-    Attributes:
-        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
-        serializer_class (Serializer): Сериализатор, используемый для валидации и сохранения данных.
-        lookup_field (str): Поле, используемое для поиска объекта.
-
-    Methods:
-        update(request, *args, **kwargs): Обновляет объект и возвращает ответ с обновленными данными.
-    """
-    queryset = Note.objects.all()
-    serializer_class = NoteSerializer
-    lookup_field = 'id'
-
-    def update(self, request, *args, **kwargs):
-        """
-        Обновляет объект и возвращает ответ с обновленными данными.
-
-        Args:
-            request (Request): Объект запроса.
-            *args: Дополнительные аргументы.
-            **kwargs: Дополнительные именованные аргументы.
-
-        Returns:
-            Response: Ответ с обновленными данными.
-        """
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)

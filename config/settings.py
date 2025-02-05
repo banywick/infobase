@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'finder',
     'common',
     'notes',
+    'reviews',
+    'sahr',
 ]
 
 MIDDLEWARE = [
