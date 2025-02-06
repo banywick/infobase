@@ -78,13 +78,14 @@ check_article.addEventListener('input', async function () {
 // Функция для отправки формы артикула
 function submitArticleForm() {
     const formData = new FormData(document.getElementById('articleForm'));
-    fetch('/api/save-article/', {
+    fetch('/sahr/add_position/', {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
         alert('Форма успешно отправлена!');
+        console.log(data)
     })
     .catch(error => {
         console.error('Ошибка:', error);

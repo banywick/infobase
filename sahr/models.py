@@ -2,13 +2,13 @@ from django.db import models
 
 class Data_Table(models.Model):
     index_remains = models.IntegerField(blank=True, null=True, default=1)
-    article = models.CharField(max_length=60,blank=True, null=True)
-    party = models.CharField(max_length=20, blank=True, null=True)
-    title = models.TextField(blank=True, null=True)
+    article = models.CharField(max_length=60)
+    party = models.CharField(max_length=20)
+    title = models.TextField()
     base_unit = models.CharField(max_length=10, blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
-    date = models.DateTimeField(blank=True, null=True)
-    address = models.CharField(max_length=100, blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+    address = models.CharField(max_length=100)
 
     def __str__(self):
         return self.article

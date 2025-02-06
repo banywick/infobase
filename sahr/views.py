@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from rest_framework import generics, status
 
 from finder.models import Remains
+from .utils.article_utils import check_article
 from .serializers import HistorySerializer, SahrDataTableSerializer
 from .models import *
 from rest_framework.response import Response
@@ -77,7 +78,37 @@ class GetSahrAllPositions(BasePositionView, generics.ListAPIView):
 
 
 class AddPositions(BasePositionView ,CreateAPIView):
-    pass
+    def create(self, request, *args, **kwargs):
+        # Создаем изменяемую копию request.data
+        data = request.data.copy()
+        print(data)
+
+        # Получаем id из данных
+        instance_id = data.get('id')
+        
+        try:
+            # Находим экземпляр модели Remains по id
+            instance = Remains.objects.get(id=instance_id)
+            
+            # Получаем артикул из найденного экземпляра
+            article = instance.article
+            
+            # Заменяем артикул в передаваемых данных
+            data['article'] = article
+            
+            # Используем ваш сериализатор для обработки данных
+            serializer = SahrDataTableSerializer(data=data)
+            serializer.is_valid(raise_exception=True)  # Проверяем валидность данных
+            
+            # Сохраняем данные
+            serializer.save()
+            
+            # Возвращаем ответ
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        except Data_Table.DoesNotExist:
+            # Если экземпляр не найден, возвращаем ошибку
+            return Response({"error": "Data_Table instance not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class EditPosition(BasePositionView, generics.RetrieveUpdateAPIView):
@@ -104,25 +135,8 @@ class HistoryListView(ListAPIView):
 class CheckArticleAPIView(APIView):
     def get(self, request, art):
         """Проверка, есть ли такой артикул в базе данных."""
-        article = Remains.objects.filter(article__icontains=art).first()
-        if article:
-            total_quantity = Remains.objects.filter(article=article).aggregate(sum_quantity=Sum('quantity'))['sum_quantity']
-            all_party = Remains.objects.filter(article=article)
-            party = {i: p.party for i, p in enumerate(all_party)}
-            title = article.title
-            unit = article.base_unit
-            art_product = article.article
-            project = article.project
-            id = article.id
-            total_quantity = f'{total_quantity:.2f}'
-            return Response({
-                "title": title,
-                "id": id,
-                "party": party,
-                'total_quantity': total_quantity,
-                'unit': unit,
-                'article': art_product,
-                "project": project
-            })
-        return Response({"error": "Товара нет в базе"}, status=status.HTTP_404_NOT_FOUND)    
+        result = check_article(art)
+        if result:
+            return Response(result)
+        return Response({"error": "Товара нет в базе"}, status=status.HTTP_404_NOT_FOUND)   
     
