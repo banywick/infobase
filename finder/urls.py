@@ -23,8 +23,11 @@ urlpatterns = [
     #Поисковой движок    
     path('all_products_filter_project/', AllProdSelectedFilter.as_view(), name='product_filter_project'),
 
-    #Детализация позиции
-    path('details/<int:id>/', RemainsDetailView.as_view(), name='position-detail'),
+    #Детализация позиции по id
+    path('details/id/<int:identifier>/', RemainsDetailView.as_view(), name='position-detail_id'),
+
+    #Детализация позиции по артикулу
+    path('details/article/<str:identifier>/', RemainsDetailView.as_view(), name='position-detail_article'),
 
     # Все проекты
     path('projects/', ProjectListView.as_view(), name='project-list'),

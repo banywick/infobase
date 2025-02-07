@@ -36,9 +36,13 @@ const check_article = document.getElementById('article');
 const views_title = document.getElementById('title');
 const selectElement = document.getElementById('party');
 const hidden_id = document.createElement('input'); // Если нужен скрытый инпут для ID
+const base_unit = document.createElement('input'); // Если нужен скрытый инпут для base_unit
 hidden_id.type = 'hidden';
 hidden_id.name = 'id';
+base_unit.type = 'hidden';
+base_unit.name = 'base_unit';
 document.getElementById('articleForm').appendChild(hidden_id);
+document.getElementById('articleForm').appendChild(base_unit);
 
 check_article.addEventListener('input', async function () {
     const enteredArticle = check_article.value;
@@ -66,6 +70,9 @@ check_article.addEventListener('input', async function () {
                 views_title.value = data.title;
                 hidden_id.value = data.id;
             }
+            if (data.base_unit) {
+                base_unit.value = data.base_unit;
+            }
             if (data.error) {
                 views_title.value = data.error;
             }
@@ -78,13 +85,16 @@ check_article.addEventListener('input', async function () {
 // Функция для отправки формы артикула
 function submitArticleForm() {
     const formData = new FormData(document.getElementById('articleForm'));
+    const csrfToken = getCSRFToken();
     fetch('/sahr/add_position/', {
         method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken // Отправляем CSRF-токен в заголовке
+        },
         body: formData
     })
     .then(response => response.json())
     .then(data => {
-        alert('Форма успешно отправлена!');
         console.log(data)
     })
     .catch(error => {

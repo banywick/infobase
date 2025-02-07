@@ -1,7 +1,7 @@
 from django.db import models
 
 class Data_Table(models.Model):
-    index_remains = models.IntegerField(blank=True, null=True, default=1)
+    index_remains = models.IntegerField(blank=True, null=True)
     article = models.CharField(max_length=60)
     party = models.CharField(max_length=20)
     title = models.TextField()

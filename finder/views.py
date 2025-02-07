@@ -146,7 +146,7 @@ class RemainsDetailView(APIView):
     - Списке партий, связанных с этим атрикулом.
     - Общем количестве товара по артикулу и выбранному проекту.
     """
-    def get(self, request, id):
+    def get(self, request, identifier):
         """
         Обрабатывает GET-запрос для получения детальной информации о товаре по артикулу.
 
@@ -159,8 +159,18 @@ class RemainsDetailView(APIView):
         - 404 Not Found, если товар с указанным артикулом не найден.
         """
 
-        # Получаем все позиции с указанным артикулом
-        positions = Remains.objects.filter(id=id).first()
+        try:
+            # Попробуем преобразовать identifier в число
+            id = int(identifier)
+            positions = Remains.objects.filter(id=id).first()
+        except ValueError:
+            # Если преобразование не удалось, значит это артикул
+            positions = Remains.objects.filter(article=identifier).first()
+
+        if not positions:
+            return Response({"error": "Позиция не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+
 
         #Нужен кверисет что бы сделать агрегацию
         all_positions_by_article = Remains.objects.filter(article=positions.article)
