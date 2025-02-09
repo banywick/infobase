@@ -14,17 +14,6 @@ from .utils.project_utils import ProjectUtils
 
 logger = logging.getLogger(__name__)
 
-def get_cached_remains_queryset():
-    """Создание КЭША из queryset Remains"""
-    cache_key = 'remains_all_queryset'
-    queryset = cache.get(cache_key)
-
-    if not queryset:
-        queryset = Remains.objects.all()
-        cache.set(cache_key, queryset, 60 * 60 * 24)
-        logger.info("Добавлен в КЭШ!!!!!")
-    return queryset
-
 
 class HomeView(TemplateView):
     """Главня станица"""
@@ -148,11 +137,13 @@ class RemainsDetailView(APIView):
     """
     def get(self, request, identifier):
         """
-        Обрабатывает GET-запрос для получения детальной информации о товаре по артикулу.
+        Обрабатывает GET-запрос для получения детальной информации о товаре
+        по артикулу и id
 
         Параметры:
         - request: Запрос от клиента.
-        - id: id товара, по которому требуется получить информацию.
+        - id: identifier товара, по которому требуется получить информацию.
+        - article: identifier товара, по которому требуется получить информацию.
 
         Возвращает:
         - 200 OK с детализированной информацией о товаре, если товар найден.
@@ -177,6 +168,7 @@ class RemainsDetailView(APIView):
 
         # Извлекаем значение поля title и base_unit
         # filter используется вместо get на всякий случай
+        id = positions.id if  positions else None
         article = positions.article if  positions else None
         title = positions.title if positions else None
         base_unit = positions.base_unit if positions else None
@@ -196,6 +188,7 @@ class RemainsDetailView(APIView):
 
         #Создаем словарь с данными для ответа
         data = {
+            'id': id,
             'article': article,
             'title': title,
             'base_unit': base_unit,
