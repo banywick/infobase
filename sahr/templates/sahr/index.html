@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- Пример мета-тега с CSRF-токеном -->
+    <title>САХР</title>
+    <h1>Тестовая страница САХР</h1>
+   
+</head>
+<body>
+    <!-- Форма для поиска -->
+    <form id="searchForm">
+        <input type="text" name="query" placeholder="Введите запрос" required>
+        <button type="submit">Отправить</button>
+    </form>
+    <br>
+    <br>
+
+    <!-- Форма для проверки артикула -->
+    <form id="articleForm">
+        <label for="article">Артикул:</label>
+        <input type="text" id="article" name="article" required>
+        <br>
+        <label for="title">Название:</label>
+        <input type="text" id="title" name="title" readonly>
+        <br>
+        <label for="comment">Комментарий:</label>
+        <input type="text" id="comment" name="comment">
+        <br>
+        <label for="address">Адрес:</label>
+        <input type="text" id="address" name="address" required >
+        <br>
+        <label for="party">Партии:</label>
+        <select id="party" name="party" required multiple>
+            <!-- Варианты будут заполняться динамически -->
+        </select>
+        <br>
+        <button type="button" onclick="submitArticleForm()">Отправить</button>
+    </form>
+    <script src="{% static 'sahr/js/query.js' %}"></script> <!-- Подключение внешнего JS-файла -->
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- Пример мета-тега с CSRF-токеном -->
+    <title>АРХИВ</title>
+    <h1>ТЕСТОВАЯ СТРАНИЦА ПОИСКА УДАЛЕННЫХ СТРОК АРХИВ</h1>
+</head> 
+<body>
+    <form id="searchForm">
+        <input type="text" name="query" placeholder="Введите запрос" required>
+        <button type="submit">Отправить</button>
+    </form>
+
+    <script>
+        // Функция для получения CSRF-токена из мета-тега
+        function getCSRFToken() {
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            return metaTag ? metaTag.getAttribute('content') : '';
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Предотвращаем отправку формы
+
+            const query = document.querySelector('input[name="query"]').value;
+            const csrfToken = getCSRFToken();
+
+            fetch('/sahr/find_archive_position/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken // Отправляем CSRF-токен в заголовке
+                },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                // Здесь вы можете обработать ответ от сервера
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

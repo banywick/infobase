@@ -1,0 +1,113 @@
+1. Создание дампа данных (только данные)
+bash
+Copy
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t finder_data_table --data-only --column-inserts > table_backup.sql
+Что делает: Создает дамп данных (только строки) из таблицы finder_data_table и сохраняет его в файл table_backup.sql.
+
+Флаги:
+
+--data-only: Экспортирует только данные, без схемы таблицы.
+
+--column-inserts: Генерирует команды INSERT с указанием имен столбцов.
+
+Результат: Файл table_backup.sql содержит команды INSERT для вставки данных.
+
+2. Замена имени таблицы в дампе
+bash
+Copy
+sed -i 's/finder_data_table/sahr_data_table/g' table_backup.sql
+Что делает: Заменяет все вхождения finder_data_table на sahr_data_table в файле table_backup.sql.
+
+Результат: Теперь команды INSERT в файле ссылаются на таблицу sahr_data_table.
+
+3. Применение дампа к целевой таблице
+bash
+Copy
+psql -h localhost -p 5432 -U sklad -d sklad_db -f table_backup.sql
+Что делает: Выполняет SQL-команды из файла table_backup.sql в базе данных sklad_db.
+
+Результат: Данные из дампа вставляются в таблицу sahr_data_table.
+
+4. Другой вариант: Копирование таблицы со схемой
+bash
+Copy
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t finder_data_table > table_backup.sql
+Что делает: Создает дамп таблицы finder_data_table, включая схему (структуру) и данные.
+
+Результат: Файл table_backup.sql содержит команды для создания таблицы и вставки данных.
+
+5. Применение дампа со схемой
+bash
+Copy
+psql -h localhost -p 5432 -U sklad -d sklad_db -f table_backup.sql
+Что делает: Выполняет SQL-команды из файла table_backup.sql в базе данных sklad_db.
+
+Результат: Если таблица finder_data_table не существует, она будет создана, и данные будут вставлены. Если таблица уже существует, данные будут добавлены к существующим.
+
+Краткий чеклист для заметок:
+Создать дамп данных (только данные):
+
+bash
+Copy
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t finder_data_table --data-only --column-inserts > table_backup.sql
+Заменить имя таблицы в дампе:
+
+bash
+Copy
+sed -i 's/finder_data_table/sahr_data_table/g' table_backup.sql
+Применить дамп к целевой таблице:
+
+bash
+Copy
+psql -h localhost -p 5432 -U sklad -d sklad_db -f table_backup.sql
+Создать дамп таблицы со схемой и данными:
+
+bash
+Copy
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t finder_data_table > table_backup.sql
+Применить дамп со схемой:
+
+bash
+Copy
+psql -h localhost -p 5432 -U sklad -d sklad_db -f table_backup.sql
+Когда использовать:
+Только данные: Если структура таблиц идентична, и нужно перенести только данные.
+
+Схема + данные: Если нужно скопировать таблицу целиком (например, для резервного копирования или переноса в другую базу данных).
+
+Создать дамп всей базы данных:
+
+bash
+Copy
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db > all_databases.sql
+Восстановить дамп всей базы данных:
+
+bash
+Copy
+sudo -u postgres psql -d sklad_db < all_databases.sql
+Очистить базу перед восстановлением (опционально):
+
+bash
+Copy
+sudo -u postgres psql -c "DROP DATABASE sklad_db;"
+sudo -u postgres psql -c "CREATE DATABASE sklad_db;"
+
+
+Удаление базы данных:
+
+bash
+Copy
+sudo -u postgres psql -c "DROP DATABASE sklad_db;"
+sudo -u postgres psql -c "CREATE DATABASE sklad_db;"
+Восстановление из дампа:
+
+bash
+Copy
+sudo -u postgres psql -d sklad_db < all_databases.sql
+Повторное применение миграций (если нужно):
+
+Например, в Django:
+
+bash
+Copy
+python manage.py migrate

@@ -29,7 +29,11 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
+
+
 ALLOWED_HOSTS = []
+CSRF_COOKIE_SECURE = False  # Установите True в производственной среде
 
 
 # Application definition
@@ -44,6 +48,10 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework',
     'finder',
+    'common',
+    'notes',
+    'reviews',
+    'sahr',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +62,22 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Ваше middleware для сбора IP-адресов
+    'common.middleware.UniqueIPMiddleware',
+    #Счетчик запросов
+    'common.middleware.RequestCounterMiddleware',
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
+}
 
 ROOT_URLCONF = 'config.urls'
 
@@ -85,11 +108,48 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": os.getenv('NAME'),
         "USER": os.getenv('USER'),
-        "PASSWORD": os.getenv('PASSWORD'),
+        # "PASSWORD": os.getenv('PASSWORD'),
+        "PASSWORD": "sklad",
         "HOST": "127.0.0.1",
         "PORT": "5432",
     }
 }
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'root': {
+#         'handlers': ['console'],
+#         'level': 'DEBUG',
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#         'your_app_name': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
+
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
