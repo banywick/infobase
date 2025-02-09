@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'notes',
     'reviews',
     'sahr',
+    'comers',
 ]
 
 MIDDLEWARE = [

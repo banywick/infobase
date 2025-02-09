@@ -1,7 +1,7 @@
 1. Создание дампа данных (только данные)
-bash
-Copy
+
 pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t finder_data_table --data-only --column-inserts > table_backup.sql
+
 Что делает: Создает дамп данных (только строки) из таблицы finder_data_table и сохраняет его в файл table_backup.sql.
 
 Флаги:
@@ -13,32 +13,30 @@ pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t finder_data_table --data-on
 Результат: Файл table_backup.sql содержит команды INSERT для вставки данных.
 
 2. Замена имени таблицы в дампе
-bash
-Copy
+
 sed -i 's/finder_data_table/sahr_data_table/g' table_backup.sql
+
 Что делает: Заменяет все вхождения finder_data_table на sahr_data_table в файле table_backup.sql.
 
 Результат: Теперь команды INSERT в файле ссылаются на таблицу sahr_data_table.
 
 3. Применение дампа к целевой таблице
-bash
-Copy
+
 psql -h localhost -p 5432 -U sklad -d sklad_db -f table_backup.sql
+
 Что делает: Выполняет SQL-команды из файла table_backup.sql в базе данных sklad_db.
 
 Результат: Данные из дампа вставляются в таблицу sahr_data_table.
 
 4. Другой вариант: Копирование таблицы со схемой
-bash
-Copy
+
 pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t finder_data_table > table_backup.sql
 Что делает: Создает дамп таблицы finder_data_table, включая схему (структуру) и данные.
 
 Результат: Файл table_backup.sql содержит команды для создания таблицы и вставки данных.
 
 5. Применение дампа со схемой
-bash
-Copy
+
 psql -h localhost -p 5432 -U sklad -d sklad_db -f table_backup.sql
 Что делает: Выполняет SQL-команды из файла table_backup.sql в базе данных sklad_db.
 
