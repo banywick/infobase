@@ -15,3 +15,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
         fields = ['id', 'project']
 
 
+class FileUploadSerializer(serializers.Serializer):
+    doc = serializers.FileField()
+
+

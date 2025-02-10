@@ -5,6 +5,9 @@ urlpatterns = [
     # Главная страница
     path('', HomeView.as_view(), name='home'),
 
+    #Загрузка файла xlsx
+    path('upload/', FileUploadView.as_view(), name='file-upload'),
+
     # Поисковой движок
     path('products/', ProductSearchView.as_view(), name='product_filter'),
 
