@@ -3,6 +3,7 @@ from django.views.generic import TemplateView
 from rest_framework import generics, status
 from .serializers import InvoiceSerializer
 from .models import Invoice
+from rest_framework.response import Response
 
 class ComersView(TemplateView):
     """
@@ -22,7 +23,7 @@ class BaseComersPositionView(generics.GenericAPIView):
     serializer_class = InvoiceSerializer
     lookup_field = 'id'
 
-class AllPositionsView(BaseComersPositionView, generics.ListAPIView):
+class GetAllPositions(BaseComersPositionView, generics.ListAPIView):
     """
     Представление для получения всех сущностей таблицы Invoce(commers/недопоставки).
 
@@ -34,3 +35,36 @@ class AllPositionsView(BaseComersPositionView, generics.ListAPIView):
         serializer_class (Serializer): Сериализатор, используемый для сериализации данных.
     """
     pass
+
+
+class RemovePosition(BaseComersPositionView, generics.DestroyAPIView):
+    """
+    Представление для удаления экземпляра а таблице comers(недопоставки).
+
+    Этот класс наследуется от DestroyAPIView и используется для обработки DELETE-запросов
+    на удаление заметок. Он использует сериализатор InvoiceSerializer для валидации данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для валидации данных.
+        lookup_field (str): Поле, используемое для поиска объекта.
+
+    Methods:
+        destroy(request, *args, **kwargs): Удаляет объект и возвращает ответ с сообщением об успешном удалении.
+    """
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Удаляет объект и возвращает ответ с сообщением об успешном удалении.
+
+        Args:
+            request (Request): Объект запроса.
+            *args: Дополнительные аргументы.
+            **kwargs: Дополнительные именованные аргументы.
+
+        Returns:
+            Response: Ответ с сообщением об успешном удалении.
+        """
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'message': 'successfully deleted'}, status=status.HTTP_200_OK)

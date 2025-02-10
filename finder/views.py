@@ -428,6 +428,7 @@ class RemoveProjectFromSessionView(APIView):
         if not project_id:
             return Response({'error': 'Project ID is required'}, status=status.HTTP_400_BAD_REQUEST)
         SessionManager.remove_project_from_session(request, project_id)
+        return Response({"message": "Project removed from session"}, status=status.HTTP_200_OK)
 
 class ClearSelectedProjectsView(APIView):
     """
