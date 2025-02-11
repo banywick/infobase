@@ -1,0 +1,174 @@
+/* .wrapper {
+    border: 1px solid black;
+    height: 100vh;
+} */
+
+header {
+    background-image: url("../img/left_collum.jpg");
+    background-size: cover;
+    width: 100%;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    padding-left: 5px;
+    padding-top: 5px;
+    justify-content: space-around;
+}
+
+header p:hover  {
+    color: rgb(231, 218, 96);
+}
+header p  {
+    font-size: 24px;
+    cursor: pointer;
+}
+
+
+.menu_windows {
+    display: flex;
+}
+
+.menu_filter, .input_data_form, .add_suppler{
+    display: none;
+    position: absolute;
+    top: 100px; /* Высота хедера */
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid black;
+    background-color: white;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.menu_filter p {
+    text-align: center;
+}
+
+.edit_form {
+    display: block;
+    width: 400px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid black;
+    background-color: white;
+    padding: 20px;
+    z-index: 1000;
+}
+
+
+.input_data_form {
+    width: 400px;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.container {
+    width: 100%;
+    margin: 0;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+.table-container {
+    overflow: auto;
+    height: 90vh;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    
+}
+th, td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #ddd;
+    
+}
+th {
+    position: sticky;
+    top: 0;
+    background-color: #575759;
+    /* border: 2px solid black; */
+    color: #fff;
+}
+
+
+.button {
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 150px; /* Фиксированная ширина */
+    box-sizing: border-box; /* Учитывает padding и border в ширине */
+    color: white;
+}
+.edit_row {
+    width: 25px;
+}
+
+.edit_row .button {
+    background-color: #4CAF50; /* Зеленый цвет */
+}
+
+.edit_status .button {
+    background-color: #6b1fec; /* Красный цвет */
+}
+.del_row .button {
+    background-color: #ec1f1f; /* Красный цвет */
+}
+
+.button:hover {
+    transform: scale(1.1);
+}
+
+.title_edit {
+    text-align: center;
+    font-size: 24px;
+    padding: 14px;
+}
+.buttons_block {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.button_edit_form {
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: white;
+    background-color: green; /* Зеленый цвет для кнопки "Сохранить" */
+    border: none;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.button_edit_form.cancel {
+    background-color: red; /* Красный цвет для кнопки "Отмена" */
+}
+
+.error {
+    color: rgb(206, 72, 72);
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.filter-value {
+    color: #0aff63; /* Красноватый цвет */
+}

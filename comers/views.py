@@ -1,9 +1,11 @@
 from django.shortcuts import render
-from django.views.generic import TemplateView
+from django.views.generic import CreateView, TemplateView
 from rest_framework import generics, status
-from .serializers import InvoiceSerializer
+
+from .serializers import *
 from .models import Invoice
 from rest_framework.response import Response
+from .forms import *
 
 class ComersView(TemplateView):
     """
@@ -16,6 +18,17 @@ class ComersView(TemplateView):
         template_name (str): Путь к HTML-шаблону, который будет использоваться для отображения страницы.
     """
     template_name = 'comers/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['input_data_form'] = InputDataForm()
+        context['invoice_edit_form'] = InvoiceEditForm()
+        context['invoice_edit_form_status'] = InvoiceEditFormStatus()
+        context['filter_form'] = FilterForm()
+        context['add_suppler_form'] = AddSupplerForm()
+        return context
+
+    
 
 
 class BaseComersPositionView(generics.GenericAPIView):
@@ -68,3 +81,38 @@ class RemovePosition(BaseComersPositionView, generics.DestroyAPIView):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'message': 'successfully deleted'}, status=status.HTTP_200_OK)
+    
+
+class AddSupplier(generics.CreateAPIView): 
+    """
+    Представление для создания нового поставщика в таблице "comers_supler".
+
+    Этот класс наследуется от CreateAPIView и используется для обработки POST-запросов
+    на создание новых заметок. Он использует сериализатор NoteSerializer для валидации
+    и сохранения данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для валидации и сохранения данных.
+    """
+    queryset = Invoice.objects.all()
+    serializer_class = SuplerSerializer
+
+
+class AddInvoiceData(generics.CreateAPIView):
+    """
+    Представление для создания ......
+
+    Этот класс наследуется от CreateAPIView и используется для обработки POST-запросов
+    на создание новых заметок. Он использует сериализатор NoteSerializer для валидации
+    и сохранения данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для валидации и сохранения данных.
+    """
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceSerializerSpecialist
+    
+
+
