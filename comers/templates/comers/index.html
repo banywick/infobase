@@ -40,10 +40,10 @@
         <div class="menu_windows">
             <div class="menu_filter">
                 <p>Фильтр</p>
-                <form method="post">
+                <form id="add_filter_form" method="post">
                     {% csrf_token %}
                     {{ filter_form.as_p }}
-                    <button type="submit">Применить фильтр</button>
+                    <button class='filter_button' type="button">Применить фильтр</button>
                 </form>
             </div>
             <div class="add_suppler">
@@ -60,7 +60,7 @@
                 <form  id="inputDataForm" method="post">
                     {% csrf_token %}
                     {{ input_data_form.as_p }}
-                    <input type='button' class='send_data_form_button'>Сохранить</input>
+                    <button type='button' class='send_data_form_button'>Сохранить</button>
                 </form>
             </div>    
         </div>
@@ -157,6 +157,7 @@
     <script src='{% static 'comers/js/popups.js' %}'></script>
     <script src="{% static 'comers/js/auto_fields.js' %}"></script>
     <script src="{% static 'comers/js/validate_form.js' %}"></script>
-    <script src="{% static 'comers/js/fetch_form.js' %}"></script>
+    <script src="{% static 'comers/js/filters.js' %}"></script>
+    <script src="{% static 'comers/js/get_all_data_load_page.js' %}"></script>
 </body>
 </html>

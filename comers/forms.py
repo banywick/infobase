@@ -1,5 +1,5 @@
 from django import forms
-from .models import Comment, Leading, Supler, Specialist,Invoice
+from .models import *
 
 class InputDataForm(forms.Form):
     invoice_number = forms.CharField(
@@ -127,15 +127,21 @@ class FilterForm(forms.Form):
     supplier = forms.ModelChoiceField(
         queryset=Supler.objects.all(),
         required=False,
-        widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
-        empty_label="Выберите вариант",
+        # widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
+        # empty_label="Выберите вариант",
         label='Поставщик')
     leading = forms.ModelChoiceField(
         queryset=Leading.objects.all(),
         required=False,
-        widget=forms.Select(attrs={'placeholder': 'Ведущий накладную'}),
-        empty_label="Ведущий накладную",
+        # widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
+        # empty_label="Ведущий накладную",
         label='Ведущий накладную')
+    status = forms.ModelChoiceField(
+        queryset=Status.objects.all(),
+        required=False,
+        # widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
+        # empty_label="Статус позиции",
+        label='Статус')
     
 
 class AddSupplerForm(forms.ModelForm):
