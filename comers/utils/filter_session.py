@@ -1,15 +1,39 @@
 from comers.models import Supler, Leading, Status
 
 class ComersSessionManager:
+    """
+    Утилитарный класс для управления данными сессии, связанными с Недопоставками.
+
+    Methods:
+        get_filter_ids_to_session(request): Получает идентификаторы фильтров из сессии.
+        get_filter_name_field(request): Получает имена фильтров из сессии.
+    """
     @staticmethod
     def get_filter_ids_to_session(request):
-        """Получаем id для фильтрации comers из сесии"""
+        """
+        Получает идентификаторы фильтров из сессии.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+
+        Returns:
+            list: Список идентификаторов фильтров [leading_id, supplier_id, status_id].
+        """
         leading_id = request.session.get('leading_id')
         supplier_id = request.session.get('supplier_id')
         status_id = request.session.get('status_id')
         return [leading_id, supplier_id, status_id]
     @staticmethod
     def get_filter_name_field(request):
+        """
+        Получает имена фильтров из сессии.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+
+        Returns:
+            dict: Словарь с именами фильтров.
+        """
         # Получаем значения из сессии
         leading_id = request.session.get('leading_id')
         supplier_id = request.session.get('supplier_id')
