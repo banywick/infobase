@@ -43,6 +43,6 @@ urlpatterns = [
     path('sahr/', include('sahr.urls')),
     path('notes/', include('notes.urls')),
     path('reviews/', include('reviews.urls')),
-    # path('comers/', include('comers.urls')),
+    path('comers/', include('comers.urls')),
     # path('inventory/', include('inventory.urls')),
 ]

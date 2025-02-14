@@ -6,13 +6,42 @@ from finder.utils.filters_q import create_q_objects, create_q_objects_for_query,
 from .utils.add_session_data import SessionManager
 from .models import Remains
 from django.views.generic import TemplateView
-from django.core.cache import cache
 from django.db.models import Sum
 from .serializers import ProjectListSerializer, RemainsSerializer
 from .utils.project_utils import ProjectUtils
+from .tasks import data_save_db 
+from rest_framework.parsers import MultiPartParser, FormParser
+from .serializers import FileUploadSerializer
+import os
 
 
 logger = logging.getLogger(__name__)
+
+class FileUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        serializer = FileUploadSerializer(data=request.data)
+        if serializer.is_valid():
+            doc = serializer.validated_data['doc']
+            filename = doc.name
+
+            # Определяем путь для сохранения файла
+            upload_folder = 'finder/document'
+            file_path = os.path.join(upload_folder, filename)
+
+            # Проверяем, существует ли директория, и создаем её, если нет
+            os.makedirs(upload_folder, exist_ok=True)
+
+            # Сохраняем файл и запускаем задачу
+            with open(file_path, 'wb+') as destination:
+                for chunk in doc.chunks():
+                    destination.write(chunk)
+
+            task = data_save_db(file_path)
+            return Response({'task_id': 'celery пока не работает'}, status=status.HTTP_202_ACCEPTED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class HomeView(TemplateView):
@@ -43,6 +72,8 @@ class ProductSearchView(APIView):
         query = request.data.get('query', '')
         search_by_code = request.data.get('search_by_code', False)
         search_by_comment = request.data.get('search_by_comment', False)
+
+        print(query)
 
         # Получаем текущие проекты из сессии
         # По которым будем делать фильтрацию
@@ -397,6 +428,7 @@ class RemoveProjectFromSessionView(APIView):
         if not project_id:
             return Response({'error': 'Project ID is required'}, status=status.HTTP_400_BAD_REQUEST)
         SessionManager.remove_project_from_session(request, project_id)
+        return Response({"message": "Project removed from session"}, status=status.HTTP_200_OK)
 
 class ClearSelectedProjectsView(APIView):
     """
