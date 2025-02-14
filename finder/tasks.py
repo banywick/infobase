@@ -1,14 +1,9 @@
 import os
 import pandas as pd
 from sqlalchemy import create_engine
-# from celery import shared_task
-import logging
+from celery import shared_task
 
-# Настройка логирования
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
-
-# @shared_task
+@shared_task
 def data_save_db(file_url):
     try:
         # Шаблон колонок

@@ -107,8 +107,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.getenv('NAME'),
-        "USER": os.getenv('USER'),
+        "NAME": "sklad_db",
+        "USER": "sklad",
         # "PASSWORD": os.getenv('PASSWORD'),
         "PASSWORD": "sklad",
         "HOST": "127.0.0.1",

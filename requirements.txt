@@ -1,5 +1,6 @@
 amqp==5.3.1
 asgiref==3.8.1
+async-timeout==5.0.1
 billiard==4.2.1
 celery==5.4.0
 click==8.1.8
@@ -12,13 +13,16 @@ django-debug-toolbar==5.0.1
 djangorestframework==3.15.2
 drf-yasg==1.21.8
 et_xmlfile==2.0.0
+flower==2.0.1
 greenlet==3.1.1
+humanize==4.11.0
 inflection==0.5.1
 kombu==5.4.2
 numpy==2.2.2
 openpyxl==3.1.5
 packaging==24.2
 pandas==2.2.3
+prometheus_client==0.21.1
 prompt_toolkit==3.0.48
 psycopg2-binary==2.9.10
 python-dateutil==2.9.0.post0
@@ -29,6 +33,7 @@ redis==5.2.1
 six==1.17.0
 SQLAlchemy==2.0.38
 sqlparse==0.5.3
+tornado==6.4.2
 typing_extensions==4.12.2
 tzdata==2024.2
 uritemplate==4.1.1

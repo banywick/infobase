@@ -9,7 +9,7 @@ from django.views.generic import TemplateView
 from django.db.models import Sum
 from .serializers import ProjectListSerializer, RemainsSerializer
 from .utils.project_utils import ProjectUtils
-from .tasks import data_save_db 
+from finder.tasks import data_save_db 
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import FileUploadSerializer
 import os
@@ -38,8 +38,8 @@ class FileUploadView(APIView):
                 for chunk in doc.chunks():
                     destination.write(chunk)
 
-            task = data_save_db(file_path)
-            return Response({'task_id': 'celery пока не работает'}, status=status.HTTP_202_ACCEPTED)
+            task = data_save_db.delay(file_path)
+            return Response({'message': 'task created'}, status=status.HTTP_202_ACCEPTED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

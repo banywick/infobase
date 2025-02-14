@@ -10,18 +10,12 @@
 <body>
     <div class="container">
         <h1>Загрузите ваш файл</h1>
-        <form method="post" enctype="multipart/form-data"  action="{% url 'file-upload' %}">
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <input type="file" name="doc" accept=".xlsx" required>
+            <input type="file" id="fileInput" name="doc" accept=".xlsx" required>
             <br>
-            <input type="submit" value="Загрузить">
+            <button type="button" class="button">Загрузить</button>
         </form>
-        {% if error %}
-            <p style="color: red;">{{ error }}</p>
-        {% endif %}
-        {% if task_id != 'unknown' %}
-            <p>Ваш файл обрабатывается. ID задачи: {{ task_id }}</p>
-        {% endif %}
     </div>
     <div class="container">
         <div class="sidebar">
@@ -93,5 +87,6 @@
         </div>
     </div>
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
+    <script src='{% static "finder/js/check_task_upload_status.js"%}'></script> 
 </body>
 </html>
