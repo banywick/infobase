@@ -4,6 +4,11 @@ from .views import *
 urlpatterns = [
     # Главная страница
     path('', HomeView.as_view(), name='home'),
+    
+    #Проверска статуса выполняемой задачи
+    path('get_task_upload_status', CheckTaskStatus.as_view(), name='status_task'),
+
+
 
     # Загрузка файла xlsx
     path('upload/', FileUploadView.as_view(), name='file-upload'),

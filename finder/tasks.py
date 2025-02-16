@@ -3,6 +3,9 @@ import pandas as pd
 from sqlalchemy import create_engine
 from celery import shared_task
 
+
+
+
 @shared_task
 def data_save_db(file_url):
     try:
@@ -53,8 +56,7 @@ def data_save_db(file_url):
         # logger.info(success_message)
 
     except Exception as e:
-        error_message = f"Ошибка при обработке файла: {e}"
-        # logger.error(error_message)
+        error_message = f"Ошибка загрузки: {e}"
         raise ValueError(error_message)
 
     finally:

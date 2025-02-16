@@ -13,6 +13,8 @@ from finder.tasks import data_save_db
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import FileUploadSerializer
 import os
+from .utils.connect_redis_bd import connect_redis
+from celery.result import AsyncResult
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +41,17 @@ class FileUploadView(APIView):
                     destination.write(chunk)
 
             task = data_save_db.delay(file_path)
-            return Response({'message': 'task created'}, status=status.HTTP_202_ACCEPTED)
+            if task.id:
+                # Если задача cоздана пришем ее id в redis
+
+                # Создаем подключение к Redis
+                redis_conn = connect_redis()
+
+                # Сохраняем строку в Redis
+                redis_conn.set('task_id', task.id)
+
+                return Response({'message': 'task created', 'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+            return Response({'message': 'Error celery'}, status=status.HTTP_202_ACCEPTED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -578,4 +590,47 @@ class GetFixPositionsToSession(APIView):
 
 
 
+class CheckTaskStatus(APIView):
+    def get(self, request):
+        redis_conn = connect_redis()
+        task_id = redis_conn.get('task_id')
 
+        if task_id is None:
+            return Response({'error': 'Task ID not found in Redis'}, status=status.HTTP_404_NOT_FOUND)
+
+        task_id = task_id.decode('utf-8')
+        task_result = AsyncResult(task_id)
+
+        # Проверяем, завершена ли задача
+        if task_result.ready():
+            if task_result.successful():
+                # Если задача успешно завершена
+                result = task_result.result
+            else:
+                # Если задача завершена с ошибкой
+                result = str(task_result.result)  # Преобразуем исключение в строку
+        else:
+            # Если задача еще не завершена
+            result = 'Выполняется'
+
+        return Response({
+            'id': task_id,
+            'status': task_result.status,  # Возвращаем статус задачи
+            'result': result,  # Возвращаем результат или сообщение об ошибке
+        })
+
+
+
+
+
+
+
+
+# def check_task_status(request, task_id):
+#     """Получение статуса задачи"""
+#     async_result = AsyncResult(task_id)
+#     if task_id == 'unknown' :
+#         return JsonResponse({"status": 'unknown'})
+#     if async_result.status == 'FAILURE':
+#         connect_redis().set("file_name", 'База не обновлена')
+#     return JsonResponse({"status": async_result.status})        
