@@ -7,10 +7,9 @@ urlpatterns = [
     
     #Проверска статуса выполняемой задачи
     path('get_task_upload_status/', CheckTaskStatus.as_view(), name='status_task'),
-
+    
+    #Проверка запущен ли celery
     path('celery_status/', CeleryStatusView.as_view(), name='celery_status_check'),
-
-
 
     # Загрузка файла xlsx
     path('upload/', FileUploadView.as_view(), name='file-upload'),
