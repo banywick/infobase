@@ -1,4 +1,5 @@
 import logging
+import time
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,7 +10,7 @@ from django.views.generic import TemplateView
 from django.db.models import Sum
 from .serializers import ProjectListSerializer, RemainsSerializer
 from .utils.project_utils import ProjectUtils
-from finder.tasks import data_save_db 
+from finder.tasks import data_save_db, ping 
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import FileUploadSerializer
 import os
@@ -42,8 +43,6 @@ class FileUploadView(APIView):
 
             task = data_save_db.delay(file_path)
             if task.id:
-                # Если задача cоздана пришем ее id в redis
-
                 # Создаем подключение к Redis
                 redis_conn = connect_redis()
 
@@ -59,6 +58,7 @@ class FileUploadView(APIView):
 class HomeView(TemplateView):
     """Главня станица"""
     template_name = 'finder/index.html'
+
 
 class ProductSearchView(APIView):
     """
@@ -85,7 +85,6 @@ class ProductSearchView(APIView):
         search_by_code = request.data.get('search_by_code', False)
         search_by_comment = request.data.get('search_by_comment', False)
 
-        print(query)
 
         # Получаем текущие проекты из сессии
         # По которым будем делать фильтрацию
@@ -592,13 +591,8 @@ class GetFixPositionsToSession(APIView):
 
 class CheckTaskStatus(APIView):
     def get(self, request):
-        redis_conn = connect_redis()
-        task_id = redis_conn.get('task_id')
+        task_id = request.query_params.get('task_id')
 
-        if task_id is None:
-            return Response({'error': 'Task ID not found in Redis'}, status=status.HTTP_404_NOT_FOUND)
-
-        task_id = task_id.decode('utf-8')
         task_result = AsyncResult(task_id)
 
         # Проверяем, завершена ли задача
@@ -623,7 +617,20 @@ class CheckTaskStatus(APIView):
 
 
 
+class CeleryStatusView(APIView):
+    def get(self, request, *args, **kwargs):
+        # Отправляем задачу-пинг
+        task = ping.delay()
 
+        time.sleep(1)
+
+        # Ждем результата (можно установить таймаут)
+        result = AsyncResult(task.id)
+
+        if result.successful():
+            return Response({"status": "Celery is running"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"status": "Celery is not responding"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 # def check_task_status(request, task_id):

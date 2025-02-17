@@ -4,6 +4,10 @@ from sqlalchemy import create_engine
 from celery import shared_task
 
 
+# Проверка celery на работоспособность
+@shared_task
+def ping():
+    return "pong"
 
 
 @shared_task

@@ -6,7 +6,9 @@ urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     
     #Проверска статуса выполняемой задачи
-    path('get_task_upload_status', CheckTaskStatus.as_view(), name='status_task'),
+    path('get_task_upload_status/', CheckTaskStatus.as_view(), name='status_task'),
+
+    path('celery_status/', CeleryStatusView.as_view(), name='celery_status_check'),
 
 
 

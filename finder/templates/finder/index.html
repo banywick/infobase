@@ -16,6 +16,16 @@
             <br>
             <button type="button" class="button">Загрузить</button>
         </form>
+        <div style="display: none;" class="load_animation">
+            <div class="load_info">
+                <p>Пожалуйста подождите! Данные обрабатываются!</p>
+                <p class="load_error" style="color:red"> </p>
+                <p class="update_success" style="color:green"> </p>
+            </div>
+            <div class="animate_process">
+                <img src="{% static '/finder/icon/shest.gif' %}" alt="" />
+            </div>
+        </div>
     </div>
     <div class="container">
         <div class="sidebar">
@@ -42,6 +52,7 @@
                     <button type="submit">Search</button>
                 </form>
             </div>
+           
             <div class="filters">
                 <span>фильтр проектов</span>
                 <span>название проекта</span>
@@ -87,6 +98,7 @@
         </div>
     </div>
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
+    <script src='{% static "finder/js/upload_file.js"%}'></script> 
     <script src='{% static "finder/js/check_task_upload_status.js"%}'></script> 
 </body>
 </html>
