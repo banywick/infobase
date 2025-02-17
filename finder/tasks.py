@@ -1,14 +1,16 @@
 import os
 import pandas as pd
 from sqlalchemy import create_engine
-# from celery import shared_task
-import logging
+from celery import shared_task
 
-# Настройка логирования
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
 
-# @shared_task
+# Проверка celery на работоспособность
+@shared_task
+def ping():
+    return "pong"
+
+
+@shared_task
 def data_save_db(file_url):
     try:
         # Шаблон колонок
@@ -58,8 +60,7 @@ def data_save_db(file_url):
         # logger.info(success_message)
 
     except Exception as e:
-        error_message = f"Ошибка при обработке файла: {e}"
-        # logger.error(error_message)
+        error_message = f"Ошибка загрузки: {e}"
         raise ValueError(error_message)
 
     finally:

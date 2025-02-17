@@ -1,4 +1,5 @@
 import logging
+import time
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,10 +10,13 @@ from django.views.generic import TemplateView
 from django.db.models import Sum
 from .serializers import ProjectListSerializer, RemainsSerializer
 from .utils.project_utils import ProjectUtils
-from .tasks import data_save_db 
+from finder.tasks import data_save_db, ping 
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import FileUploadSerializer
 import os
+from .utils.connect_redis_bd import connect_redis
+from .utils.file_name_document import get_file_name
+from celery.result import AsyncResult
 
 
 logger = logging.getLogger(__name__)
@@ -26,6 +30,9 @@ class FileUploadView(APIView):
             doc = serializer.validated_data['doc']
             filename = doc.name
 
+            # Добавляем имя документа в redis
+            connect_redis().set('file_name', filename)
+
             # Определяем путь для сохранения файла
             upload_folder = 'finder/document'
             file_path = os.path.join(upload_folder, filename)
@@ -38,8 +45,16 @@ class FileUploadView(APIView):
                 for chunk in doc.chunks():
                     destination.write(chunk)
 
-            task = data_save_db(file_path)
-            return Response({'task_id': 'celery пока не работает'}, status=status.HTTP_202_ACCEPTED)
+            task = data_save_db.delay(file_path)
+            if task.id:
+                # Создаем подключение к Redis
+                redis_conn = connect_redis()
+
+                # Сохраняем строку в Redis
+                redis_conn.set('task_id', task.id)
+
+                return Response({'message': 'task created', 'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+            return Response({'message': 'Error celery'}, status=status.HTTP_202_ACCEPTED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -47,6 +62,13 @@ class FileUploadView(APIView):
 class HomeView(TemplateView):
     """Главня станица"""
     template_name = 'finder/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        file_name_context = get_file_name(self.request)
+        context.update(file_name_context)
+        return context
+
 
 class ProductSearchView(APIView):
     """
@@ -73,7 +95,6 @@ class ProductSearchView(APIView):
         search_by_code = request.data.get('search_by_code', False)
         search_by_comment = request.data.get('search_by_comment', False)
 
-        print(query)
 
         # Получаем текущие проекты из сессии
         # По которым будем делать фильтрацию
@@ -547,6 +568,7 @@ class RemoveFixPositionToSession(APIView):
             return Response({"message": "Fix position remove successfully."}, status=status.HTTP_200_OK)  
     
 class GetFixPositionsToSession(APIView):
+
     """
     Представление для получения фиксированных позиций из сессии пользователя.
 
@@ -576,6 +598,112 @@ class GetFixPositionsToSession(APIView):
         current_projects = request.session.get('selected_instance', {})
         return Response(current_projects, status=status.HTTP_200_OK) 
 
+class CheckTaskStatus(APIView):
+    """
+    Представление API для проверки статуса выполнения задачи Celery.
 
+    Это представление позволяет проверять текущий статус задачи Celery
+    по её идентификатору и возвращает информацию о состоянии задачи.
 
+    Методы
+    ------
+    get(request)
+        Обрабатывает GET-запросы для проверки статуса задачи Celery.
 
+    Атрибуты
+    --------
+    Нет атрибутов
+    """
+
+    def get(self, request):
+        """
+        Обрабатывает GET-запросы для проверки статуса задачи Celery.
+
+        Этот метод извлекает идентификатор задачи из параметров запроса,
+        проверяет статус задачи и возвращает информацию о её состоянии.
+
+        Параметры
+        ---------
+        request : HttpRequest
+            Объект HTTP-запроса.
+
+        Возвращает
+        ----------
+        Response
+            JSON-ответ, содержащий:
+            - 'id': Идентификатор задачи.
+            - 'status': Статус задачи (например, 'SUCCESS', 'FAILURE', 'PENDING').
+            - 'result': Результат выполнения задачи или сообщение об ошибке.
+        """
+        task_id = request.query_params.get('task_id')
+
+        task_result = AsyncResult(task_id)
+
+        # Проверяем, завершена ли задача
+        if task_result.ready():
+            if task_result.successful():
+                # Если задача успешно завершена
+                result = task_result.result
+            else:
+                # Если задача завершена с ошибкой
+                result = str(task_result.result)  # Преобразуем исключение в строку
+                connect_redis().set('file_name', 'База не обновлена!')
+        else:
+            # Если задача еще не завершена
+            result = 'Выполняется'
+
+        return Response({
+            'id': task_id,
+            'status': task_result.status,  # Возвращаем статус задачи
+            'result': result,  # Возвращаем результат или сообщение об ошибке
+        })
+
+class CeleryStatusView(APIView):
+    """
+    Представление API для проверки статуса работника Celery.
+
+    Это представление отправляет задачу-пинг работнику Celery и ожидает ответа,
+    чтобы определить, работает ли Celery и отвечает ли он.
+
+    Методы
+    ------
+    get(request, *args, **kwargs)
+        Обрабатывает GET-запросы для проверки статуса работника Celery.
+
+    """
+
+    def get(self, request, *args, **kwargs):
+        """
+        Обрабатывает GET-запросы для проверки статуса работника Celery.
+
+        Этот метод отправляет задачу-пинг работнику Celery и ожидает
+        небольшой промежуток времени, чтобы проверить, была ли задача успешной.
+
+        Параметры
+        ---------
+        request : HttpRequest
+            Объект HTTP-запроса.
+        *args : tuple
+            Дополнительные позиционные аргументы.
+        **kwargs : dict
+            Дополнительные именованные аргументы.
+
+        Возвращает
+        ----------
+        Response
+            - Если Celery работает, возвращает JSON-ответ со статусом и кодом HTTP 200.
+            - Если Celery не отвечает, возвращает JSON-ответ со статусом и кодом HTTP 503.
+        """
+        # Отправляем задачу-пинг
+        # проверяем работает ли celery
+        task = ping.delay()
+
+        time.sleep(1)
+
+        # Ждем результата
+        result = AsyncResult(task.id)
+
+        if result.successful():
+            return Response({"status": "Celery работает"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"status": "Celery не отвечает"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
