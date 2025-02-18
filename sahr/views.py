@@ -8,6 +8,7 @@ from .utils.article_utils import check_article
 from .serializers import HistorySerializer, SahrDataTableSerializer
 from .models import *
 from rest_framework.response import Response
+from .utils.backup_utils import *
 
 
 
@@ -172,7 +173,6 @@ class SahrFindFilter(APIView):
         return Response(results.values())
     
     
-    
 class GetSahrAllPositions(BasePositionView, generics.ListAPIView):
     """
     Представление для получения всех позиций из таблицы САХР.
@@ -189,7 +189,6 @@ class GetSahrAllPositions(BasePositionView, generics.ListAPIView):
 
     """
     pass
-
 
 
 class AddPositions(BasePositionView, CreateAPIView):
@@ -303,8 +302,6 @@ class RemovePosition(BasePositionView, DestroyAPIView):
         return Response({'message': 'successfully deleted'}, status=status.HTTP_200_OK)
 
 
-
-
 class HistoryListView(ListAPIView):
     """
     Представление для отображения списка записей истории, связанных с определенным экземпляром Data_Table.
@@ -357,7 +354,6 @@ class HistoryListView(ListAPIView):
             'data': serializer.data,
             'related_count': related_count
         })
-
     
 
 class CheckArticleAPIView(APIView):
@@ -378,3 +374,34 @@ class CheckArticleAPIView(APIView):
             return Response(result)
         return Response({"error": "Товара нет в базе"}, status=status.HTTP_404_NOT_FOUND)   
     
+
+class SahrBackupView(APIView):
+    """
+    Представление для обработки запросов на скачивание резервной копии
+    данных из С.А.ХР
+
+    Этот класс обрабатывает GET-запросы и предоставляет функциональность для создания
+    резервной копии данных из базы данных и отправки её пользователю в виде Excel-файла.
+
+    Methods:
+        get(request, *args, **kwargs):
+            Обрабатывает GET-запрос для скачивания резервной копии данных.
+
+            Args:
+                request (HttpRequest): Объект HTTP-запроса.
+
+            Returns:
+                HttpResponse: HTTP-ответ с прикрепленным Excel-файлом резервной копии.
+
+            Процесс:
+                1. Вызывает функцию `backup_sahr_table()` для создания резервной копии данных.
+                2. Использует функцию `handle_backup_download()` для отправки файла пользователю.
+
+    """
+    def get(self, request, *args, **kwargs):
+
+        # Вызов функции для создания резервной копии
+        file_path, filename = backup_sahr_table()
+
+        # Использование функции из другого модуля для обработки скачивания
+        return handle_backup_download(file_path, filename)

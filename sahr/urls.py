@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
     path("", SahrView.as_view(), name="sahr_home"),
     path("archive/", SahrArchiveView.as_view(), name = 'get_archive_page'),
+    path("download_backup/", SahrBackupView.as_view(), name = 'backup_sahr'),
     path("get_archive_all_positions/", AllArchiveRemovePosition.as_view(), name="get_sahr_archive_all"),
     path("find_archive_position/", SahrFindFilterArchive.as_view(), name = 'find_positions_archive'),
 
