@@ -16,6 +16,7 @@ def data_save_db(file_url):
         # Шаблон колонок
         columns_template = [
             "Цена",
+            "Партия.Примечание",
             "Комментарий",
             "Код",
             "Артикул",
@@ -27,7 +28,7 @@ def data_save_db(file_url):
         ]
 
         # Читаем файл
-        df = pd.read_excel(file_url, usecols=[0, 11, 12, 13, 14, 15, 16, 17, 18])
+        df = pd.read_excel(file_url, usecols=[0, 5, 11, 12, 13, 14, 15, 16, 17, 18])
 
         # Проверяем порядок столбцов
         order_columns = df.iloc[7].fillna("Конечный остаток (Количество)").tolist()
@@ -40,6 +41,7 @@ def data_save_db(file_url):
         # Переименование колонок
         df.columns = [
             "price",
+            "notes_part",
             "comment",
             "code",
             "article",
