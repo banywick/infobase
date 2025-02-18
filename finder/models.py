@@ -1,6 +1,7 @@
 from django.db import models
 
 class Remains(models.Model):
+    notes_part = models.CharField(max_length=50, null=True, verbose_name='Примечания')
     comment = models.CharField(max_length=50, null=True, verbose_name='Комментарий')
     code = models.CharField(max_length=50, null=True, verbose_name='Код')
     article = models.TextField(null=True, verbose_name='Артикул')
