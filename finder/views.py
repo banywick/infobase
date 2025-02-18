@@ -69,10 +69,13 @@ class HomeView(TemplateView):
         user_group = None
 
         if user.is_authenticated:
-            if user.groups.filter(name='commers').exists():
-                user_group = 'commers'
-            # elif user.groups.filter(name='коммерсанты').exists():
-            #     user_group = 'коммерсанты'
+            # Получаем все группы пользователя
+            user_groups = user.groups.all()
+
+            # Проверяем каждую группу
+            for group in user_groups:
+                user_group = group.name
+                break  # Прерываем цикл, как только найдена первая группа
 
         context['user_group'] = user_group
         file_name_context = get_file_name(self.request)

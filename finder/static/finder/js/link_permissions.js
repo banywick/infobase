@@ -1,27 +1,41 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Извлечение значения из атрибута данных
     const sidebar = document.querySelector('.sidebar');
-    const userGroup = sidebar.getAttribute('data-user-group');
+
+    // Или извлечение значения из текста элемента
+    const userGroupElement = document.getElementById('user-group');
+    const userGroup = userGroupElement.textContent.trim();
+
     const links = document.querySelectorAll('.sidebar a');
 
+     // Список разрешенных идентификаторов ссылок для группы "commers"
+    const allowedLinkIdsForCommers = ['1', '2', '5', '7', '9'];
+     // Список разрешенных идентификаторов ссылок для группы "commers"
+    const allowedLinkIdsForSklad = ['1', '2', '3', '4', '5', '8', '9'];
+     // Список разрешенных идентификаторов ссылок для тех кто не состоит в группах"
+    const allowedLinkIdsForAnanimus = ['1', '7', '9'];
+
     links.forEach(link => {
+        const linkId = link.getAttribute('data-link-id');
+
         if (userGroup === 'commers') {
-            // Доступна только ссылка "Комерсанты"
-            if (link.getAttribute('data-link-id') !== '3') {
+            // группа коммерсанты
+            if (!allowedLinkIdsForCommers.includes(linkId)) {
                 link.style.pointerEvents = 'none';
                 link.style.color = 'gray'; // Пример стиля для неактивных ссылок
             }
-        } else if (userGroup === 'коммерсанты') {
-            // Доступны только первые три ссылки
-            if (link.getAttribute('data-link-id') > 4) {
+        } else if (!userGroup || userGroup === 'None' || userGroup === 'undefined') {
+            // Анонимные пользователи
+            if (!allowedLinkIdsForAnanimus.includes(linkId)) {
                 link.style.pointerEvents = 'none';
                 link.style.color = 'gray'; // Пример стиля для неактивных ссылок
             }
-        } else {
-            // Анонимные пользователи, доступна только одна ссылка
-            if (link.getAttribute('data-link-id') !== '1') {
+        } else if (userGroup === 'sklad') {
+            // группа склад
+            if (!allowedLinkIdsForSklad.includes(linkId)) {
                 link.style.pointerEvents = 'none';
                 link.style.color = 'gray'; // Пример стиля для неактивных ссылок
             }
-        }
+        } 
     });
 });
