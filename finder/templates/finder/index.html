@@ -31,12 +31,16 @@
     <div class="container">
         <div class="sidebar">
             <h2>infobase поиск</h2>
+                <h3>Пользователь {{ user.username }}</h3>
+                <h3>состоит в группе {{ user_group }}</h3>
+                
             <ul>
-                <li>Поиск</li>
-                <li>С.А.Х.Р</li>
-                <li>Архив</li>
-                <li>Недостатки</li>
-                <li>Инвентаризация</li>
+                <li><a style="color:white" href="{% url 'sahr_home' %}" data-link-id="1">Сахр</a></li>
+                <li><a style="color:white" href="{% url 'home_commers' %}" data-link-id="2">Комерсанты</a></li>
+                <li><a style="color:white" href="{% url 'home_review' %}" data-link-id="3">Отзывы</a></li>
+                <li><a style="color:white" href="{% url 'notes_home' %}" data-link-id="4">Заметки</a></li>
+                <li><a style="color:white" href="{% url 'get_archive_page' %}" data-link-id="5">Архив</a></li>
+                
             </ul>
             <button>Обновить базу</button>
             <button>Выйти</button>
@@ -101,5 +105,6 @@
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
     <script src='{% static "finder/js/upload_file.js"%}'></script> 
     <script src='{% static "finder/js/check_task_upload_status.js"%}'></script> 
+    <script src='{% static "finder/js/link_permissions.js"%}'></script> 
 </body>
 </html>

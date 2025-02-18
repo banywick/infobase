@@ -60,11 +60,21 @@ class FileUploadView(APIView):
 
 
 class HomeView(TemplateView):
-    """Главня станица"""
+    """Главная страница"""
     template_name = 'finder/index.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+        user_group = None
+
+        if user.is_authenticated:
+            if user.groups.filter(name='commers').exists():
+                user_group = 'commers'
+            # elif user.groups.filter(name='коммерсанты').exists():
+            #     user_group = 'коммерсанты'
+
+        context['user_group'] = user_group
         file_name_context = get_file_name(self.request)
         context.update(file_name_context)
         return context
