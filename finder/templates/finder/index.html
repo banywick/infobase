@@ -35,20 +35,22 @@
             <h3>состоит в группе <span id="user-group">{{ user_group }}</span></h3>
         
             <ul>
-                <li><a style="color:white" href="{% url 'home_finder' %}" data-link-id="1">Поиск</a></li>
-                <li><a style="color:white" href="{% url 'notes_home' %}" data-link-id="2">Заметки</a></li>
-                <li><a style="color:white" href="{% url 'sahr_home' %}" data-link-id="3">Сахр</a></li>
-                <li><a style="color:white" href="{% url 'get_archive_page' %}" data-link-id="4">Архив</a></li>
-                <li><a style="color:white" href="{% url 'home_commers' %}" data-link-id="5">Недопоставки</a></li>
-                <li><a style="color:white" href="#" data-link-id="6">Инвентаризация</a></li>
-                <li><a style="color:white" href="{% url 'home_review' %}" data-link-id="7">Таблица аналогов</a></li>
+                <li><a style="color:white" href="{% url 'home_finder' %}" data-link-name="поиск">Поиск</a></li>
+                <li><a style="color:white" href="{% url 'notes_home' %}" data-link-name="заметки">Заметки</a></li>
+                <li><a style="color:white" href="{% url 'sahr_home' %}" data-link-name="сахр">Сахр</a></li>
+                <li><a style="color:white" href="{% url 'get_archive_page' %}" data-link-name="архив">Архив</a></li>
+                <li><a style="color:white" href="{% url 'home_commers' %}" data-link-name="недопоставки">Недопоставки</a></li>
+                <li><a style="color:white" href="#" data-link-name="инвентаризация">Инвентаризация</a></li>
+                <li><a style="color:white" href="{% url 'home_review' %}" data-link-name="таблица аналогов">Таблица аналогов</a></li>
+                <li><a style="color:white" href="#" data-link-name="бтк">БТК</a></li>
             </ul>
-            <a style="color:green" href="#" data-link-id="8" >Обновить базу</a>
+            <a style="color:green" href="#" data-link-name="обновить базу">Обновить базу</a>
             <br>
             <button>Выйти</button>
             <br>
-            <a style="color:white" href="{% url 'home_review' %}" data-link-id="9">Отзывы и предложения</a>
+            <a style="color:white" href="{% url 'home_review' %}" data-link-name="Отзывы и предложения">Отзывы и предложения</a>
         </div>
+        <span id="allowed-link-names">{{ allowed_link_names|safe }}</span>
         <div class="content">
             <div class="search-bar">
                 <form id="search-form" method="post">

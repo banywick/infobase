@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import Group
 
 class Remains(models.Model):
     notes_part = models.CharField(max_length=50, null=True, verbose_name='Примечания')
@@ -82,3 +83,31 @@ class ProjectStatus(models.Model):
 
 
     
+class LinkAccess(models.Model):
+    """
+    Для возможности управлять какой группе
+    какие ссылки из меню отображать 
+    
+    """
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name='')
+    LINK_NAMES = [
+        ('поиск', 'Поиск'),
+        ('заметки', 'Заметки'),
+        ('сахр', 'Сахр'),  
+        ('архив', 'Архив'), 
+        ('недопоставки', 'Недопоставки'),  
+        ('инвентаризация', 'Инвентаризация'),  
+        ('таблица аналогов', 'Таблица аналогов'), 
+        ('бтк', 'БТК'),
+        ('отзывы и предложения', 'Отзывы и предложения'), 
+        ('обновить базу', 'Обновить базу'),  
+    ]
+    link_name = models.CharField(
+        max_length=20, choices=LINK_NAMES, verbose_name='Строка меню')
+
+    def __str__(self):
+        return f"{self.group.name} - {self.link_name}"
+    
+    class Meta:
+        verbose_name = "Доступ по ссылкам"
+        verbose_name_plural = "Доступы по ссылкам"
