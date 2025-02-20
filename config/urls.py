@@ -44,5 +44,6 @@ urlpatterns = [
     path('notes/', include('notes.urls')),
     path('reviews/', include('reviews.urls')),
     path('comers/', include('comers.urls')),
+    path('', include('common.urls')),
     # path('inventory/', include('inventory.urls')),
 ]

@@ -20,6 +20,7 @@ from .utils.file_name_document import get_file_name
 from celery.result import AsyncResult
 
 
+
 logger = logging.getLogger(__name__)
 
 class FileUploadView(APIView):

@@ -9,6 +9,7 @@ from .serializers import HistorySerializer, SahrDataTableSerializer
 from .models import *
 from rest_framework.response import Response
 from .utils.backup_utils import *
+from common.utils.access_mixin import UserGroupRequiredMixin
 
 
 
@@ -30,10 +31,11 @@ class BasePositionView(generics.GenericAPIView):
     serializer_class = SahrDataTableSerializer
     lookup_field = 'id'
 
-class SahrView(TemplateView):
+class SahrView(UserGroupRequiredMixin, TemplateView):
     """Главная страница САХР"""
 
     template_name = 'sahr/index.html'
+    group_required = ['update_base','sklad']
 
     def get_context_data(self):
         """Меняем в (адресном хранении) Data Table

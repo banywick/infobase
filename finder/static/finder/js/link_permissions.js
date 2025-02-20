@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const userGroup = userGroupElement.textContent.trim();
 
     // Список разрешенных ссылок для анонимных пользователей
-    const allowedLinkIdsForAnonymous = ['поиск', 'заметки', 'Отзывы и предложения'];
+    const allowedLinkIdsForAnonymous = ['поиск','Отзывы и предложения'];
 
     links.forEach(link => {
         const linkName = link.getAttribute('data-link-name');

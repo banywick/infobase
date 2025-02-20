@@ -3,13 +3,14 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .models import Note
 from .serializers import NoteSerializer
+from common.utils.access_mixin import UserGroupRequiredMixin
 
 class BaseNotePositionView(generics.GenericAPIView):
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
     lookup_field = 'id'
 
-class NotesView(TemplateView):
+class NotesView(UserGroupRequiredMixin,TemplateView):
     """
     Представление для отображения страницы заметок.
 
@@ -20,6 +21,7 @@ class NotesView(TemplateView):
         template_name (str): Путь к HTML-шаблону, который будет использоваться для отображения страницы.
     """
     template_name = 'notes/index.html'
+    group_required = ['update_base','sklad','commers','btk', 'other']
 
 class AddNoteView(BaseNotePositionView, generics.CreateAPIView):
     """
