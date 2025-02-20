@@ -3,7 +3,7 @@ from .views import *
 
 urlpatterns = [
     # Главная страница
-    path('', HomeView.as_view(), name='home'),
+    path('', HomeView.as_view(), name='home_finder'),
     
     #Проверска статуса выполняемой задачи
     path('get_task_upload_status/', CheckTaskStatus.as_view(), name='status_task'),

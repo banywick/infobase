@@ -31,17 +31,26 @@
     <div class="container">
         <div class="sidebar">
             <h2>infobase поиск</h2>
+            <h3>Пользователь {{ user.username }}</h3>
+            <h3>состоит в группе <span id="user-group">{{ user_group }}</span></h3>
+        
             <ul>
-                <li>Поиск</li>
-                <li>С.А.Х.Р</li>
-                <li>Архив</li>
-                <li>Недостатки</li>
-                <li>Инвентаризация</li>
+                <li><a style="color:white" href="{% url 'home_finder' %}" data-link-name="поиск">Поиск</a></li>
+                <li><a style="color:white" href="{% url 'notes_home' %}" data-link-name="заметки">Заметки</a></li>
+                <li><a style="color:white" href="{% url 'sahr_home' %}" data-link-name="сахр">Сахр</a></li>
+                <li><a style="color:white" href="{% url 'get_archive_page' %}" data-link-name="архив">Архив</a></li>
+                <li><a style="color:white" href="{% url 'home_commers' %}" data-link-name="недопоставки">Недопоставки</a></li>
+                <li><a style="color:white" href="#" data-link-name="инвентаризация">Инвентаризация</a></li>
+                <li><a style="color:white" href="#" data-link-name="таблица аналогов">Таблица аналогов</a></li>
+                <li><a style="color:white" href="#" data-link-name="бтк">БТК</a></li>
             </ul>
-            <button>Обновить базу</button>
+            <a style="color:green" href="#" data-link-name="обновить базу">Обновить базу</a>
+            <br>
             <button>Выйти</button>
-            <p>Отзывы и предложения</p>
+            <br>
+            <a style="color:white" href="{% url 'home_review' %}" data-link-name="отзывы и предложения">Отзывы и предложения</a>
         </div>
+        <span id="allowed-link-names">{{ allowed_link_names|safe }}</span>
         <div class="content">
             <div class="search-bar">
                 <form id="search-form" method="post">
@@ -53,7 +62,6 @@
                     <button type="submit">Search</button>
                 </form>
             </div>
-           
             <div class="filters">
                 <span>фильтр проектов</span>
                 <span>название проекта</span>
@@ -101,5 +109,6 @@
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
     <script src='{% static "finder/js/upload_file.js"%}'></script> 
     <script src='{% static "finder/js/check_task_upload_status.js"%}'></script> 
+    <script src='{% static "finder/js/link_permissions.js"%}'></script> 
 </body>
 </html>

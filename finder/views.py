@@ -1,11 +1,12 @@
 import logging
 import time
+import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from finder.utils.filters_q import create_q_objects, create_q_objects_for_query, get_current_projects
 from .utils.add_session_data import SessionManager
-from .models import Remains
+from .models import LinkAccess, Remains
 from django.views.generic import TemplateView
 from django.db.models import Sum
 from .serializers import ProjectListSerializer, RemainsSerializer
@@ -17,6 +18,7 @@ import os
 from .utils.connect_redis_bd import connect_redis
 from .utils.file_name_document import get_file_name
 from celery.result import AsyncResult
+
 
 
 logger = logging.getLogger(__name__)
@@ -60,11 +62,27 @@ class FileUploadView(APIView):
 
 
 class HomeView(TemplateView):
-    """Главня станица"""
+    """Главная страница"""
     template_name = 'finder/index.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+        user_group = None
+        allowed_link_names = []
+
+        if user.is_authenticated:
+            user_groups = user.groups.all()
+            for group in user_groups:
+                user_group = group.name
+                break  # Прерываем цикл
+            user_groups = user.groups.all()
+            allowed_links = LinkAccess.objects.filter(group__in=user_groups)
+            allowed_link_names = [link.link_name for link in allowed_links]
+
+        # context['allowed_link_names'] = json.dumps(allowed_link_names)  # Преобразуем в JSON
+        context['allowed_link_names'] = json.dumps(allowed_link_names)  # Преобразуем в JSON
+        context['user_group'] = user_group
         file_name_context = get_file_name(self.request)
         context.update(file_name_context)
         return context

@@ -1,5 +1,8 @@
 from django.contrib import admin
 from .models import ProjectStatus
+from .models import LinkAccess
+
+admin.site.register(LinkAccess)
 
 @admin.register(ProjectStatus)
 class ProjectStatusAdmin(admin.ModelAdmin):
