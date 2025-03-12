@@ -186,7 +186,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -204,9 +203,19 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 FLOWER_RPC_HOST = "http://127.0.0.1:8000"  # Хост, на котором запущен Celery
 FLOWER_RPC_PORT = 5555  # Порт для Flower
 
-STATIC_URL = "static/"
-MEDIA_URL = "/madia/"
-MEDIA_URL = os.path.join(BASE_DIR, "media/")
-STATIC_DIR = os.path.join(BASE_DIR, "finder/static")
-STATICFILES_DIRS = [STATIC_DIR]
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+# URL для статических файлов
+STATIC_URL = '/static/'
+
+# Дополнительные пути для статических файлов
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+# Директория, куда будут собраны все статические файлы
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# URL для медиа файлов
+MEDIA_URL = '/media/'
+
+# Директория для хранения медиа файлов
+MEDIA_ROOT = BASE_DIR / "media"
