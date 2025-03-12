@@ -15,7 +15,6 @@
 
 header {
     margin-left: 254px;
-    width: 1666px;
     height: 96px;
     background: rgb(255, 255, 255);
     border: 1px solid black;
@@ -37,6 +36,10 @@ header {
     align-items: center;
     margin-left: 15px;
     padding: 4px;
+}
+
+.menu_row img {
+    background-color: white;
 }
 
 .menu_link{
@@ -86,7 +89,6 @@ header {
 }
 .filter_project_container {
     margin-left: 254px;
-    width: 1666px;
     height: 72px;
     background: rgb(255, 255, 255);
     border: 1px solid black;
@@ -128,3 +130,20 @@ header {
     margin-left: 6px;
 }
 
+.bottom_menu {
+
+    width: 254px;
+    height: 162px;
+    left: 0;
+    top: 738px;
+    /* Auto layout */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10;
+    padding: 0px;
+
+
+
+}
