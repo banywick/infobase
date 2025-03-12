@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'finder/css/style_finder2.css' %}">
+    <link rel="stylesheet" href="{% static 'css/index_all.css' %}">
+    <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
+    <title>Document</title>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <div class="find_container">
+                <div class="search_bar">
+                    <form id="search_form" method="post">
+                        {% csrf_token %}
+
+                        <div class="input_wrapper">
+                            <div class="input_container">
+                                <input type="text" name="query" placeholder="поиск по названию, коду, артикулу">
+                                <img src="{% static 'icon/lupa_input.png'  %}" alt="">
+                            </div>
+                        </div>
+                    </form>
+                    <div class="filter_container"> 
+                        <div class="filters">
+                            <div class="check_box_container">
+                                <input class='check_box' type="checkbox" id="search_by_code" name="search_by_code" value="true">
+                                <label for="search_by_code">искать по коду</label>
+                            </div>
+                            <div class="check_box_container">
+                                <input class='check_box' type="checkbox" id="search_by_comment" name="search_by_comment" value="true">
+                                <label for="search_by_comment">искать по комментарию</label>
+                            </div>
+                        </div>
+                    </div>     
+                </div>
+            </div> 
+            <div class="info_update">
+                <div>
+                    База обновлена
+                </div>
+                <div>
+                    13.02.2025
+                </div>
+            </div>
+        </header>
+        <div class="filter_project_container">
+            <div class="button_wrapper">
+                <img src="{% static 'icon/filter.png'  %}" alt="">
+                <div>Фильтр проектов</div>
+            </div>
+            <div class="button_wrapper_clear">
+                <div>Сбросить фильтр</div>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div class="logo">
+                <img src="{% static 'finder/icon/logo_finder.png'  %}" alt="">
+            </div>
+            <div class="main_menu">
+                <div class="menu_row">
+                
+                    <img src="{% static 'finder/icon/search.png'  %}" alt="">
+                    <div class="menu_link">
+                        <a href="#">Поиск</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/note.png'  %}" alt="">
+                    <div class="menu_link">
+                        <a href="#">Заметки</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/sahr.png'  %}" alt="">
+                    <div class="menu_link">
+                        <a href="#">С.А.ХР</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/archive.png'  %}" alt="">
+                    <div class="menu_link">
+                        <a href="#">Архив</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/comers.png'  %}" alt="">
+                    <div class="menu_link">
+                        <a href="#">Недопоставки</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/inventory.png'  %}" alt="">
+                    <div class="menu_link">
+                        <a href="#">Инвентаризация</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/analogs.png'  %}" alt="">
+                    <div class="menu_link">
+                        <a href="#">Таблица аналогов</a>
+                    </div>
+                </div>
+            </div>    
+        </div> 
+    </div>
+</body>
+</html>
+

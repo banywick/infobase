@@ -1,0 +1,130 @@
+@font-face {
+    font-family: 'Inter';
+    src: url('/static/fonts/inter/Inter_18pt-Light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.wrapper {
+    /* position: relative; */
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    margin-left: 254px;
+    width: 1666px;
+    height: 96px;
+    background: rgb(255, 255, 255);
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+}
+
+.sidebar {
+    position: absolute;
+    width: 254px;
+    min-height: 100vh;
+    background: rgb(31, 58, 85);
+}
+
+.menu_row {
+    display: flex;
+    align-items: center;
+    margin-left: 15px;
+    padding: 4px;
+}
+
+.menu_link{
+    margin: 0px 10px;
+}
+
+.menu_link a {
+    color: rgb(255, 255, 255);
+    font-family: Inter;
+    font-size: 18px;
+}
+
+
+.find_container {
+    margin-left: 50px;
+    width: 375px;
+    height: 96px;
+
+}
+
+.filter_container {
+    width: 375px;
+    padding: 10px;
+}
+
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: Inter;
+    font-size: 16px;
+}
+
+.check_box {
+    width: 17px;
+    height: 14px;
+    
+}
+
+.search_bar{
+    margin-top: 16px;
+}
+
+.info_update {
+    text-align: center;
+    margin-right: 40px;
+}
+.filter_project_container {
+    margin-left: 254px;
+    width: 1666px;
+    height: 72px;
+    background: rgb(255, 255, 255);
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+}
+
+.button_wrapper {
+    width: 224px;
+    height: 40px;
+    border-radius: 40px;
+    background: rgb(31, 58, 85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgb(255, 255, 255);
+    font-family: Inter;
+    font-size: 16px;
+    margin-left: 45px;
+}
+.button_wrapper_clear {
+    width: 224px;
+    height: 40px;
+    border-radius: 40px;
+    background: rgb(251, 184, 160);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 40px;
+    color: rgb(255, 255, 255);
+    font-family: Inter;
+    font-size: 16px;
+    margin-right: 40px;
+}
+
+.button_wrapper div {
+    margin-left: 6px;
+}
+
