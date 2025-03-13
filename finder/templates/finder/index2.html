@@ -45,11 +45,9 @@
                 <div>
                     13.02.2025
                 </div>
-                <img src="{% static 'finder/search.svg' %}" alt="Search Icon" style="width: 50px; height: 50px;">
             </div>
         </header>
         <div class="filter_project_container">
-            <img src="{% static 'finder/search.svg' %}" alt="Search Icon">
             <div class="button_wrapper">
                 <img src="{% static 'icon/filter.png'  %}" alt="">
                 <div>Фильтр проектов</div>
@@ -60,59 +58,93 @@
         </div>
         <div class="sidebar">
             <div class="logo">
-                <img src="{% static 'finder/icon/logo_finder.png'  %}" alt="">
+                <img src="{% static 'finder/icon/logo_finder.svg'  %}" alt="">
             </div>
-            <div class="main_menu">
+            <div class="menu_item">
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/search.svg' %}" alt="Search Icon">
+                    <img id="icon_color" src="{% static 'finder/icon/search.svg' %}" alt="Search Icon">
                     <div class="menu_link">
                         <a href="#">Поиск</a>
                     </div>
                 </div>
+                <div class="details_item">
+                    <div>
+                        Будет блок с детализацией
+                    </div>
+                    <div>
+                        Будет блок с детализацией
+                    </div>
+                    <div>
+                        Будет блок с детализацией
+                    </div>
+                    <div>
+                        Будет блок с детализацией
+                    </div>
+                </div> 
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/note.png'  %}" alt="">
+                    <img src="{% static 'finder/icon/notes.svg'  %}" alt="">
                     <div class="menu_link">
                         <a href="#">Заметки</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/sahr.png'  %}" alt="">
+                    <img src="{% static 'finder/icon/sahr.svg'  %}" alt="">
                     <div class="menu_link">
                         <a href="#">С.А.ХР</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/archive.png'  %}" alt="">
+                    <img src="{% static 'finder/icon/archive.svg'  %}" alt="">
                     <div class="menu_link">
                         <a href="#">Архив</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/comers.png'  %}" alt="">
+                    <img src="{% static 'finder/icon/comers.svg'  %}" alt="">
                     <div class="menu_link">
                         <a href="#">Недопоставки</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/inventory.png'  %}" alt="">
+                    <img src="{% static 'finder/icon/inventory.svg'  %}" alt="">
                     <div class="menu_link">
                         <a href="#">Инвентаризация</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/analogs.png'  %}" alt="">
+                    <img src="{% static 'finder/icon/analogs.svg'  %}" alt="">
                     <div class="menu_link">
                         <a href="#">Таблица аналогов</a>
                     </div>
                 </div>
-                <div>
-                    Будет блок с детализацией
-                  
-                </div>
-                <div class="bottom_menu">
+                
+                
 
-                </div>
             </div> 
+            <div class="down_menu">
+                <div class="button_wrapper_update">
+                    <img src="{% static 'finder/icon/update_base.svg'  %}" alt="">
+                <div>Обновить базу</div>
+            </div>
+            <div class="menu_row_down">
+                <img src="{% static 'finder/icon/login.svg'  %}" alt="">
+                <div class="menu_link">
+                    <a href="#">Войти</a>
+                </div>
+            </div>
+            {% comment %} <div class="menu_row_down" hidden>
+                <img src="{% static 'finder/icon/inventory.svg'  %}" alt="">
+                <div class="menu_link">
+                    <a href="#">Выйти</a>
+                </div>
+            </div> {% endcomment %}
+            <div class="menu_row_down">
+                <img src="{% static 'finder/icon/revievs.svg'  %}" alt="">
+                <div class="menu_link">
+                    <a id='revievs_link' href="#">Отзывы и предложения</a>
+                </div>
+            </div>
+            <p>Ваш отзыв поможет <br> улучшить продукт</p>
 
         </div> 
     </div>

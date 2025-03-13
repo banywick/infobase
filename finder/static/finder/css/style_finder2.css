@@ -29,18 +29,34 @@ header {
     width: 254px;
     min-height: 100vh;
     background: rgb(31, 58, 85);
+    padding: 0px 15px;
+}
+
+.sidebar p {
+    color: rgb(165, 176, 187);
+    font-family: Inter;
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 15px;
+    letter-spacing: 0%;
+    text-align: left;
+}
+
+#revievs_link {
+    font-size: 16px;
 }
 
 .menu_row {
     display: flex;
     align-items: center;
-    margin-left: 15px;
     padding: 4px;
 }
-
-.menu_row img {
-    background-color: white;
+.menu_row_down {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
 }
+
 
 .menu_link{
     margin: 0px 10px;
@@ -125,25 +141,53 @@ header {
     font-size: 16px;
     margin-right: 40px;
 }
+.button_wrapper_update {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 40px;
+    color: rgb(255, 255, 255);
+    font-family: Inter;
+    font-size: 16px;
+    background: rgb(12, 207, 19);
+    opacity: 0.3;
+    margin-bottom: 5px;
+}
 
 .button_wrapper div {
     margin-left: 6px;
 }
 
-.bottom_menu {
 
-    width: 254px;
-    height: 162px;
-    left: 0;
-    top: 738px;
-    /* Auto layout */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10;
-    padding: 0px;
+.details_item {
+    height: 345px;
+    border: 1px solid;
+}
+
+.down_menu {
+    height: 150px;
+    position: fixed;
+    bottom: 0;
+}   
+
+.logo {
+    text-align: center;
+    height: 150px;
+    padding: 20px 0;
+}
+
+
+.menu_row img {
+    transition: filter 0.3s ease;
+}
 
 
 
+.menu_row .menu_link a {
+    transition: color 0.3s ease
+}
+
+.menu_row:hover .menu_link a {
+    color:rgb(251, 184, 160); /* Изменяет цвет текста на более светлый */
 }
