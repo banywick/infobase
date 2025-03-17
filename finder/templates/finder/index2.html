@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{% static 'finder/css/style_finder2.css' %}">
     <link rel="stylesheet" href="{% static 'css/index_all.css' %}">
     <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
-    <title>Document</title>
+    <title>Поисковик</title>
 </head>
 <body>
     <div class="wrapper">
@@ -16,11 +16,10 @@
                 <div class="search_bar">
                     <form id="search_form" method="post">
                         {% csrf_token %}
-
                         <div class="input_wrapper">
                             <div class="input_container">
                                 <input type="text" name="query" placeholder="поиск по названию, коду, артикулу">
-                                <img src="{% static 'icon/lupa_input.png'  %}" alt="">
+                                <img src="{% static 'icon/lupa_input.png' %}" alt="Иконка поиска">
                             </div>
                         </div>
                     </form>
@@ -39,17 +38,13 @@
                 </div>
             </div> 
             <div class="info_update">
-                <div>
-                    База обновлена
-                </div>
-                <div>
-                    13.02.2025
-                </div>
+                <div>База обновлена</div>
+                <div>13.02.2025</div>
             </div>
         </header>
         <div class="filter_project_container">
             <div class="button_wrapper">
-                <img src="{% static 'icon/filter.png'  %}" alt="">
+                <img src="{% static 'icon/filter.png' %}" alt="Иконка фильтра">
                 <div>Фильтр проектов</div>
             </div>
             <div class="button_wrapper_clear">
@@ -58,95 +53,91 @@
         </div>
         <div class="sidebar">
             <div class="logo">
-                <img src="{% static 'finder/icon/logo_finder.svg'  %}" alt="">
+                <img src="{% static 'finder/icon/logo_finder.svg' %}" alt="Логотип">
             </div>
             <div class="menu_item">
                 <div class="menu_row">
-                    <img id="icon_color" src="{% static 'finder/icon/search.svg' %}" alt="Search Icon">
+                    <img id="icon_color" src="{% static 'finder/icon/search.svg' %}" alt="Иконка поиска">
                     <div class="menu_link">
                         <a href="#">Поиск</a>
                     </div>
                 </div>
                 <div class="details_item">
-                    <div>
-                        Будет блок с детализацией
+                    <h2 class="info_title">Информация о позиции</h2>
+                    <h3 class="position_title">Наименование:</h3>
+                    <p>Мотор омывателя ВАЗ-2108-2115, 2123 в сборе LADA 21105208009</p>
+                    <h3 class="position_title">Артикул:</h3>
+                    <p>Б000156874</p>
+                    <h3 class="position_title">Проект:</h3>
+                    <div class="project_item">
+                        <div class="circle"></div>
+                        <p>Название проекта на который закуплен товар</p>
                     </div>
-                    <div>
-                        Будет блок с детализацией
+                    <h3 class="position_title">Всего:</h3>
+                    <p>571 шт</p>
+                    <div class="any_projects">
+                        <p>На всех проектах (9)</p>
+                        <img src="{% static 'finder/icon/arrow.svg' %}" alt="Стрелка">       
                     </div>
-                    <div>
-                        Будет блок с детализацией
-                    </div>
-                    <div>
-                        Будет блок с детализацией
-                    </div>
+                    <div class="hide_info">Скрыть информацию</div>
                 </div> 
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/notes.svg'  %}" alt="">
+                    <img src="{% static 'finder/icon/notes.svg' %}" alt="Иконка заметок">
                     <div class="menu_link">
                         <a href="#">Заметки</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/sahr.svg'  %}" alt="">
+                    <img src="{% static 'finder/icon/sahr.svg' %}" alt="Иконка С.А.ХР">
                     <div class="menu_link">
                         <a href="#">С.А.ХР</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/archive.svg'  %}" alt="">
+                    <img src="{% static 'finder/icon/archive.svg' %}" alt="Иконка архива">
                     <div class="menu_link">
                         <a href="#">Архив</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/comers.svg'  %}" alt="">
+                    <img src="{% static 'finder/icon/comers.svg' %}" alt="Иконка недопоставок">
                     <div class="menu_link">
                         <a href="#">Недопоставки</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/inventory.svg'  %}" alt="">
+                    <img src="{% static 'finder/icon/inventory.svg' %}" alt="Иконка инвентаризации">
                     <div class="menu_link">
                         <a href="#">Инвентаризация</a>
                     </div>
                 </div>
                 <div class="menu_row">
-                    <img src="{% static 'finder/icon/analogs.svg'  %}" alt="">
+                    <img src="{% static 'finder/icon/analogs.svg' %}" alt="Иконка таблицы аналогов">
                     <div class="menu_link">
                         <a href="#">Таблица аналогов</a>
                     </div>
                 </div>
-                
-                
-
             </div> 
             <div class="down_menu">
                 <div class="button_wrapper_update">
-                    <img src="{% static 'finder/icon/update_base.svg'  %}" alt="">
-                <div>Обновить базу</div>
-            </div>
-            <div class="menu_row_down">
-                <img src="{% static 'finder/icon/login.svg'  %}" alt="">
-                <div class="menu_link">
-                    <a href="#">Войти</a>
+                    <img src="{% static 'finder/icon/update_base.svg' %}" alt="Иконка обновления базы">
+                    <div>Обновить базу</div>
                 </div>
-            </div>
-            {% comment %} <div class="menu_row_down" hidden>
-                <img src="{% static 'finder/icon/inventory.svg'  %}" alt="">
-                <div class="menu_link">
-                    <a href="#">Выйти</a>
+                <div class="menu_row_down">
+                    <img src="{% static 'finder/icon/login.svg' %}" alt="Иконка входа">
+                    <div class="menu_link">
+                        <a href="#">Войти</a>
+                    </div>
                 </div>
-            </div> {% endcomment %}
-            <div class="menu_row_down">
-                <img src="{% static 'finder/icon/revievs.svg'  %}" alt="">
-                <div class="menu_link">
-                    <a id='revievs_link' href="#">Отзывы и предложения</a>
+                <div class="menu_row_down">
+                    <img src="{% static 'finder/icon/revievs.svg' %}" alt="Иконка отзывов">
+                    <div class="menu_link">
+                        <a id='revievs_link' href="#">Отзывы и предложения</a>
+                    </div>
                 </div>
-            </div>
-            <p>Ваш отзыв поможет <br> улучшить продукт</p>
-
-        </div> 
+                <p>Ваш отзыв поможет <br> улучшить продукт</p>
+            </div> 
+        </div>
     </div>
 </body>
 </html>
