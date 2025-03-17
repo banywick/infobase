@@ -5,6 +5,7 @@
     --text-color: rgb(255, 255, 255);
     --font-family: 'Inter', sans-serif;
     --border-color: black;
+    --red-color: rgb(246, 78, 17);
 }
 
 /* Основные стили */
@@ -33,7 +34,7 @@ header {
 }
 
 .sidebar {
-    position: absolute;
+    position: fixed;
     width: 254px;
     min-height: 100vh;
     background: var(--primary-color);
@@ -61,8 +62,13 @@ header {
     text-decoration: none;
 }
 
-.menu_row:hover .menu_link a {
+.menu_row:hover  .menu_link a {
     color: var(--secondary-color);
+}
+
+.menu_row_down:hover  .menu_link a {
+    color: var(--secondary-color);
+
 }
 
 .find_container {
@@ -137,7 +143,7 @@ header {
 
 .details_item {
     border: 1px solid;
-    display: contents;
+    display: block;
 }
 
 .down_menu {
@@ -189,13 +195,13 @@ header {
 .circle {
     width: 10px;
     height: 10px;
-    background-color: rgb(246, 78, 17);
+    background-color: var(--red-color);
     border-radius: 50%;
     margin-right: 5px;
 }
 
 .any_projects p {
-    color: rgb(246, 78, 17);
+    color:  var(--red-color);
     font-size: 16px;
     font-weight: 500;
     line-height: 19px;
@@ -209,4 +215,30 @@ header {
     line-height: 19px;
     text-align: center;
     cursor: pointer;
+}
+
+.main {
+    border: 1px solid black;
+    margin-left: 254px;
+
+}
+
+.main {
+    position: relative;
+    height: 82vh; /* Высота экрана */
+    overflow: hidden; /* Скрываем прокрутку для основного контейнера */
+}
+.manual {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto; /* Включаем вертикальную прокрутку для изображения */
+}
+
+.manual img {
+    display: block;
+    width: 100%;
+    height: auto;
 }

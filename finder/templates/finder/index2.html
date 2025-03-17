@@ -44,12 +44,19 @@
         </header>
         <div class="filter_project_container">
             <div class="button_wrapper">
-                <img src="{% static 'icon/filter.png' %}" alt="Иконка фильтра">
+                <img src="{% static 'icon/filter.png' %}" alt="Иконка фильтра">  
                 <div>Фильтр проектов</div>
             </div>
             <div class="button_wrapper_clear">
                 <div>Сбросить фильтр</div>
             </div>
+        </div>
+        <div class="main">
+            <div class="manual">
+                <img src="{% static 'finder/img/manual.jpg' %}" alt="Инструкция">
+                
+
+            </div>       
         </div>
         <div class="sidebar">
             <div class="logo">
@@ -62,7 +69,7 @@
                         <a href="#">Поиск</a>
                     </div>
                 </div>
-                <div class="details_item">
+                <div class="details_item" id="details_item">
                     <h2 class="info_title">Информация о позиции</h2>
                     <h3 class="position_title">Наименование:</h3>
                     <p>Мотор омывателя ВАЗ-2108-2115, 2123 в сборе LADA 21105208009</p>
@@ -79,7 +86,7 @@
                         <p>На всех проектах (9)</p>
                         <img src="{% static 'finder/icon/arrow.svg' %}" alt="Стрелка">       
                     </div>
-                    <div class="hide_info">Скрыть информацию</div>
+                    <div class="hide_info" id="hide_info">Скрыть информацию</div>
                 </div> 
                 <div class="menu_row">
                     <img src="{% static 'finder/icon/notes.svg' %}" alt="Иконка заметок">
@@ -139,6 +146,7 @@
             </div> 
         </div>
     </div>
+    <script src='{% static "finder/js/popups.js"%}'></script> 
 </body>
 </html>
 
