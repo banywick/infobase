@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'finder/css/style_finder2.css' %}">
+    <link rel="stylesheet" href="{% static 'finder/css/table_style.css' %}">
     <link rel="stylesheet" href="{% static 'css/index_all.css' %}">
     <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
     <title>Поисковик</title>
@@ -18,9 +19,9 @@
                         {% csrf_token %}
                         <div class="input_wrapper">
                             <div class="input_container">
-                                <input type="text" name="query" placeholder="поиск по названию, коду, артикулу">
-                                <img src="{% static 'icon/lupa_input.png' %}" alt="Иконка поиска">
+                                <input id="search_input" type="text" name="query" placeholder="поиск по названию, коду, артикулу">
                             </div>
+                            <img id="search_icon" src="{% static 'icon/lupa_input.png' %}" alt="Иконка поиска">
                         </div>
                     </form>
                     <div class="filter_container"> 
@@ -54,9 +55,60 @@
         <div class="main">
             <div class="manual">
                 <img src="{% static 'finder/img/manual.jpg' %}" alt="Инструкция">
-                
-
-            </div>       
+            </div> 
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr class="table-header">
+                            <th class="icon-column"></th>
+                            <th class="icon-column"></th>
+                            <th class="header-cell">Партия</th>
+                            <th class="header-cell">Артикул</th>
+                            <th class="header-cell">Код</th>
+                            <th class="header-cell">Наименование</th>
+                            <th class="icon-column"></th>
+                            <th class="header-cell">Количество на складе</th>
+                            <th class="header-cell">Единицы измерения</th>
+                            <th class="header-cell">Цена</th>
+                            <th class="icon-column"></th>
+                            <th class="header-cell">Проект</th>
+                            <th class="header-cell">Комментарий</th>
+                        </tr>
+                    </thead>
+                    <tbody class="pinned-block" id="pinnedRows">
+                        <!-- Закрепленные строки будут здесь -->
+                    </tbody>
+                    <tbody>
+                        <tr class="table-row">
+                            <td class="icon-column">
+                                <button onclick="pinRow(this)">
+                                <img src="{% static 'finder/icon/keep.svg' %}" alt="">  
+                            </button>
+                        </td>
+                            <td class="icon-column">
+                                <img src="{% static 'finder/icon/comment2.svg' %}" alt="">  
+                            </td>
+                            <td class="data-column"></td>
+                            <td class="data-column"></td>
+                            <td class="data-column"></td>
+                            <td class="data-column"></td>
+                            <td class="icon-column">
+                                <img src="{% static 'finder/icon/content_copy.svg' %}" alt="">  
+                            </td>
+                            <td class="data-column"></td>
+                            <td class="data-column"></td>
+                            <td class="data-column"></td>
+                            <td class="icon-column">
+                                <div class="circle_table"></div>
+                            </td>
+                            <td class="data-column"></td>
+                            <td class="data-column"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        
+     
         </div>
         <div class="sidebar">
             <div class="logo">
@@ -146,7 +198,17 @@
             </div> 
         </div>
     </div>
+    <script>
+        // Определяем пути к статическим файлам
+        const staticUrls = {
+            keepIcon: "{% static 'finder/icon/keep.svg' %}",
+            commentIcon: "{% static 'finder/icon/comment2.svg' %}",
+            copyIcon: "{% static 'finder/icon/content_copy.svg' %}"
+        };
+    </script>
     <script src='{% static "finder/js/popups.js"%}'></script> 
+    <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
+    <script src='{% static "finder/js/switch_manual_finger.js"%}'></script> 
 </body>
 </html>
 

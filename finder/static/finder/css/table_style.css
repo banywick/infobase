@@ -1,0 +1,83 @@
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    word-wrap: break-word;
+}
+
+.table-header {
+    background-color: rgba(158, 236, 160, 1);
+}
+
+/* Ширина для 1,2,7 (иконка) */
+th:nth-child(1),
+td:nth-child(1),
+td:nth-child(2),
+td:nth-child(7) {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+}
+
+/* Ширина для 11 столбца (круг) */
+th:nth-child(11),
+td:nth-child(11) {
+    min-width: 30px;
+    max-width: 30px;
+    
+}
+
+/* Ширина для третьего столбца (Партия), четвертого столбца (Артикул) и пятого столбца (Код) */
+th:nth-child(3),
+td:nth-child(3),
+td:nth-child(4),
+td:nth-child(5) {
+    min-width: 126px;
+    max-width: 126px;
+}
+
+/* Ширина для шестого столбца (Наименование) */
+th:nth-child(6),
+td:nth-child(6) {
+    min-width: 368px;
+    max-width: 368px;
+}
+/* Ширина для шестого столбца (Количество) */
+th:nth-child(8),
+td:nth-child(8) {
+    min-width: 115px;
+    max-width: 115px;
+}
+/* Ширина для шестого столбца (Единица) */
+th:nth-child(9),
+td:nth-child(9) {
+    width: 105px;
+    min-width: 105px;
+    max-width: 105px;
+}
+/* Ширина для 11 столбца (Комментарий), 12 (Проект) */
+th:nth-child(12),
+td:nth-child(12),
+td:nth-child(13) {
+    min-width: 180px;
+    max-width: 180px;
+}
+
+.pinned-block {
+    display: none;
+}
+
+.pinned-block.visible {
+    display: table-row-group;
+}
+
+.circle_table {
+    width: 10px;
+    height: 10px;
+    background-color: gray;
+    border-radius: 100%;
+}
