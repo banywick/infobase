@@ -13,6 +13,11 @@ th, td {
     background-color: rgba(158, 236, 160, 1);
 }
 
+#keep_icon {
+    background: white;
+
+}
+
 /* Ширина для 1,2,7 (иконка) */
 th:nth-child(1),
 td:nth-child(1),
@@ -38,6 +43,7 @@ td:nth-child(4),
 td:nth-child(5) {
     min-width: 126px;
     max-width: 126px;
+    text-align: center;
 }
 
 /* Ширина для шестого столбца (Наименование) */
@@ -45,12 +51,14 @@ th:nth-child(6),
 td:nth-child(6) {
     min-width: 368px;
     max-width: 368px;
+    text-align: left;
 }
 /* Ширина для шестого столбца (Количество) */
 th:nth-child(8),
 td:nth-child(8) {
     min-width: 115px;
     max-width: 115px;
+    text-align: center;
 }
 /* Ширина для шестого столбца (Единица) */
 th:nth-child(9),
@@ -58,6 +66,7 @@ td:nth-child(9) {
     width: 105px;
     min-width: 105px;
     max-width: 105px;
+    text-align: center;
 }
 /* Ширина для 11 столбца (Комментарий), 12 (Проект) */
 th:nth-child(12),
@@ -65,6 +74,7 @@ td:nth-child(12),
 td:nth-child(13) {
     min-width: 180px;
     max-width: 180px;
+    text-align: center;
 }
 
 .pinned-block {
@@ -80,4 +90,31 @@ td:nth-child(13) {
     height: 10px;
     background-color: gray;
     border-radius: 100%;
+}
+
+
+.notes-icon-container {
+    position: relative;
+    cursor: pointer;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: rgb(221 221 221);
+    color: rgba(31, 58, 85, 1);
+    padding: 5px;
+    border: 1px solid rgb(165, 176, 187);
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    top: -131%;
+    left: 18px;
+    height: 35px;
+    align-content: center;
+    display: none;
+    
+}
+
+.notes-icon-container:hover .tooltip {
+    display: block;
 }

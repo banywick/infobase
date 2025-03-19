@@ -1,6 +1,6 @@
  // Очищаем таблицу перед добавлением новых данных
-const tbody = document.querySelector('tbody:not(.pinned-block)');
- tbody.innerHTML = ''; // Очищаем содержимое tbody
+// const tbody = document.querySelector('tbody:not(.pinned-block)');
+//  tbody.innerHTML = ''; // Очищаем содержимое tbody
 
 document.getElementById('search_input').addEventListener('input', function() {
     var tableContainer = document.querySelector('.table-container');

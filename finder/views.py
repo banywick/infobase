@@ -64,7 +64,6 @@ class FileUploadView(APIView):
 class HomeView(TemplateView):
     """Главная страница"""
     template_name = 'finder/index2.html'
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
@@ -542,8 +541,9 @@ class AddFixPositionToSession(APIView):
 
         # #Получение по id(fixed_positin_id) аннатированного экзепляра remains c статусом
         SessionManager.add_fix_positions_to_session(request, fixed_position_id)
+        current_projects = request.session.get('selected_instance', {})
+        return Response(current_projects, status=status.HTTP_200_OK)
         
-        return Response({"message": "Fix position add successfully."}, status=status.HTTP_200_OK)  
 
 class RemoveFixPositionToSession(APIView):
     """

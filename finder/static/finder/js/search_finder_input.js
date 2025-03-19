@@ -1,5 +1,16 @@
+// Обработчик для клика по значку увеличительного стекла
 document.getElementById('search_icon').addEventListener('click', function(event) {
-    event.preventDefault();
+    handleSearch(event);
+});
+
+// Обработчик для отправки формы (нажатие Enter)
+document.getElementById('search_form').addEventListener('submit', function(event) {
+    handleSearch(event);
+});
+
+function handleSearch(event) {
+    event.preventDefault(); // Предотвращаем стандартное поведение отправки формы
+
     const form = document.getElementById('search_form');
     const formData = new FormData(form);
     const data = {};
@@ -31,19 +42,22 @@ document.getElementById('search_icon').addEventListener('click', function(event)
             // Иконка закрепления
             row.innerHTML = `
                 <td class="icon-column">
-                    <button onclick="pinRow(this)">
-                        <img src="${staticUrls.keepIcon}" alt="">  
+                    <button class="id_positoin_row" data-id="${item.id}">
+                        <img id="keep_icon" src="${staticUrls.keepIcon}" alt="">
                     </button>
                 </td>
                 <td class="icon-column">
-                    <img src="${staticUrls.commentIcon}" alt="">    
+                    ${item.notes_part ? `
+                        <div class="notes-icon-container">
+                            <img src="${staticUrls.commentIcon}" alt="" class="notes-icon">
+                            <div class="tooltip">${item.notes_part}</div></div> ` : ''}
                 </td>
                 <td class="data-column">${item.party}</td>
                 <td class="data-column">${item.article}</td>
                 <td class="data-column">${item.code}</td>
                 <td class="data-column">${item.title}</td>
                 <td class="icon-column">
-                    <img src="${staticUrls.copyIcon}" alt=""> 
+                    <img src="${staticUrls.copyIcon}" alt="">
                 </td>
                 <td class="data-column">${item.quantity}</td>
                 <td class="data-column">${item.base_unit}</td>
@@ -57,10 +71,41 @@ document.getElementById('search_icon').addEventListener('click', function(event)
 
             tbody.appendChild(row); // Добавляем строку в таблицу
         });
+
+        // Добавляем обработчик событий для кнопок
+        tbody.addEventListener('click', function(event) {
+            if (event.target.closest('.id_positoin_row')) {
+                const button = event.target.closest('.id_positoin_row');
+                const data_id = button.getAttribute('data-id');
+                console.log(data_id);
+
+                // Создаём URL внутри обработчика событий
+                const url = `http://127.0.0.1:8000/finder/add_fix_positions_to_session/${data_id}/`;
+
+                // Отправляем fetch запрос
+                fetch(url, {
+                    method: 'POST', // или 'GET', в зависимости от вашего API
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    // Если нужно отправить данные в теле запроса, используйте body
+                    // body: JSON.stringify({ key: 'value' })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+            }
+        });
     })
     .catch(error => console.error('Error:', error));
-});
+}
 
+// Функция для получения CSRF-токена
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
