@@ -53,9 +53,9 @@
             </div>
         </div>
         <div class="main">
-            {% comment %} <div class="manual">
+            <div class="manual">
                 <img src="{% static 'finder/img/manual.jpg' %}" alt="Инструкция">
-            </div>  {% endcomment %}
+            </div>
             <div class="table-container">
                 <table>
                     <thead>
@@ -79,23 +79,13 @@
                         <!-- Закрепленные строки будут здесь -->
                     </tbody>
                     <tbody>
-                        <tr class="table-row">
-                            <td class="icon-column"></td>
-                            <td class="icon-column"></td>
-                            <td class="data-column"></td>
-                            <td class="data-column"></td>
-                            <td class="data-column"></td>
-                            <td class="data-column"></td>
-                            <td class="icon-column"></td>
-                            <td class="data-column"></td>
-                            <td class="data-column"></td>
-                            <td class="data-column"></td>
-                            <td class="icon-column"></td>
-                            <td class="data-column"></td>
-                            <td class="data-column"></td>
-                        </tr>
+                        <!-- основные строки будут здесь -->
                     </tbody>
                 </table>
+                <div class="not_found">
+                    <img src="{% static 'finder/img/not_found.png' %}" alt="Ничего не найдено">  
+                    <p>Ничего не найдено!</p>
+                </div>
             </div>
         </div>
         <div class="sidebar">
@@ -190,14 +180,15 @@
         // Определяем пути к статическим файлам
         const staticUrls = {
             keepIcon: "{% static 'finder/icon/keep.svg' %}",
+            keepIconRed: "{% static 'finder/icon/keep_red.svg' %}",
             commentIcon: "{% static 'finder/icon/comment2.svg' %}",
             copyIcon: "{% static 'finder/icon/content_copy.svg' %}"
         };
     </script>
     <script src='{% static "finder/js/popups.js"%}'></script> 
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
-    {% comment %} <script src='{% static "finder/js/add_pin_positions.js"%}'></script>  {% endcomment %}
-    {% comment %} <script src='{% static "finder/js/switch_manual_finger.js"%}'></script>  {% endcomment %}
+    <script src='{% static "finder/js/add_pin_positions.js"%}'></script> 
+    <script src='{% static "finder/js/switch_manual_finger.js"%}'></script> 
 </body>
 </html>
 

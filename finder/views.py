@@ -134,6 +134,9 @@ class ProductSearchView(APIView):
         # Применение фильтров отображаем 200 позиций
         queryset = queryset.filter(q_objects & q_objects_projects)[:200]
 
+        if not queryset.exists():
+            return Response({"detail": "Ничего не найдено"}, status=status.HTTP_200_OK)
+
         serializer = RemainsSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)  
 
@@ -541,8 +544,7 @@ class AddFixPositionToSession(APIView):
 
         # #Получение по id(fixed_positin_id) аннатированного экзепляра remains c статусом
         SessionManager.add_fix_positions_to_session(request, fixed_position_id)
-        current_projects = request.session.get('selected_instance', {})
-        return Response(current_projects, status=status.HTTP_200_OK)
+        return Response({"message": "Fix position add successfully."}, status=status.HTTP_200_OK)
         
 
 class RemoveFixPositionToSession(APIView):

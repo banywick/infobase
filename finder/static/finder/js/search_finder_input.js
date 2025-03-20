@@ -32,7 +32,13 @@ function handleSearch(event) {
         console.log(data);
         // Очищаем таблицу перед добавлением новых данных
         const tbody = document.querySelector('tbody:not(.pinned-block)');
+        var not_found = document.querySelector('.not_found')
         tbody.innerHTML = ''; // Очищаем содержимое tbody
+        if(data.detail === "Ничего не найдено") {
+            console.log('Ничего не найдено.')
+            not_found.style.display = 'block'
+        } else {
+        not_found.style.display = 'none'   
 
         // Добавляем новые строки в таблицу
         data.forEach(item => {
@@ -70,7 +76,7 @@ function handleSearch(event) {
             `;
 
             tbody.appendChild(row); // Добавляем строку в таблицу
-        });
+        })};
 
         // Добавляем обработчик событий для кнопок
         tbody.addEventListener('click', function(event) {
@@ -80,7 +86,7 @@ function handleSearch(event) {
                 console.log(data_id);
 
                 // Создаём URL внутри обработчика событий
-                const url = `http://127.0.0.1:8000/finder/add_fix_positions_to_session/${data_id}/`;
+                const url = `/finder/add_fix_positions_to_session/${data_id}/`;
 
                 // Отправляем fetch запрос
                 fetch(url, {
@@ -89,12 +95,22 @@ function handleSearch(event) {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken')
                     },
-                    // Если нужно отправить данные в теле запроса, используйте body
-                    // body: JSON.stringify({ key: 'value' })
                 })
                 .then(response => response.json())
                 .then(data => {
                     console.log('Success:', data);
+
+                      // Удаление всей строки из таблицы
+                const rowToRemove = button.closest('tr');
+                if (rowToRemove) {
+                    rowToRemove.remove();
+                }
+
+
+
+
+
+
                 })
                 .catch((error) => {
                     console.error('Error:', error);

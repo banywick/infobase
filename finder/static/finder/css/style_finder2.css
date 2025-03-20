@@ -246,7 +246,7 @@ header {
 }
 
 .table-container {
-    display: block;
+    display: none;
 }
 
 .manual img {

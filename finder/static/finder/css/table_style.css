@@ -1,3 +1,26 @@
+:root {
+    --primary-color: rgb(31, 58, 85);
+    --secondary-color: rgb(251, 184, 160);
+    --text-color: rgb(255, 255, 255);
+    --font-family: 'Inter', sans-serif;
+    --border-color: black;
+    --red-color: rgb(246, 78, 17);
+
+}
+.table-container {
+    overflow-y: auto; /* Включаем вертикальную прокрутку */
+    height: 82vh; /* Высота экрана */
+
+}
+
+
+thead {
+    position: sticky;
+    top: 0;
+    background-color: #f1f1f1;
+    z-index: 1;
+}
+
 
 table {
     width: 100%;
@@ -74,16 +97,23 @@ td:nth-child(12),
 td:nth-child(13) {
     min-width: 180px;
     max-width: 180px;
-    text-align: center;
+    text-align: left;
+}
+
+/* Изменение фона строк внутри pinned-block и элемента с id keep_icon */
+.pinned-block tr,
+#keep_icon_pin {
+    background-color: rgba(216, 222, 227, 1);
 }
 
 .pinned-block {
-    display: none;
-}
+    position: sticky;
+    top: 52px;
+    background-color: #f1f1f1;
+    z-index: 1;
+};
 
-.pinned-block.visible {
-    display: table-row-group;
-}
+
 
 .circle_table {
     width: 10px;
@@ -112,9 +142,22 @@ td:nth-child(13) {
     height: 35px;
     align-content: center;
     display: none;
+    z-index: 1;
     
 }
 
 .notes-icon-container:hover .tooltip {
     display: block;
+}
+
+.not_found {
+    display: flex;
+    width: 224px;
+    text-align: center;
+    align-items: center;
+    font-family: var(--font-family);
+    font-size: 18px;
+    display: none;
+    
+
 }
