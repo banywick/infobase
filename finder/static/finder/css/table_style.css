@@ -106,26 +106,12 @@ td:nth-child(13) {
     background-color: rgba(216, 222, 227, 1);
 }
 
-.pinned-block {
-    position: sticky;
-    top: 52px;
-    background-color: #f1f1f1;
-    z-index: 1;
-};
-
-
-
-.circle_table {
-    width: 10px;
-    height: 10px;
-    background-color: gray;
-    border-radius: 100%;
-}
 
 
 .notes-icon-container {
     position: relative;
     cursor: pointer;
+    
 }
 
 .tooltip {
@@ -159,5 +145,10 @@ td:nth-child(13) {
     font-size: 18px;
     display: none;
     
+
+}
+
+.id_positoin_row img :hover {
+    background-color: aqua;
 
 }

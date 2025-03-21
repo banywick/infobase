@@ -68,7 +68,12 @@ function fetchData() {
                 <td class="data-column">${item.base_unit}</td>
                 <td class="data-column">${item.price}</td>
                 <td class="icon-column">
-                    <div class="circle_table" style="background-color: ${item.status_color};"></div>
+                    <div class="circle_table"
+                        style="background-color: ${item.status_color};
+                        width:10px;
+                        height:10px;
+                        border-radius:100%">
+                    </div>
                 </td>
                 <td class="data-column">${item.project}</td>
                 <td class="data-column">${item.comment || ''}</td> <!-- Если комментарий null, выводим пустую строку -->

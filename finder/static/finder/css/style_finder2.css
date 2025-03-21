@@ -242,17 +242,18 @@ header {
     top: 0;
     bottom: 0;
     overflow-y: auto; /* Включаем вертикальную прокрутку для изображения */
-    display: block;
+    display: none;
 }
 
 .table-container {
-    display: none;
+    display: block;
 }
 
 .manual img {
     width: 100%;
     height: auto;
 }
+
 
 
 
