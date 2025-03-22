@@ -233,8 +233,6 @@ class RemainsDetailView(APIView):
         if not positions:
             return Response({"error": "Позиция не найдена"}, status=status.HTTP_404_NOT_FOUND)
 
-
-
         #Нужен кверисет что бы сделать агрегацию
         all_positions_by_article = Remains.objects.filter(article=positions.article)
 
@@ -257,6 +255,8 @@ class RemainsDetailView(APIView):
         # # Получаем все проекты и партии, связанные с этим артикулом
         projects = all_positions_by_article.values_list('project', flat=True).distinct()
         partys = all_positions_by_article.values_list('party', flat=True).distinct()
+
+        
 
         #Создаем словарь с данными для ответа
         data = {

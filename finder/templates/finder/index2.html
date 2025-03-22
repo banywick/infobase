@@ -78,7 +78,7 @@
                     <tbody class="pinned-block" id="pinnedRows">
                         <!-- Закрепленные строки будут здесь -->
                     </tbody>
-                    <tbody>
+                    <tbody id="mainRows">
                         <!-- основные строки будут здесь -->
                     </tbody>
                 </table>
@@ -102,22 +102,22 @@
                 <div class="details_item" id="details_item">
                     <h2 class="info_title">Информация о позиции</h2>
                     <h3 class="position_title">Наименование:</h3>
-                    <p>Мотор омывателя ВАЗ-2108-2115, 2123 в сборе LADA 21105208009</p>
+                    <p id="position_name"></p>
                     <h3 class="position_title">Артикул:</h3>
-                    <p>Б000156874</p>
+                    <p id="position_article"></p>
                     <h3 class="position_title">Проект:</h3>
                     <div class="project_item">
-                        <div class="circle"></div>
-                        <p>Название проекта на который закуплен товар</p>
+                        <div class="circle" id="project_color"></div>
+                        <p id="project_name"></p>
                     </div>
                     <h3 class="position_title">Всего:</h3>
-                    <p>571 шт</p>
+                    <p id="total_quantity">571 шт</p>
                     <div class="any_projects">
                         <p>На всех проектах (9)</p>
-                        <img src="{% static 'finder/icon/arrow.svg' %}" alt="Стрелка">       
+                        <img src="{% static 'finder/icon/arrow.svg' %}" alt="Стрелка">
                     </div>
                     <div class="hide_info" id="hide_info">Скрыть информацию</div>
-                </div> 
+                </div>
                 <div class="menu_row">
                     <img src="{% static 'finder/icon/notes.svg' %}" alt="Иконка заметок">
                     <div class="menu_link">
@@ -188,6 +188,7 @@
     <script src='{% static "finder/js/popups.js"%}'></script> 
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
     <script src='{% static "finder/js/add_pin_positions.js"%}'></script> 
+    <script src='{% static "finder/js/details.js"%}'></script> 
     {% comment %} <script src='{% static "finder/js/switch_manual_finger.js"%}'></script>  {% endcomment %}
 </body>
 </html>

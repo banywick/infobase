@@ -150,8 +150,7 @@ header {
 }
 
 .details_item {
-    /* border: 1px solid; */
-    display: block;
+    display: none;
 }
 
 .down_menu {
@@ -193,7 +192,6 @@ header {
 .project_item, .any_projects {
     display: flex;
     align-items: center;
-    justify-content: space-between;
 }
 
 .any_projects {
