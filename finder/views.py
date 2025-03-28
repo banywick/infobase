@@ -235,6 +235,13 @@ class RemainsDetailView(APIView):
 
         #Нужен кверисет что бы сделать агрегацию
         all_positions_by_article = Remains.objects.filter(article=positions.article)
+        details_any_projects = {}
+        for p in all_positions_by_article:
+            details_any_projects[f'{p.project}'] = p.quantity
+
+        print(list(details_any_projects))    
+            
+      
 
         # Извлекаем значение поля title и base_unit
         # filter используется вместо get на всякий случай
@@ -268,7 +275,8 @@ class RemainsDetailView(APIView):
             'total_quantity': total_quantity,
             'total_quantity_by_project': total_quantity_by_project,
             'projects': list(projects),
-            'party': list(partys)
+            'party': list(partys),
+            'details_any_projects': details_any_projects
         }
         return Response(data, status=status.HTTP_200_OK)    
 

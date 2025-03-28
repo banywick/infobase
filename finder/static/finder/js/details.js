@@ -19,12 +19,42 @@
         }
 
              // Функция для обновления информации в details_item
-            function updateDetailsItem(data) {
-                document.getElementById('position_name').innerText = data['Наименование'];
-                document.getElementById('position_article').innerText = data['Артикул'];
-                document.getElementById('project_color').style.backgroundColor = data['Цвет'];
-                document.getElementById('project_name').innerText = data['Проект'];
+            async function updateDetailsItem(data) {
+                try {
+                    // Выполняем fetch запрос
+                    const response = await fetch(`get_details/article_id/${data.ID}/`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const additionalData = await response.json();
+                    console.log(additionalData)
+            
+                    // Обновляем элементы на странице
+                    document.getElementById('position_name').innerText = data['Наименование'];
+                    document.getElementById('position_article').innerText = data['Артикул'];
+                    document.getElementById('project_color').style.backgroundColor = data['Цвет'];
+                    document.getElementById('project_name').innerText = data['Проект'];
+                    document.getElementById('total_quantity').innerText = additionalData.total_quantity_by_project;
+                    document.getElementById('unit').innerText = additionalData.base_unit;
+                    
+                    // Подсчитываем количество проектов
+                    const projectCount = additionalData.projects.length;
+                    console.log('Количество проектов:', projectCount);
+                    document.getElementById('count_projects').innerText = `(${projectCount})`;
+            
+                    // Если нужно использовать данные из fetch запроса
+                    // Например, добавляем новые данные в элемент
+                    // document.getElementById('some_element').innerText = additionalData.someField;
+            
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                }
             }
+
+
+
+
+
 
         // Функция для добавления обработчика событий к tbody
         function addRowClickListener(tbody) {
@@ -32,7 +62,7 @@
                 const target = event.target.closest('tr');
                 if (target) {
                     const data = getRowData(target);
-                    console.log(data);
+                    console.log(data.ID);
                     updateDetailsItem(data);
                     detailsItem.style.display = 'block'; // Показываем details_item при клике на строку
                 }

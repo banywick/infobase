@@ -10,8 +10,13 @@
 .table-container {
     overflow-y: auto; /* Включаем вертикальную прокрутку */
     height: 82vh; /* Высота экрана */
-
+    position: relative; /* Устанавливаем относительное позиционирование для контейнера таблицы */
 }
+
+
+
+
+
 
 
 thead {
@@ -152,3 +157,5 @@ td:nth-child(13) {
     background-color: aqua;
 
 }
+
+
