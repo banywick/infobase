@@ -36,20 +36,54 @@
                     document.getElementById('project_name').innerText = data['Проект'];
                     document.getElementById('total_quantity').innerText = additionalData.total_quantity_by_project;
                     document.getElementById('unit').innerText = additionalData.base_unit;
-                    
-                    // Подсчитываем количество проектов
-                    const projectCount = additionalData.projects.length;
-                    console.log('Количество проектов:', projectCount);
-                    document.getElementById('count_projects').innerText = `(${projectCount})`;
+                    document.getElementById('count_projects').innerText = `(${additionalData.total_sum_any_projects})`;
+                    document.getElementById('name_position').innerText = additionalData.title;
+                    document.getElementById('final_result_sum').innerText = additionalData.total_sum_any_projects;
+                    document.getElementById('final_result_sum_unit').innerText = additionalData.base_unit;
             
-                    // Если нужно использовать данные из fetch запроса
-                    // Например, добавляем новые данные в элемент
-                    // document.getElementById('some_element').innerText = additionalData.someField;
+                // Получаем контейнер, в который будем добавлять новые элементы
+                const container = document.getElementById('item_project_popup');
+
+                // Очищаем контейнер перед добавлением новых элементов
+                container.innerHTML = '';
+
+                // Парсим список словарей и создаем элементы
+                additionalData.details_any_projects.forEach(project => {
+                    // Создаем контейнер для каждого проекта
+                    const projectContainer = document.createElement('div');
+                    projectContainer.className = 'project_container';
+
+                    // Создаем и добавляем дочерние элементы
+                    const projectNameDiv = document.createElement('div');
+                    projectNameDiv.className = 'project_name_popup';
+                    projectNameDiv.innerText = project.project;
+
+
+                    const projectQuantityDiv = document.createElement('div');
+                    projectQuantityDiv.className = 'project_quantity_popup';
+                    projectQuantityDiv.innerText = project.quantity;
+
+                    const projectUnitDiv = document.createElement('div');
+                    projectUnitDiv.className = 'project_unit_popup';
+                    projectUnitDiv.innerText = project.base_unit;
+
+                    // Добавляем дочерние элементы в контейнер проекта
+                    projectContainer.appendChild(projectNameDiv);
+                    projectContainer.appendChild(projectQuantityDiv);
+                    projectContainer.appendChild(projectUnitDiv);
+
+                    // Добавляем контейнер проекта в основной контейнер
+                    container.appendChild(projectContainer);
+                });
             
                 } catch (error) {
                     console.error('Fetch error:', error);
                 }
             }
+            
+            
+            
+            
 
 
 

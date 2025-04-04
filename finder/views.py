@@ -235,13 +235,21 @@ class RemainsDetailView(APIView):
 
         #Нужен кверисет что бы сделать агрегацию
         all_positions_by_article = Remains.objects.filter(article=positions.article)
-        details_any_projects = {}
+        details_any_projects = []
         for p in all_positions_by_article:
-            details_any_projects[f'{p.project}'] = p.quantity
+            project_details = {
+                'project': p.project,
+                'quantity': p.quantity,
+                'base_unit': p.base_unit
+    }
+            # Добавляем словарь в список
+            details_any_projects.append(project_details)
 
-        print(list(details_any_projects))    
+        # Вычисление суммы всех проектов
+        total_sum_any_projects = sum(item['quantity'] for item in details_any_projects)
+
+
             
-      
 
         # Извлекаем значение поля title и base_unit
         # filter используется вместо get на всякий случай
@@ -276,7 +284,8 @@ class RemainsDetailView(APIView):
             'total_quantity_by_project': total_quantity_by_project,
             'projects': list(projects),
             'party': list(partys),
-            'details_any_projects': details_any_projects
+            'details_any_projects': details_any_projects,
+            'total_sum_any_projects': total_sum_any_projects
         }
         return Response(data, status=status.HTTP_200_OK)    
 

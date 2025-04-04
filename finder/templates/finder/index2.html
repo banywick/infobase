@@ -53,6 +53,7 @@
             </div>
         </div>
         <div class="main">
+            <div class="background-overlay"></div>
             <div class="any_projects_popup">
                 <div class="close">
                     <img id="icon_color" src="{% static 'finder/icon/close.svg' %}" alt="Закрыть">  
@@ -61,16 +62,31 @@
                     <div class="title_popup_any_projects">
                         На всех проектах
                     </div>
-                    <div class="name_position">
-                        Винт M4-6gx20-48.016 ГОСТ10336-80
+                    <div class="name_position" id="name_position">
                     </div>
-                    <div class="item_project_popup">
-                        <div class="project_name_popup">4 дивиз - БУК-МБ 255 - приход</div>
-                        <div class="project_quantity_popup">2.28</div>
-                        <div class="project_unit_popup">м</div>
-
-
+                    <div id="item_project_popup" class="item_project_popup">
+                        <div class="row_item_detais">
+                            <div class="project_name_popup"></div>
+                            <div class="project_quantity_popup"></div>
+                            <div class="project_unit_popup"></div>
+                        </div>
                     </div>
+                        <div class="info_result_sum_project">
+                            <div class="info_result_items">
+                                <div class="info_result_items_title">
+                                    Итого:
+                                </div>
+                                <div class="final_result_sum" id="final_result_sum" >
+                                </div>
+                                <div class="final_result_sum_unit" id="final_result_sum_unit">
+                                </div>
+                            </div>
+                        </div>
+                            <div class="close_div">
+                                <div class="button_wrapper_close">  
+                                    <div>Закрыть</div> 
+                                </div>
+                            </div>
                 </div>
             </div>
             {% comment %} <div class="manual">
@@ -213,6 +229,7 @@
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
     <script src='{% static "finder/js/add_pin_positions.js"%}'></script> 
     <script src='{% static "finder/js/details.js"%}'></script> 
+    <script src='{% static "finder/js/popups.js"%}'></script> 
     {% comment %} <script src='{% static "finder/js/switch_manual_finger.js"%}'></script>  {% endcomment %}
 </body>
 </html>

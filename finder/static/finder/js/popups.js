@@ -1,12 +1,22 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const titleCount = document.querySelector('.title_count');
+    const backgroundOverlay = document.querySelector('.background-overlay');
+    const popup = document.querySelector('.any_projects_popup');
+    const closeIcon = document.querySelector('.close');
+    const closeButton = document.querySelector('.button_wrapper_close');
 
-// // скрываем детализацию по клику
-// // Находим элементы по их id
-// const hideInfoButton = document.getElementById('hide_info');
-// const detailsItem = document.getElementById('details_item');
+    titleCount.addEventListener('click', function() {
+        backgroundOverlay.style.display = 'block';
+        popup.style.display = 'block';
+    });
 
-// // Добавляем обработчик события на клик
-// hideInfoButton.addEventListener('click', function() {
-//     console.log(6666999)
-//     // Скрываем блок details_item
-//     detailsItem.style.display = 'none';
-// });
+    closeIcon.addEventListener('click', function() {
+        backgroundOverlay.style.display = 'none';
+        popup.style.display = 'none';
+    });
+
+    closeButton.addEventListener('click', function() {
+        backgroundOverlay.style.display = 'none';
+        popup.style.display = 'none';
+    });
+});
