@@ -118,7 +118,10 @@ header {
 .button_wrapper,
 .button_wrapper_clear,
 .button_wrapper_update,
-.button_wrapper_close {
+.button_wrapper_close,
+.button_wrapper_filter_view_all,
+.button_wrapper_filter_clear,
+.button_wrapper_filter_submit {
     height: 40px;
     display: flex;
     align-items: center;
@@ -402,4 +405,5 @@ header {
 .final_result_sum {
     margin-left: 175px;
 }
+
 

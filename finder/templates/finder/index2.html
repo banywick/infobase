@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'finder/css/style_finder2.css' %}">
+    <link rel="stylesheet" href="{% static 'finder/css/popups_style.css' %}">
     <link rel="stylesheet" href="{% static 'finder/css/table_style.css' %}">
     <link rel="stylesheet" href="{% static 'css/index_all.css' %}">
     <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
@@ -44,7 +45,7 @@
             </div>
         </header>
         <div class="filter_project_container">
-            <div class="button_wrapper">
+            <div class="button_wrapper" id="button_filter_projects">
                 <img src="{% static 'icon/filter.png' %}" alt="Иконка фильтра">  
                 <div>Фильтр проектов</div>
             </div>
@@ -89,9 +90,34 @@
                             </div>
                 </div>
             </div>
+            <div class="choice_project_popup">
+                    <div class="close">
+                        <img id="icon_color" src="{% static 'finder/icon/close.svg' %}" alt="Закрыть">  
+                    </div> 
+                    <div class="title_popup_any_projects">
+                        Фильтр проектов
+                        <input type="text" id="project_search" placeholder="Поиск проектов..." class="search-input">
+                    </div>
+                    <div class="item_choice_project_container">
+
+
+                    </div>
+                    <div class="down_project_container">
+                        <div class="button_wrapper_filter_view_all" id="button_filter_view_all">
+                            <div>Отобразить все позиции</div>
+                        </div>
+                        <div class="button_wrapper_filter_clear" id="button_filter_clear">
+                            <div>Сбросить фильтр</div>
+                        </div>
+                        <div class="button_wrapper_filter_submit" id="button_filter_submit">
+                            <div>Применить</div>
+                        </div>
+                    </div>
+
+            </div>
             {% comment %} <div class="manual">
                 <img src="{% static 'finder/img/manual.jpg' %}" alt="Инструкция">
-            </div> {% endcomment %}
+            </div>  {% endcomment %}
             <div class="table-container">
                 <table>
                     <thead>
@@ -230,6 +256,7 @@
     <script src='{% static "finder/js/add_pin_positions.js"%}'></script> 
     <script src='{% static "finder/js/details.js"%}'></script> 
     <script src='{% static "finder/js/popups.js"%}'></script> 
+    <script src='{% static "finder/js/filters_projects.js"%}'></script> 
     {% comment %} <script src='{% static "finder/js/switch_manual_finger.js"%}'></script>  {% endcomment %}
 </body>
 </html>
