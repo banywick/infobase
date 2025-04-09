@@ -52,27 +52,41 @@
                     // Создаем контейнер для каждого проекта
                     const projectContainer = document.createElement('div');
                     projectContainer.className = 'project_container';
+                    
 
-                    // Создаем и добавляем дочерние элементы
+                    // Создаем цветной кружок статуса (как в вашем примере)
+                    const statusCircle = document.createElement('div');
+                    statusCircle.className = 'circle';
+                    statusCircle.style.backgroundColor = project.status_color;
+                    statusCircle.style.width = '10px';
+                    statusCircle.style.height = '10px';
+                    statusCircle.style.borderRadius = '100%';
+                
+                    // Создаем контейнер для статуса (если нужно подпись рядом с кружком)
+                    const projectStatusDiv = document.createElement('div');
+                    projectStatusDiv.className = 'project_status_popup';
+                    projectStatusDiv.appendChild(statusCircle);
+                    // projectStatusDiv.appendChild(document.createTextNode(' ' + project.status)); // если нужно текст статуса
+                
+                    // Остальные элементы
                     const projectNameDiv = document.createElement('div');
                     projectNameDiv.className = 'project_name_popup';
                     projectNameDiv.innerText = project.project;
-
-
+                
                     const projectQuantityDiv = document.createElement('div');
                     projectQuantityDiv.className = 'project_quantity_popup';
                     projectQuantityDiv.innerText = project.quantity;
-
+                
                     const projectUnitDiv = document.createElement('div');
                     projectUnitDiv.className = 'project_unit_popup';
                     projectUnitDiv.innerText = project.base_unit;
-
-                    // Добавляем дочерние элементы в контейнер проекта
+                
+                    // Собираем структуру
+                    projectContainer.appendChild(projectStatusDiv); // Добавляем кружок первым
                     projectContainer.appendChild(projectNameDiv);
                     projectContainer.appendChild(projectQuantityDiv);
                     projectContainer.appendChild(projectUnitDiv);
-
-                    // Добавляем контейнер проекта в основной контейнер
+                
                     container.appendChild(projectContainer);
                 });
             
@@ -80,15 +94,6 @@
                     console.error('Fetch error:', error);
                 }
             }
-            
-            
-            
-            
-
-
-
-
-
 
         // Функция для добавления обработчика событий к tbody
         function addRowClickListener(tbody) {

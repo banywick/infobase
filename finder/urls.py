@@ -48,6 +48,6 @@ urlpatterns = [
     path('clear_all_selected_projects/', ClearSelectedProjectsView.as_view(), name='clear_selected_projects'),
 
     #Частично удалить проекты с сессии
-    path('remove_project_from_session/', RemoveProjectFromSessionView.as_view(), name='remove-project-from-session'),
+    path('remove_project_from_session/<int:project_id>/', RemoveProjectFromSessionView.as_view(), name='remove_project_from_session'),
 ]
 

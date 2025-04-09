@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from .project_utils import ProjectUtils
 from django.forms.models import model_to_dict
 
@@ -6,22 +7,24 @@ class SessionManager:
     @staticmethod
     def add_projects_to_session(request, projects_ids):
         """
-        Добавляет проекты в сессию пользователя.
-
+        Добавляет проекты с их статусами в сессию пользователя.
+        
         Аргументы:
         request -- объект запроса Django.
-        projects_ids -- список идентификаторов проектов, которые нужно добавить в сессию.
-        пример для js {"projects_ids":["64875","4105"]}
-
-        Метод извлекает проекты из базы данных по их идентификаторам, преобразует их в словарь
-        и добавляет в сессию пользователя. Если в сессии уже есть проекты, новые проекты
-        добавляются к существующим.
+        projects_ids -- список идентификаторов проектов.
         """
-
-        projects_dict = ProjectUtils.get_projects_dict(projects_ids)
-        current_projects = request.session.get('selected_projects', {})
-        updated_projects = {**current_projects, **projects_dict}
-        request.session['selected_projects'] = updated_projects
+        projects_with_status = ProjectUtils.get_projects_with_status(projects_ids)
+        current_projects = request.session.get('selected_projects', [])
+        
+        # Объединяем текущие проекты с новыми, избегая дубликатов
+        existing_ids = {p['id'] for p in current_projects}
+        new_projects = [
+            p for p in projects_with_status 
+            if p['id'] not in existing_ids
+        ]
+        
+        request.session['selected_projects'] = current_projects + new_projects
+        return request.session['selected_projects']
 
     @staticmethod
     def clear_selected_projects(request):
@@ -40,35 +43,25 @@ class SessionManager:
     @staticmethod
     def remove_project_from_session(request, project_id):
         """
-        Удаляет проект из сессии пользователя по его идентификатору.
-
+        Удаляет проект из сессии пользователя.
+        
         Аргументы:
-        request -- объект запроса Django.
-        project_id -- идентификатор проекта, который нужно удалить из сессии.
-
-        Метод удаляет проект из сессии пользователя по его идентификатору. Если проект
-        существует в сессии, он будет удален.
+        - request: объект запроса Django
+        - project_id: ID проекта (int)
+        
+        Возвращает:
+        - Обновленный список проектов в сессии
         """
-        # Получаем текущие проекты из сессии или создаем пустой словарь, если их нет
-        current_projects = request.session.get('selected_projects', {})
-
-        # Преобразуем project_id в строку
-        project_id_str = str(project_id)
-
-        # Удаляем проект по его ID, если он существует
-        if project_id_str in current_projects:
-            del current_projects[project_id_str]
-
-        # Сохраняем обновленный словарь проектов в сессии
-        request.session['selected_projects'] = current_projects
-
-
-        # Удаляем проект по его ID, если он существует
-        if project_id_str in current_projects:
-            del current_projects[project_id_str]
-
-        # Сохраняем обновленный словарь проектов в сессии
-        request.session['selected_projects'] = current_projects
+        current_projects = request.session.get('selected_projects', [])
+        
+        # Фильтруем проекты, оставляя только те, чей ID не совпадает с удаляемым
+        updated_projects = [
+            p for p in current_projects 
+            if p.get('id') != project_id
+        ]
+        
+        request.session['selected_projects'] = updated_projects
+        return updated_projects
 
     def add_fix_positions_to_session(request, fixed_position_id):
         """

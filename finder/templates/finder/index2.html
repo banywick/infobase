@@ -49,6 +49,9 @@
                 <img src="{% static 'icon/filter.png' %}" alt="Иконка фильтра">  
                 <div>Фильтр проектов</div>
             </div>
+            <div class="selected-projects-container">
+                <!-- Сюда будем добавлять выбранные проекты через JS -->
+            </div>
             <div class="button_wrapper_clear">
                 <div>Сбросить фильтр</div>
             </div>
@@ -67,6 +70,7 @@
                     </div>
                     <div id="item_project_popup" class="item_project_popup">
                         <div class="row_item_detais">
+                            <div class="circle" id="project_color"></div>
                             <div class="project_name_popup"></div>
                             <div class="project_quantity_popup"></div>
                             <div class="project_unit_popup"></div>
@@ -248,7 +252,9 @@
             keepIcon: "{% static 'finder/icon/keep.svg' %}",
             keepIconRed: "{% static 'finder/icon/keep_red.svg' %}",
             commentIcon: "{% static 'finder/icon/comment2.svg' %}",
-            copyIcon: "{% static 'finder/icon/content_copy.svg' %}"
+            copyIcon: "{% static 'finder/icon/content_copy.svg' %}",
+            addIcon: "{% static 'finder/icon/add.svg' %}",
+            closeIcon: "{% static 'finder/icon/clear.svg' %}"
         };
     </script>
     <script src='{% static "finder/js/popups.js"%}'></script> 

@@ -268,10 +268,22 @@ class RemainsDetailView(APIView):
             return Response({"error": "Position not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # # Получаем все проекты и партии, связанные с этим артикулом
-        projects = all_positions_by_article.values_list('project', flat=True).distinct()
+        project_list = all_positions_by_article.values_list('project', flat=True).distinct()
         partys = all_positions_by_article.values_list('party', flat=True).distinct()
 
-        
+        # Получаем QuerySet с аннотированными остатками (уже содержит status_color)
+        queryset = ProjectUtils.get_annotated_remains()
+
+        # Создаем список проектов с их цветами статусов
+        projects_with_colors = []
+        for project_name in project_list:
+            project_data = queryset.filter(project=project_name).first()
+            projects_with_colors.append({
+                'name': project_name,
+                'status_color': project_data.status_color if project_data else 'gray'
+            })
+
+        status_color_obj = queryset.filter(project=project).first()
 
         #Создаем словарь с данными для ответа
         data = {
@@ -282,7 +294,7 @@ class RemainsDetailView(APIView):
             'one_project': project,
             'total_quantity': total_quantity,
             'total_quantity_by_project': total_quantity_by_project,
-            'projects': list(projects),
+            'projects': projects_with_colors,  # Теперь это список словарей с цветами
             'party': list(partys),
             'details_any_projects': details_any_projects,
             'total_sum_any_projects': total_sum_any_projects
@@ -308,12 +320,15 @@ class ProjectListView(APIView):
         - 200 OK с сериализованным списком уникальных проектов.
         """
 
-        # Получаем все уникальные проекты
-        unique_projects = Remains.objects.all().distinct('project')
-
+           # Получаем аннотированные остатки с полем status_color
+        queryset = ProjectUtils.get_annotated_remains()
+        
+        # Применяем distinct к аннотированному QuerySet
+        unique_projects = queryset.distinct('project')
+        
         # Сериализуем данные
         serializer = ProjectListSerializer(unique_projects, many=True)
-
+        
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
@@ -425,68 +440,55 @@ class GetSessionDataView(APIView):
     
 class RemoveProjectFromSessionView(APIView):
     """
-    Представление для частичного удаления проекта из сессии пользователя по его идентификатору.
-
-    Этот класс обрабатывает POST-запросы, которые содержат идентификатор проекта,
-    и удаляет соответствующий проект из сессии пользователя с помощью метода
-    `SessionManager.remove_project_from_session`.
-
-    Основные функции:
-    - Принимает идентификатор проекта из тела запроса.
-    - Удаляет проект из сессии пользователя, если он существует.
-    - Возвращает сообщение об успешном удалении или ошибку, если идентификатор проекта не передан.
-
-    Пример JSON-запроса:
-    ```json
-    {
-        "project_id": "64875"
-    }
-    ```
-
-    Пример успешного ответа:
-    ```json
-    {
-        "message": "Project removed from session"
-    }
-    ```
-
-    Пример ошибки:
-    ```json
-    {
-        "error": "Project ID is required"
-    }
-    ```
+    Представление для удаления проекта из сессии пользователя.
+    Теперь работает с новой структурой данных:
+    [
+        {"id": 64875, "name": "Проект 1", "status_color": "#FF0000"},
+        {"id": 4105, "name": "Проект 6", "status_color": "green"}
+    ]
     """
     def post(self, request, *args, **kwargs):
         """
-        Обрабатывает POST-запрос для удаления проекта из сессии пользователя.
-
-        Параметры:
-        - request: Запрос от клиента, содержащий JSON с ключом `project_id`.
-        - *args, **kwargs: Дополнительные аргументы (не используются в этом методе).
-
-        Возвращает:
-        - 200 OK с сообщением "Project removed from session", если проект успешно удален.
-        - 400 Bad Request с сообщением "Project ID is required", если идентификатор проекта не передан.
-
-        Пример тела запроса:
-        ```json
+        Обрабатывает POST-запрос для удаления проекта из сессии.
+        
+        Пример запроса:
         {
-            "project_id": "64875"
+            "project_id": 64875  # или "64875" (автоматически конвертируется в int)
         }
-        ```
-
-        Логика работы:
-        1. Извлекает идентификатор проекта из тела запроса.
-        2. Проверяет, передан ли идентификатор проекта. Если нет, возвращает ошибку 400.
-        3. Использует метод `SessionManager.remove_project_from_session` для удаления проекта из сессии.
-        4. Возвращает успешный ответ с сообщением.
+        
+        Возвращает:
+        - 200 OK с обновленным списком проектов, если успешно
+        - 400 Bad Request с описанием ошибки, если что-то пошло не так
         """
-        project_id = request.data.get('project_id')
-        if not project_id:
-            return Response({'error': 'Project ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-        SessionManager.remove_project_from_session(request, project_id)
-        return Response({"message": "Project removed from session"}, status=status.HTTP_200_OK)
+        try:
+            project_id = request.data.get('project_id')
+            if not project_id:
+                return Response(
+                    {'error': 'Project ID is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Конвертируем project_id в int (работает и со строковыми значениями)
+            project_id = int(project_id)
+            
+            # Получаем обновленный список проектов после удаления
+            updated_projects = SessionManager.remove_project_from_session(request, project_id)
+            
+            return Response({
+                'message': 'Project removed from session',
+                'projects': updated_projects
+            }, status=status.HTTP_200_OK)
+            
+        except ValueError:
+            return Response(
+                {'error': 'Project ID must be a number'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class ClearSelectedProjectsView(APIView):
     """

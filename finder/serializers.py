@@ -10,9 +10,10 @@ class RemainsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProjectListSerializer(serializers.ModelSerializer):
+    status_color = serializers.CharField(read_only=True)
     class Meta:
         model = Remains
-        fields = ['id', 'project']
+        fields = ['id', 'project', 'status_color']
 
 
 class FileUploadSerializer(serializers.Serializer):
