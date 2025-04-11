@@ -443,11 +443,15 @@ class RemoveProjectFromSessionView(APIView):
     Представление для удаления проекта из сессии пользователя.
     Теперь работает с новой структурой данных:
     [
-        {"id": 64875, "name": "Проект 1", "status_color": "#FF0000"},
-        {"id": 4105, "name": "Проект 6", "status_color": "green"}
+        {"id": 64875, "project": "Проект 1", "status_color": "red"},
+        {"id": 4105, "project": "Проект 6", "status_color": "green"}
     ]
+    Пример запроса:
+        {
+            "project_id": 64875  # или "64875" (автоматически конвертируется в int)
+        }
     """
-    def post(self, request, *args, **kwargs):
+    def post(self, request, project_id, *args, **kwargs):
         """
         Обрабатывает POST-запрос для удаления проекта из сессии.
         
@@ -460,15 +464,9 @@ class RemoveProjectFromSessionView(APIView):
         - 200 OK с обновленным списком проектов, если успешно
         - 400 Bad Request с описанием ошибки, если что-то пошло не так
         """
+        print("Received project_id from URL:", project_id)
         try:
-            project_id = request.data.get('project_id')
-            if not project_id:
-                return Response(
-                    {'error': 'Project ID is required'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Конвертируем project_id в int (работает и со строковыми значениями)
+            # Конвертируем project_id в int (уже должен быть int из URL)
             project_id = int(project_id)
             
             # Получаем обновленный список проектов после удаления
@@ -489,7 +487,6 @@ class RemoveProjectFromSessionView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 class ClearSelectedProjectsView(APIView):
     """
     Представление для полного удаления всех выбранных проектов из сессии пользователя.

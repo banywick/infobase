@@ -87,6 +87,8 @@
     opacity: 1;
 }
 
+
+
 /* Контейнер для содержимого проекта */
 .project-content {
     display: flex;
@@ -96,6 +98,29 @@
     text-overflow: ellipsis;
     min-width: 0; /* Важно для работы ellipsis */
 }
+
+
+/* Стиль для выбранного элемента */
+.project-item.selected {
+    background-color: #e8f5e9;
+    border-color: #81c784;
+    box-shadow: 0 0 0 1px #81c784;
+}
+
+/* Иконка в выбранном состоянии */
+.project-item.selected .close-icon {
+opacity: 1;
+transform: rotate(45deg);
+transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Анимация иконки */
+.close-icon, #add_close_icon {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+
+
 
 .title_popup_any_projects {
     display: flex;

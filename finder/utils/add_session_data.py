@@ -60,7 +60,9 @@ class SessionManager:
             if p.get('id') != project_id
         ]
         
+        # Явно сохраняем изменения в сессии
         request.session['selected_projects'] = updated_projects
+        request.session.modified = True
         return updated_projects
 
     def add_fix_positions_to_session(request, fixed_position_id):

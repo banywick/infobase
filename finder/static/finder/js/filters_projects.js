@@ -21,13 +21,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span>${project.project}</span>
                 </div>
                 <img id="add_close_icon" src="${staticUrls.addIcon}" alt="">
+                <div class="id_position_unic_project" hidden >${project.id}</div>
             `;
             
             container.appendChild(projectElement);
         });
     }
     
-    // Улучшенная функция фильтрации
+    // Поиск проектов в окне
     function filterProjects() {
         const searchTerm = searchInput.value.toLowerCase().trim();
         
@@ -106,14 +107,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-
+//fetch запрос
 async function loadSelectedProjects() {
     try {
         const response = await fetch('/finder/get_session_filter_projects/');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
-        console.log('Received projects data:', data);
+        console.log(data.selected_projects);
         displaySelectedProjects(data.selected_projects || []);
     } catch (error) {
         console.error('Ошибка загрузки проектов:', error);
@@ -128,10 +129,6 @@ function displaySelectedProjects(projects) {
     const container = document.querySelector('.selected-projects-container');
     container.innerHTML = '';
     
-    if (!projects || projects.length === 0) {
-        container.innerHTML = '<div class="no-projects">Нет выбранных проектов</div>';
-        return;
-    }
     
     projects.forEach(project => {
         const projectElement = document.createElement('div');
@@ -146,13 +143,14 @@ function displaySelectedProjects(projects) {
         // Создаем элемент с названием проекта
         const nameElement = document.createElement('span');
         nameElement.className = 'project-name';
-        nameElement.textContent = project.name;
+        nameElement.textContent = project.project;
         
         // Создаем кнопку удаления (если нужно)
         const deleteButton = document.createElement('button');
         deleteButton.className = 'delete-project';
         deleteButton.innerHTML = '&times;';
-        deleteButton.addEventListener('click', () => removeProjectFromSession(project.id));
+
+        deleteButton.addEventListener('click', () => removeProjectFromSession(projectElement));
         
         // Собираем элементы вместе
         projectElement.appendChild(colorCircle);
@@ -163,43 +161,53 @@ function displaySelectedProjects(projects) {
     });
 }
 
-// Функция для удаления проекта из сессии (пример)
-async function removeProjectFromSession(projectId) {
-    try {
-        const response = await fetch(`/finder/remove_project_from_session/${projectId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            // Обновляем список проектов на странице
-            displaySelectedProjects(result.remaining_projects);
-            
-            // Можно добавить уведомление об успехе
-            showToast('Проект успешно удален из фильтра');
-        } else {
-            throw new Error(result.message || 'Unknown error');
-        }
-    } catch (error) {
-        console.error('Ошибка удаления проекта:', error);
-        showToast('Ошибка при удалении проекта', 'error');
+// Функция для удаления проекта
+function handleProjectDelete(event) {
+    // 1. Находим элементы
+    const deleteButton = event.target.closest('.delete-project');
+    if (!deleteButton) return;
+    
+    const projectElement = deleteButton.closest('.project-chip');
+    if (!projectElement) {
+        console.error('Не найден элемент project-chip');
+        return;
     }
+    
+    const projectId = projectElement.dataset.projectId;
+    if (!projectId) {
+        console.error('Не найден data-project-id');
+        return;
+    }
+    
+    // 2. Визуальное удаление
+    projectElement.classList.add('removing');
+    
+    // 3. Отправка на сервер
+    fetch(`/finder/remove_project_from_session/${projectId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Ошибка сервера');
+        
+        // 4. Полное удаление после анимации
+        setTimeout(() => {
+            projectElement.remove();
+        }, 300);
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        projectElement.classList.remove('removing');
+    });
 }
 
-// Вспомогательная функция для показа уведомлений
-function showToast(message, type = 'success') {
-    // Реализация зависит от вашей системы уведомлений
-    console.log(`${type}: ${message}`);
-}
+// Навешиваем обработчик
+document.addEventListener('click', handleProjectDelete);
+
 
 // Вспомогательная функция для получения CSRF токена
 function getCSRFToken() {

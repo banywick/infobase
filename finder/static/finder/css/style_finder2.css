@@ -133,20 +133,39 @@ header {
 .project-chip {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
-    background: #e0e0e0;
-    border-radius: 16px;
-    font-size: 14px;
-    white-space: nowrap;
+    margin: 4px;
+    background: #f5f5f5;
+    transition: all 0.3s ease;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+}
+
+.project-chip.removing {
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
 }
 
 .project-chip-color {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    margin-right: 6px;
-    flex-shrink: 0;
+    margin-right: 8px;
 }
+
+.delete-project {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 6px;
+    line-height: 1;
+}
+
+
 
 .button_wrapper,
 .button_wrapper_clear,

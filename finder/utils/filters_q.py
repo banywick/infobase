@@ -4,16 +4,22 @@ from .metiz import process_metiz_query
 def get_current_projects(request):
     """
     Получает текущие проекты из сессии пользователя.
-    преобразовывает dict в list
-
+    Поддерживает как старый (dict), так и новый (list) форматы.
+    
     Args:
         request (HttpRequest): Объект запроса.
-
+    
     Returns:
         list: Список значений текущих проектов.
     """
-    current_projects = request.session.get('selected_projects', {})
-    return list(current_projects.values())
+    current_projects = request.session.get('selected_projects', [])
+    
+    # Если это новый формат (список словарей)
+    if isinstance(current_projects, list):
+        # Возвращаем список названий проектов
+        return [project['project'] for project in current_projects]
+    
+
 
 def create_q_objects(values, field_name):
     """

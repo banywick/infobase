@@ -76,7 +76,7 @@ class ProjectUtils:
         return [
             {
                 'id': project['id'],
-                'name': project['project'],
+                'project': project['project'],
                 'status_color': project['status_color']
             }
                 for project in annotated_projects
