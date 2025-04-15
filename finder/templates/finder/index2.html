@@ -94,7 +94,7 @@
                             </div>
                 </div>
             </div>
-            <div class="choice_project_popup">
+            <div class="choice_project_popup" id="choice_project_popup">
                     <div class="close">
                         <img id="icon_color" src="{% static 'finder/icon/close.svg' %}" alt="Закрыть">  
                     </div> 
@@ -109,9 +109,6 @@
                     <div class="down_project_container">
                         <div class="button_wrapper_filter_view_all" id="button_filter_view_all">
                             <div>Отобразить все позиции</div>
-                        </div>
-                        <div class="button_wrapper_filter_clear" id="button_filter_clear">
-                            <div>Сбросить фильтр</div>
                         </div>
                         <div class="button_wrapper_filter_submit" id="button_filter_submit">
                             <div>Применить</div>
@@ -264,6 +261,7 @@
     <script src='{% static "finder/js/popups.js"%}'></script> 
     <script src='{% static "finder/js/filters_projects.js"%}'></script> 
     <script src="{% static "finder/js/projectSelection.js" %}"></script>
+    <script src="{% static "finder/js/all_one_project.js" %}"></script>
     {% comment %} <script src='{% static "finder/js/switch_manual_finger.js"%}'></script>  {% endcomment %}
 </body>
 </html>

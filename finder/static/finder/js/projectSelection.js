@@ -1,3 +1,6 @@
+//Фомирование колекции при выборе проектов подсветка кнопок
+// Отправка коллекции на сервер для добавления в сессию
+
 document.addEventListener('DOMContentLoaded', function() {
 // Проверяем наличие глобальной переменной staticUrls
 if (typeof staticUrls === 'undefined') {

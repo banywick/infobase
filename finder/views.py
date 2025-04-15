@@ -131,7 +131,6 @@ class ProductSearchView(APIView):
         # Создание Q-объектов для каждого слова
         q_objects = create_q_objects_for_query(values, search_by_code, search_by_comment)
 
-        # Применение фильтров отображаем 200 позиций
         queryset = queryset.filter(q_objects & q_objects_projects)[:200]
 
         if not queryset.exists():
@@ -142,56 +141,73 @@ class ProductSearchView(APIView):
 
 class AllProdSelectedFilter(APIView):
     """
-    APIView для фильтрации позиций на основе выбранных проектов.
+    API endpoint для фильтрации товарных позиций по конкретному проекту.
+    
+    Позволяет получить аннотированный список остатков товаров с цветовой меткой статуса
+    для указанного проекта. Возвращает данные в формате, готовом для отображения в интерфейсе.
 
     Методы:
+    --------
     post(self, request, *args, **kwargs)
-        Обрабатывает POST-запрос для фильтрации позиций на основе выбранных проектов.
+        Обрабатывает POST-запрос с названием проекта и возвращает отфильтрованные данные
     """
 
     def post(self, request, *args, **kwargs):
         """
-        Обрабатывает POST-запрос для фильтрации позиций на основе выбранных проектов.
+        Обрабатывает POST-запрос для получения товарных позиций конкретного проекта.
 
-        Аргументы:
-        request -- объект запроса Django.
+        Параметры запроса:
+        ------------------
+        request.data : dict
+            Должен содержать параметр:
+            - project_name: str (название проекта для фильтрации)
 
         Возвращает:
-        Response -- объект ответа Django REST Framework с сериализованными данными позиций.
+        -----------
+        Response
+            - HTTP 200: успешный ответ с данными в формате:
+            {
+                "id": int,
+                "project": str,
+                "status_color": str,
+                ... другие поля модели Remains
+            }[]
+            - HTTP 400: если не указан project_name
+            - HTTP 404: если проект не найден
+
+        Логика работы:
+        --------------
+        1. Получает название проекта из request.data
+        2. Фильтрует аннотированный queryset (с цветами статусов) по project_name
+        3. Сериализует данные с помощью RemainsSerializer
+        4. Возвращает отфильтрованные данные
 
         Пример запроса:
+        ---------------
+        POST /finder/all_products_filter_project/
         {
-            "projects_ids": ["64875", "4105"]
+            "project_name": "Склад Общий"
         }
 
-        Описание:
-        1. Получает список выбранных идентификаторов проектов из запроса.
-        2. Извлекает из базы данных названия проектов по их идентификаторам и возвращает словарь {id: project_name}.
-        3. Преобразует значения словаря в список для функции create_q_objects.
-        4. Создает Q-объекты из проектов на основе списка названий проектов.
-        5. Выполняет запрос на все позиции и применяет фильтры.
-        6. Сериализует данные и возвращает ответ.
+        Пример успешного ответа:
+        ------------------------
+        HTTP 200 OK
+        [
+            {
+                "id": 1,
+                "project": "Склад Общий",
+                "status_color": "red",
+                ...
+            },
+            ...
+        ]
         """
-        # Список выбранных id проектов получаем с request
-        projects_ids = request.data.get('projects_ids')
+        #получаем название проекта для фильтрации с request
+        project_name = request.data.get('project_name')
 
-        # извлекает из базы по id названия и возвращает dict {id:project_name}
-        current_projects = ProjectUtils.get_projects_dict(projects_ids)
+        queryset = ProjectUtils.get_annotated_remains()
+        queryset = queryset.filter(project=project_name)
 
-        # Преобразуем значения словаря в список для функции create_q_objects
-        project_names = list(current_projects.values())
-
-        # Создаем Q объекты из проектов на основе current_projects
-        q_objects_projects = create_q_objects(project_names, 'project')
-        # print(q_objects_projects)
-
-        # Запрос на все позиции
-        queryset = Remains.objects.all()
-
-        # Применение фильтров
-        queryset = queryset.filter(q_objects_projects)[:200]
-
-        #Серелизуем данные
         serializer = RemainsSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK) 
 

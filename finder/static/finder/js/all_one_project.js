@@ -1,64 +1,73 @@
-//Основной js
+// Отправка названия проекта который выбрал пользователь
+let selectedProject = null;
 
+// Обработчик клика на элементы проектов
+document.addEventListener('click', function(e) {
+    const projectContent = e.target.closest('.project-content');
+    if (projectContent) {
+        const projectSpan = projectContent.querySelector('span');
+        if (projectSpan) {
+            selectedProject = projectSpan.textContent.trim();
+            console.log('Выбран проект:', selectedProject); // Для отладки
+            
+            // Визуальное выделение
+            document.querySelectorAll('.project-content').forEach(el => {
+                el.classList.remove('selected');
+            });
+            projectContent.classList.add('selected');
+        }
+    }
+});
 
-// Обработчики поиска (оставляем как есть)
-
-document.getElementById('search_icon').addEventListener('click', handleSearch);
-document.getElementById('search_form').addEventListener('submit', handleSearch);
-
-
-    
-
-
-// Объединяем логику поиска в одну функцию
-function handleSearch(event) {
-    event.preventDefault();
-    const searchData = getFormData();
-    performSearch(searchData);
-}
-
-// Функция для получения данных формы
-function getFormData() {
-    const form = document.getElementById('search_form');
-    const formData = new FormData(form);
-    const data = {};
-    
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
-    
-    return data;
-}
-
-// Основная функция выполнения поиска
-function performSearch(searchData) {
+// Обработчик клика на кнопку фильтра
+document.getElementById('button_filter_view_all').addEventListener('click', async function() {
+    const popup = document.getElementById('choice_project_popup');
     const tbody = document.querySelector('tbody:not(.pinned-block)');
     const not_found = document.querySelector('.not_found');
     
-    // Показываем состояние загрузки
-    tbody.innerHTML = '<tr><td colspan="12" class="loading">Загрузка данных...</td></tr>';
-    not_found.style.display = 'none';
+    if (!selectedProject) {
+        alert('Пожалуйста, выберите проект');
+        return;
+    }
+    
+    try {
+        console.log('Отправляемые данные:', { project: selectedProject }); // Для отладки
+        
+        // Показываем состояние загрузки
+        tbody.innerHTML = '<tr><td colspan="12" class="loading">Загрузка данных...</td></tr>';
+        not_found.style.display = 'none';
 
-    fetch('/finder/products/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(searchData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data);
+        const response = await fetch('/finder/all_products_filter_project/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ project_name: selectedProject })
+        });
+        
+        if (!response.ok) throw new Error('Ошибка сервера');
+        
+        const data = await response.json();
+        console.log('Ответ сервера:', data);
+        
+        
+        // Рендерим полученные данные
         renderTableData(data, tbody, not_found);
-    })
-    .catch(error => {
-        console.error('Error:', error);
+        
+        // Закрываем popup только после успешного выполнения
+        if (popup) popup.style.display = 'none';
+        
+    } catch (error) {
+        console.error('Ошибка:', error);
         tbody.innerHTML = '<tr><td colspan="12" class="error">Ошибка загрузки данных</td></tr>';
-    });
-}
+        alert('Произошла ошибка при отправке данных');
+    }
+});
 
-// Функция рендеринга данных таблицы
+selectedProject = null;
+
+// Функция рендеринга данных таблицы (такая же как в основном JS)
 function renderTableData(data, tbody, not_found) {
     tbody.innerHTML = '';
     
@@ -136,18 +145,12 @@ function renderTableData(data, tbody, not_found) {
     });
 }
 
-// Функция для получения CSRF-токена (оставляем как есть)
+// Функция для получения CSRF токена
 function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [cookieName, cookieValue] = cookie.trim().split('=');
+        if (cookieName === name) return cookieValue;
     }
-    return cookieValue;
+    return null;
 }

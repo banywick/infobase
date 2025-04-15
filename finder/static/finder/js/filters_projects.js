@@ -1,3 +1,6 @@
+//Модуль для работы с проектами
+
+
 document.addEventListener('DOMContentLoaded', function() {
     // Элементы popup
     const popup = document.querySelector('.choice_project_popup');
@@ -6,11 +9,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('project_search');
     let allProjects = []; // Здесь будем хранить все проекты
 
-    // Функция для отрисовки проектов
+    // Функция для отрисовки проектов в попап окне
     function renderProjects(projects) {
         const container = document.querySelector('.item_choice_project_container');
         container.innerHTML = '';
         
+        //цикл по созданию объектов
         projects.forEach(project => {
             const projectElement = document.createElement('div');
             projectElement.className = 'project-item';
@@ -28,6 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+
+
     // Поиск проектов в окне
     function filterProjects() {
         const searchTerm = searchInput.value.toLowerCase().trim();
@@ -62,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderProjects(filteredProjects);
     }
 
-
+    //fetch запрос для получения всех проектов
     async function loadProjectsIntoPopup() {
         try {
             const container = document.querySelector('.item_choice_project_container');
@@ -107,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-//fetch запрос
+//fetch запрос получения проектов из сесии
 async function loadSelectedProjects() {
     try {
         const response = await fetch('/finder/get_session_filter_projects/');
@@ -124,7 +130,7 @@ async function loadSelectedProjects() {
     }
 }
 
-// Отображение выбранных проектов из сессии
+// Отображение выбранных проектов из сессии в хэдере
 function displaySelectedProjects(projects) {
     const container = document.querySelector('.selected-projects-container');
     container.innerHTML = '';
@@ -161,7 +167,7 @@ function displaySelectedProjects(projects) {
     });
 }
 
-// Функция для удаления проекта
+// Функция для удаления проекта по иконке крестик
 function handleProjectDelete(event) {
     // 1. Находим элементы
     const deleteButton = event.target.closest('.delete-project');
@@ -205,7 +211,7 @@ function handleProjectDelete(event) {
     });
 }
 
-// Навешиваем обработчик
+// Навешиваем обработчик для клика удаления элементов в хэдере
 document.addEventListener('click', handleProjectDelete);
 
 
@@ -218,17 +224,83 @@ function getCSRFToken() {
     return cookieValue || '';
 }
 
+
+document.getElementById('button_filter_submit')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    
+    // Показываем лоадер (опционально)
+    const container = document.querySelector('.selected-projects-container');
+    if (container) {
+        container.innerHTML = '<div class="loading">Загрузка проектов...</div>';
+    }
+    
+    // Блокируем кнопку на время обработки
+    const button = e.currentTarget;
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.innerHTML = '<span class="loader"></span> Обработка...';
+    
+    // Ждем 1 секунду и выполняем запрос
+    setTimeout(async () => {
+        try {
+            await loadSelectedProjects(); // Вызываем функцию загрузки проектов
+        } catch (error) {
+            console.error('Ошибка:', error);
+            if (container) {
+                container.innerHTML = '<div class="error-message">Ошибка загрузки проектов</div>';
+            }
+        } finally {
+            // Восстанавливаем кнопку
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    }, 1000); // Задержка 1 секунда
+});
+
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     loadSelectedProjects();
     
-    // Можно добавить обработчик для кнопки сброса фильтров
-    document.querySelector('.button_wrapper_clear')?.addEventListener('click', () => {
-        fetch('/finder/clear_session_projects/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
+    // Обработчик кнопки очистки
+    document.querySelector('.button_wrapper_clear')?.addEventListener('click', async function() {
+        try {
+            // Визуальная анимация очистки
+            const container = document.querySelector('.selected-projects-container');
+            if (container) {
+                container.querySelectorAll('.project-chip').forEach(item => {
+                    item.classList.add('removing');
+                });
             }
-        }).then(loadSelectedProjects);
+
+            // Fetch запрос для удаления выбранных проектов (кнопка отчичтить фильтр)
+            const response = await fetch('/finder/clear_all_selected_projects/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) throw new Error('Ошибка сервера');
+
+            // Полное удаление элементов после анимации
+            setTimeout(() => {
+                if (container) container.innerHTML = '';
+                
+            }, 300);
+
+        } catch (error) {
+            console.error('Ошибка очистки проектов:', error);
+            
+            // Отменяем анимацию удаления при ошибке
+            document.querySelectorAll('.project-chip.removing').forEach(item => {
+                item.classList.remove('removing');
+            });
+        }
     });
+
+
 });
