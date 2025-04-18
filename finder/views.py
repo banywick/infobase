@@ -18,6 +18,7 @@ import os
 from .utils.connect_redis_bd import connect_redis
 from .utils.file_name_document import get_file_name
 from celery.result import AsyncResult
+from rest_framework.pagination import PageNumberPagination
 
 
 
@@ -139,77 +140,42 @@ class ProductSearchView(APIView):
         serializer = RemainsSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)  
 
-class AllProdSelectedFilter(APIView):
-    """
-    API endpoint для фильтрации товарных позиций по конкретному проекту.
-    
-    Позволяет получить аннотированный список остатков товаров с цветовой меткой статуса
-    для указанного проекта. Возвращает данные в формате, готовом для отображения в интерфейсе.
 
-    Методы:
-    --------
-    post(self, request, *args, **kwargs)
-        Обрабатывает POST-запрос с названием проекта и возвращает отфильтрованные данные
-    """
+
+from rest_framework.response import Response
+
+class StrictPagination(PageNumberPagination):
+    page_size = 100  # Жёстко фиксируем 10 элементов на страницу
+    page_size_query_param = None  # Запрещаем клиенту менять размер страницы
+    max_page_size = 100
+    
+    def get_paginated_response(self, data):
+        return Response({
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'count': self.page.paginator.count,
+            'results': data
+        })
+
+class AllProdSelectedFilter(APIView):
+    pagination_class = StrictPagination  # Используем наш строгий пагинатор
 
     def post(self, request, *args, **kwargs):
-        """
-        Обрабатывает POST-запрос для получения товарных позиций конкретного проекта.
-
-        Параметры запроса:
-        ------------------
-        request.data : dict
-            Должен содержать параметр:
-            - project_name: str (название проекта для фильтрации)
-
-        Возвращает:
-        -----------
-        Response
-            - HTTP 200: успешный ответ с данными в формате:
-            {
-                "id": int,
-                "project": str,
-                "status_color": str,
-                ... другие поля модели Remains
-            }[]
-            - HTTP 400: если не указан project_name
-            - HTTP 404: если проект не найден
-
-        Логика работы:
-        --------------
-        1. Получает название проекта из request.data
-        2. Фильтрует аннотированный queryset (с цветами статусов) по project_name
-        3. Сериализует данные с помощью RemainsSerializer
-        4. Возвращает отфильтрованные данные
-
-        Пример запроса:
-        ---------------
-        POST /finder/all_products_filter_project/
-        {
-            "project_name": "Склад Общий"
-        }
-
-        Пример успешного ответа:
-        ------------------------
-        HTTP 200 OK
-        [
-            {
-                "id": 1,
-                "project": "Склад Общий",
-                "status_color": "red",
-                ...
-            },
-            ...
-        ]
-        """
-        #получаем название проекта для фильтрации с request
         project_name = request.data.get('project_name')
+        if not project_name:
+            print('не работает пагинация')
+            return Response({"detail": "project_name is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        queryset = ProjectUtils.get_annotated_remains()
-        queryset = queryset.filter(project=project_name)
-
-        serializer = RemainsSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK) 
+        queryset = ProjectUtils.get_annotated_remains().filter(
+            project=project_name
+        ).order_by('id')  # Важно: обязательная сортировка
+        
+        # Принудительная пагинация ВСЕГДА
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        
+        serializer = RemainsSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 class RemainsDetailView(APIView):
     """

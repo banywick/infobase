@@ -1,5 +1,10 @@
-// Отправка названия проекта который выбрал пользователь
+// Глобальные переменные для управления пагинацией
 let selectedProject = null;
+let isLoading = false;
+let currentPage = 1;
+const ITEMS_PER_PAGE = 100; // Фиксированное количество элементов на страницу
+let hasMoreData = true;
+let abortController = null;
 
 // Обработчик клика на элементы проектов
 document.addEventListener('click', function(e) {
@@ -8,7 +13,10 @@ document.addEventListener('click', function(e) {
         const projectSpan = projectContent.querySelector('span');
         if (projectSpan) {
             selectedProject = projectSpan.textContent.trim();
-            console.log('Выбран проект:', selectedProject); // Для отладки
+            console.log('Выбран проект:', selectedProject);
+            
+            // Сброс пагинации при выборе нового проекта
+            resetPagination();
             
             // Визуальное выделение
             document.querySelectorAll('.project-content').forEach(el => {
@@ -20,63 +28,154 @@ document.addEventListener('click', function(e) {
 });
 
 // Обработчик клика на кнопку фильтра
-document.getElementById('button_filter_view_all').addEventListener('click', async function() {
+document.getElementById('button_filter_view_all').addEventListener('click', function() {
     const popup = document.getElementById('choice_project_popup');
-    const tbody = document.querySelector('tbody:not(.pinned-block)');
-    const not_found = document.querySelector('.not_found');
     
     if (!selectedProject) {
         alert('Пожалуйста, выберите проект');
         return;
     }
     
-    try {
-        console.log('Отправляемые данные:', { project: selectedProject }); // Для отладки
-        
-        // Показываем состояние загрузки
-        tbody.innerHTML = '<tr><td colspan="12" class="loading">Загрузка данных...</td></tr>';
-        not_found.style.display = 'none';
+    // Сброс и начальная загрузка
+    resetPagination();
+    loadMoreData(true);
+    
+    // Закрываем popup
+    if (popup) popup.style.display = 'none';
+});
 
+// Сброс состояния пагинации
+function resetPagination() {
+    currentPage = 1;
+    hasMoreData = true;
+    const tbody = document.querySelector('tbody:not(.pinned-block)');
+    if (tbody) tbody.innerHTML = '';
+    document.querySelector('.not_found').style.display = 'none';
+    document.getElementById('loadMoreBtn').style.display = 'none';
+    
+    // Отмена предыдущего запроса
+    if (abortController) {
+        abortController.abort();
+    }
+}
+
+// Основная функция загрузки данных
+async function loadMoreData(isInitialLoad = false) {
+    if (isLoading || !hasMoreData) return;
+    
+    isLoading = true;
+    const tbody = document.querySelector('tbody:not(.pinned-block)');
+    const notFound = document.querySelector('.not_found');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    
+    try {
+        // Создаем новый AbortController
+        abortController = new AbortController();
+        
+        // Показываем индикатор загрузки
+        showLoadingIndicator(tbody, isInitialLoad);
+        
         const response = await fetch('/finder/all_products_filter_project/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({ project_name: selectedProject })
+            body: JSON.stringify({ 
+                project_name: selectedProject,
+                page: currentPage
+            }),
+            signal: abortController.signal
         });
         
-        if (!response.ok) throw new Error('Ошибка сервера');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
-        console.log('Ответ сервера:', data);
+        console.log('Получены данные:', data);
         
+        // Удаляем индикатор загрузки
+        removeLoadingIndicator(tbody);
         
-        // Рендерим полученные данные
-        renderTableData(data, tbody, not_found);
-        
-        // Закрываем popup только после успешного выполнения
-        if (popup) popup.style.display = 'none';
+        // Обработка полученных данных
+        if (data.results && data.results.length > 0) {
+            renderTableData(data.results, tbody, notFound, isInitialLoad);
+            hasMoreData = data.next !== null;
+            currentPage++;
+            
+            // Показываем кнопку "Показать еще" если есть еще данные
+            loadMoreBtn.style.display = hasMoreData ? 'block' : 'none';
+        } else if (isInitialLoad) {
+            // Нет данных для первой загрузки
+            notFound.style.display = 'block';
+            hasMoreData = false;
+            loadMoreBtn.style.display = 'none';
+        } else {
+            // Нет больше данных для подгрузки
+            hasMoreData = false;
+            loadMoreBtn.style.display = 'none';
+        }
         
     } catch (error) {
-        console.error('Ошибка:', error);
-        tbody.innerHTML = '<tr><td colspan="12" class="error">Ошибка загрузки данных</td></tr>';
-        alert('Произошла ошибка при отправке данных');
+        if (error.name === 'AbortError') {
+            console.log('Запрос был прерван');
+            return;
+        }
+        
+        console.error('Ошибка загрузки:', error);
+        showErrorIndicator(tbody, isInitialLoad);
+        loadMoreBtn.style.display = 'none';
+    } finally {
+        isLoading = false;
     }
-});
+}
 
-selectedProject = null;
-
-// Функция рендеринга данных таблицы (такая же как в основном JS)
-function renderTableData(data, tbody, not_found) {
-    tbody.innerHTML = '';
+// Функции для работы с UI
+function showLoadingIndicator(tbody, isInitialLoad) {
+    if (!tbody) return;
     
-    if(data.detail === "Ничего не найдено") {
-        not_found.style.display = 'block';
+    if (isInitialLoad) {
+        tbody.innerHTML = '<tr><td colspan="12" class="loading">Загрузка данных...</td></tr>';
+    } else {
+        const loadingRow = document.createElement('tr');
+        loadingRow.innerHTML = '<td colspan="12" class="loading">Загрузка дополнительных данных...</td>';
+        tbody.appendChild(loadingRow);
+    }
+}
+
+function removeLoadingIndicator(tbody) {
+    if (!tbody) return;
+    const loadingRows = tbody.querySelectorAll('tr .loading');
+    loadingRows.forEach(row => row.closest('tr').remove());
+}
+
+function showErrorIndicator(tbody, isInitialLoad) {
+    if (!tbody) return;
+    
+    if (isInitialLoad) {
+        tbody.innerHTML = '<tr><td colspan="12" class="error">Ошибка загрузки данных</td></tr>';
+    } else {
+        const errorRow = document.createElement('tr');
+        errorRow.innerHTML = '<td colspan="12" class="error">Ошибка загрузки</td>';
+        tbody.appendChild(errorRow);
+    }
+}
+
+// Функция рендеринга данных таблицы
+function renderTableData(data, tbody, notFound, clearTable = true) {
+    if (!tbody) return;
+    
+    if (clearTable) {
+        tbody.innerHTML = '';
+    }
+    
+    if (!data || data.length === 0) {
+        if (clearTable) {
+            notFound.style.display = 'block';
+        }
         return;
     }
     
-    not_found.style.display = 'none';
+    notFound.style.display = 'none';
     
     data.forEach(item => {
         const row = document.createElement('tr');
@@ -145,6 +244,27 @@ function renderTableData(data, tbody, not_found) {
     });
 }
 
+// Инициализация кнопки "Показать еще"
+function initLoadMoreButton() {
+    const loadMoreBtn = document.createElement('button');
+    loadMoreBtn.id = 'loadMoreBtn';
+    loadMoreBtn.textContent = 'Показать еще';
+    loadMoreBtn.style.display = 'none';
+    loadMoreBtn.style.margin = '20px auto';
+    loadMoreBtn.style.padding = '10px 20px';
+    loadMoreBtn.style.backgroundColor = '#4CAF50';
+    loadMoreBtn.style.color = 'white';
+    loadMoreBtn.style.border = 'none';
+    loadMoreBtn.style.borderRadius = '4px';
+    loadMoreBtn.style.cursor = 'pointer';
+    
+    loadMoreBtn.addEventListener('click', function() {
+        loadMoreData();
+    });
+    
+    document.querySelector('.table-container').appendChild(loadMoreBtn);
+}
+
 // Функция для получения CSRF токена
 function getCookie(name) {
     const cookies = document.cookie.split(';');
@@ -154,3 +274,11 @@ function getCookie(name) {
     }
     return null;
 }
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    initLoadMoreButton();
+    
+    // Удаляем обработчик скролла, так как теперь используем кнопку
+    window.removeEventListener('scroll', scrollHandler);
+});
