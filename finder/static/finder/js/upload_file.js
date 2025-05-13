@@ -26,10 +26,19 @@ function uploadDocumentAndCheckCelery() {
     .then(([uploadData, celeryData]) => {
         console.log('Upload Data:', uploadData);
         console.log('Celery Status:', celeryData);
+        const not_file_info = document.querySelector('.not_file_info');
+        not_file_info.innerHTML = '';
 
         if (uploadData.task_id) {
             checkTaskStatus(uploadData.task_id);
         }
+        if (uploadData.doc && uploadData.doc[0]) {
+            console.log('Данные существуют')
+            // load_errors.innerHTML = uploadData.doc[0];
+            not_file_info.innerHTML = 'Не выбран файл!';
+        }
+
+        
     })
     .catch(error => console.error('Error:', error));
 }

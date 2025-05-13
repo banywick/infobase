@@ -172,7 +172,8 @@ header {
 .button_wrapper_update,
 .button_wrapper_close,
 .button_wrapper_filter_view_all,
-.button_wrapper_filter_submit {
+.button_wrapper_filter_submit
+{
     height: 40px;
     display: flex;
     align-items: center;
@@ -205,6 +206,11 @@ header {
     background: rgb(246, 78, 17);
 
 }
+
+
+
+
+
 
 .details_item {
     display: none;
@@ -335,19 +341,6 @@ header {
     z-index: 9; /* Убедитесь, что фон находится под popup */
 }
 
-.any_projects_popup {
-    display: none; /* Скрываем popup по умолчанию */
-    position: absolute;
-    top: 40%;
-    transform: translate(-50%, -50%);
-    z-index: 10; /* Убедитесь, что popup находится поверх фона */
-    width: 610px;
-    height: 545px;
-    left: 655px;
-    border-radius: 10px;
-    background: rgb(255, 255, 255);
-    border: 1px solid black;
-}
 
 .title_popup_any_projects {
     color: rgb(31, 58, 85);
@@ -368,19 +361,8 @@ header {
     margin-top: 10px;
 }
 
-.any_projects_popup > div {
-    text-align: center;
-    background-color: white; 
-    border-radius: 8px;
-}
 
 
-
-.any_projects_popup.active {
-    display: flex; /* Показываем popup, когда он активен */
-    justify-content: center;
-    align-items: center;
-}
 
 .close {
     display: flex;

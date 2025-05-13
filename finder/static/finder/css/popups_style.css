@@ -1,3 +1,15 @@
+/* CSS переменные для удобства */
+:root {
+    --primary-color: rgb(31, 58, 85);
+    --secondary-color: rgb(251, 184, 160);
+    --text-color: rgb(255, 255, 255);
+    --font-family: 'Inter', sans-serif;
+    --border-color: black;
+    --red-color: rgb(246, 78, 17);
+}
+
+
+
 .choice_project_popup {
     position: absolute;
     top: 49%;
@@ -155,3 +167,263 @@ transition: transform 0.3s ease, opacity 0.3s ease;
     background: #1F3A55;
 
 }
+
+
+.any_projects_popup {
+    display: none; /* Скрываем popup по умолчанию */
+    position: absolute;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    z-index: 10; /* Убедитесь, что popup находится поверх фона */
+    width: 610px;
+    height: 545px;
+    left: 655px;
+    border-radius: 10px;
+    background: rgb(255, 255, 255);
+    border: 1px solid black;
+}
+
+.any_projects_popup > div {
+    text-align: center;
+    background-color: white; 
+    border-radius: 8px;
+}
+
+
+
+.any_projects_popup.active {
+    display: flex; /* Показываем popup, когда он активен */
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+
+/* Основные стили popup */
+.upload_popup {
+    display: none; /* Скрываем popup по умолчанию */
+    position: absolute;
+    top:48%;
+    transform: translate(-50%, -50%);
+    z-index: 10; /* Убедитесь, что popup находится поверх фона */
+    width: 400px;
+    height: 765px;
+    left: 655px;
+    border-radius: 10px;
+    background: rgb(255, 255, 255);
+    border: 1px solid black;
+}
+
+.upload_popup.active {
+    opacity: 1;
+}
+
+.popup_content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+
+.title_update_popup h2 {
+    color: #2d3748;
+    font-family: var(--font-family);
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    margin: 0;
+} 
+
+/* Стили для загрузки файла */
+.file-upload-wrapper {
+    width: 100%;
+    margin: 16px 0;
+}
+
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    background-color: #f9fafb;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload-label:hover {
+    border-color: #9ca3af;
+    background-color: #f3f4f6;
+}
+
+.upload-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+}
+
+.upload-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: #4b5563;
+}
+
+.upload-text {
+    color: #4b5563;
+    font-weight: 500;
+    font-size: 16px;
+    font-family: var(--font-family);
+}
+
+.file-name {
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: var(--font-family);
+}
+
+.file-upload-input {
+    display: none;
+}
+
+/* Стили для кнопки */
+.upload-button {
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border-radius: 24px;
+    background-color: #4f46e5;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: var(--font-family);
+    cursor: pointer;
+    width: 100%;
+    max-width: 224px;
+    border: none;
+    padding: 0 32px;
+    transition: all 0.3s ease;
+}
+
+.upload-button:hover {
+    background-color: #4338ca;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.upload-button:active {
+    transform: translateY(0);
+}
+
+.button-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.button-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: white;
+}
+
+
+.not_file_info {
+    color: red;
+    font-family: var(--font-family);
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Стили для анимации загрузки */
+.load_animation {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 16px;
+}
+
+.load_info {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.loading-text {
+    color: #4b5563;
+    font-size: 16px;
+    font-family: var(--font-family);
+    margin-bottom: 16px;
+}
+
+.load_error {
+    color: #dc2626 !important;
+    font-size: 14px;
+    font-family: var(--font-family);
+    margin: 8px 0;
+}
+
+.update_success {
+    color: #16a34a !important;
+    font-size: 14px;
+    font-family: var(--font-family);
+    margin: 8px 0;
+}
+
+
+
+
+/* Анимация шестереренок */
+
+.gears-container {
+width: 134px;
+height: 106px;
+margin: 20px;
+}
+
+/* Анимация большой синей шестерни */
+.gear-large {
+transform-origin: 52.5px 44px; /* Центр шестерни */
+animation: rotateGear 8s linear infinite;
+}
+
+/* Анимация маленькой оранжевой шестерни */
+.gear-small {
+transform-origin: 96px 19px; /* Центр шестерни */
+animation: rotateGearReverse 5s linear infinite;
+}
+
+/* Ключевые кадры анимации */
+@keyframes rotateGear {
+from {
+    transform: rotate(0deg);
+}
+to {
+    transform: rotate(360deg);
+}
+}
+
+@keyframes rotateGearReverse {
+from {
+    transform: rotate(0deg);
+}
+to {
+    transform: rotate(-360deg);
+}
+}
+
+/* Дополнительные эффекты при наведении */
+.gears-container:hover .gear-large {
+animation-duration: 4s;
+}
+
+.gears-container:hover .gear-small {
+animation-duration: 2.5s;
+}
+

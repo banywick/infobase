@@ -64,7 +64,7 @@ class FileUploadView(APIView):
 
 class HomeView(TemplateView):
     """Главная страница"""
-    template_name = 'finder/index.html'
+    template_name = 'finder/index2.html'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user

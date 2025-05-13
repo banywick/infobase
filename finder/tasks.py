@@ -30,7 +30,6 @@ def data_save_db(file_url):
 
         # Читаем строки 7 и 9 для поиска заголовков
         header_df = pd.read_excel(file_url, header=None, nrows=10)
-        print(header_df)
         
         # Ищем основной заголовок "Конечный остаток" в 7 строке (индекс 6)
         seventh_row = header_df.iloc[6].fillna("").astype(str)
