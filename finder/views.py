@@ -19,8 +19,7 @@ from .utils.connect_redis_bd import connect_redis
 from .utils.file_name_document import get_file_name
 from celery.result import AsyncResult
 from rest_framework.pagination import PageNumberPagination
-
-
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -89,60 +88,44 @@ class HomeView(TemplateView):
 
 
 class ProductSearchView(APIView):
-    """
-    Представление для поиска товаров с использованием фильтров и условий поиска.
-    Поддерживает поиск по коду товара, комментарию и другим параметрам.
-    """
+
+
     def post(self, request, *args, **kwargs):
-        """
-        Обрабатывает POST-запрос для поиска товаров.
-
-        Извлекает из request.data параметры поиска:
-        - query: строка запроса, которая разделяется на отдельные слова.
-        - search_by_code: флаг, указывающий, нужно ли искать по коду товара.
-        - search_by_comment: флаг, указывающий, нужно ли искать по комментарию.
-
-        Формирует Q-объекты для фильтрации товаров на основе переданных параметров.
-        Применяет фильтры к данным и возвращает результат в виде сериализованного JSON.
-
-        Возвращает:
-        - 200 OK с результатами поиска, если запрос успешен.
-        - 200 OK с сообщением 'empty input', если запрос пуст.
-        """
-        query = request.data.get('query', '')
-        search_by_code = request.data.get('search_by_code', False)
-        search_by_comment = request.data.get('search_by_comment', False)
-
-
-        # Получаем текущие проекты из сессии
-        # По которым будем делать фильтрацию
-        current_projects = get_current_projects(request)
-
-        # Создаем Q объекты из проектов на основе этих значений
-        q_objects_projects = create_q_objects(current_projects, 'project')
-
-        # Аннатированные данные проект с цветом
-        queryset = ProjectUtils.get_annotated_remains()
-
-        # Разделение ввода на слова
-        values = query.split()
-        if not values:
+        query = request.data.get('query', '').strip()
+        if not query:
             return Response({'message': 'empty input'}, status=status.HTTP_200_OK)
 
-        # Создание Q-объектов для каждого слова
-        q_objects = create_q_objects_for_query(values, search_by_code, search_by_comment)
+        # Получаем проекты и создаем Q-объекты
+        current_projects = get_current_projects(request)
+        q_projects = create_q_objects(current_projects, 'project')
 
-        queryset = queryset.filter(q_objects & q_objects_projects)[:200]
+        # Создаем Q-объекты для поиска
+        search_by_code = request.data.get('search_by_code', False)
+        search_by_comment = request.data.get('search_by_comment', False)
+        search_terms = query.split()
+        
+        q_search = create_q_objects_for_query(
+            search_terms, 
+            search_by_code, 
+            search_by_comment
+        )
+
+        print(q_search)
+        
+
+        # Выполняем запрос
+        queryset = ProjectUtils.get_annotated_remains()
+        queryset = queryset.filter(q_search & q_projects)[:200]
 
         if not queryset.exists():
             return Response({"detail": "Ничего не найдено"}, status=status.HTTP_200_OK)
 
         serializer = RemainsSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)  
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
-from rest_framework.response import Response
+
 
 class StrictPagination(PageNumberPagination):
     page_size = 100  # Жёстко фиксируем 10 элементов на страницу

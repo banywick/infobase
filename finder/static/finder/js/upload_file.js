@@ -43,6 +43,43 @@ function uploadDocumentAndCheckCelery() {
     .catch(error => console.error('Error:', error));
 }
 
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработка отображения имени файла
+    const fileInput = document.getElementById('fileInput');
+    const fileNameSpan = document.querySelector('.file-name');
+    
+    if (fileInput && fileNameSpan) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileNameSpan.textContent = this.files[0].name;
+                fileNameSpan.style.color = '#4b5563';
+            } else {
+                fileNameSpan.textContent = 'Файл не выбран';
+                fileNameSpan.style.color = '#6b7280';
+            }
+        });
+    }
+    
+    // Функции для показа/скрытия popup
+    window.showPopup = function() {
+        const popup = document.querySelector('.upload_popup');
+        if (popup) {
+            popup.style.display = 'block';
+            setTimeout(() => {
+                popup.classList.add('active');
+            }, 10);
+        }
+    };
+    
+});
+
+
+
+
+
+
+
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
