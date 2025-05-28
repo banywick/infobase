@@ -34,11 +34,18 @@
                                     <input class='check_box' type="checkbox" id="search_by_comment" name="search_by_comment" value="true">
                                     <label for="search_by_comment">искать по комментарию</label>
                                 </div>
+                                <div class="check_box_container">
+                                    <input class='check_box' type="checkbox" id="search_by_analog" name="search_by_analog" value="true">
+                                    <label for="search_by_comment">искать аналоги</label>
+                                </div>
                             </div>
                         </div> 
                     </form>    
                 </div>
             </div> 
+            <div class="info_window">
+              
+            </div>
             <div class="info_update">
                 <div>База обновлена</div>
                 <div>13.02.2025</div>
@@ -275,12 +282,9 @@
                         <a href="#">Инвентаризация</a>
                     </div>
                 </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/analogs.svg' %}" alt="Иконка таблицы аналогов">
-                    <div class="menu_link">
-                        <a href="#">Таблица аналогов</a>
-                    </div>
-                </div>
+
+
+
             </div> 
             <div class="down_menu">
                 <div class="button_wrapper_update">

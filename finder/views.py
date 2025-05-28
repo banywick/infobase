@@ -4,7 +4,7 @@ import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from finder.utils.filters_q import create_q_objects, create_q_objects_for_query, get_current_projects
+from finder.utils.filters_q import create_q_objects, create_q_objects_for_query, get_analogs_list, get_current_projects
 from .utils.add_session_data import SessionManager
 from .models import LinkAccess, Remains
 from django.views.generic import TemplateView
@@ -102,15 +102,22 @@ class ProductSearchView(APIView):
         # Создаем Q-объекты для поиска
         search_by_code = request.data.get('search_by_code', False)
         search_by_comment = request.data.get('search_by_comment', False)
+        search_by_analog = request.data.get('search_by_analog', False)
         search_terms = query.split()
         
         q_search = create_q_objects_for_query(
             search_terms, 
             search_by_code, 
-            search_by_comment
+            search_by_comment,
+            search_by_analog
         )
 
+        # Получаем список аналогов
+        list_analogs = get_analogs_list(search_terms, search_by_analog)
+        
         print(q_search)
+        
+
         
 
         # Выполняем запрос
@@ -121,7 +128,10 @@ class ProductSearchView(APIView):
             return Response({"detail": "Ничего не найдено"}, status=status.HTTP_200_OK)
 
         serializer = RemainsSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({
+        "results": serializer.data,  # основные результаты
+        "analogs": list_analogs
+}, status=status.HTTP_200_OK)
 
 
 

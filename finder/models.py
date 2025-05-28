@@ -111,3 +111,25 @@ class LinkAccess(models.Model):
     class Meta:
         verbose_name = "Доступ по ссылкам"
         verbose_name_plural = "Доступы по ссылкам"
+
+
+
+
+class Standard(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name='Коллекция')  # Например "standart38"
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+class StandardValue(models.Model):
+    standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='values', verbose_name='Коллекция')
+    value = models.CharField(max_length=50)  # Храним как строку для универсальности
+
+    def __str__(self):
+        return f"{self.value}"
+
+    class Meta:
+        unique_together = ('standard', 'value')  # Запрещаем дубликаты
+        ordering = ['value']  # Сортировка по значению
+        verbose_name = "Аналоги"
+        verbose_name_plural = "Аналоги"

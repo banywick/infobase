@@ -80,8 +80,8 @@ header {
 }
 
 .filter_container {
-    width: 375px;
-    padding: 10px;
+    width: 425px;
+    padding: 4px;
 }
 
 .filters {
@@ -439,4 +439,61 @@ header {
     margin-left: 175px;
 }
 
+.info_window {
+    z-index: 1;
+    display: none;
+    max-width: 430px;
+    border: 1px solid #e0e0e0;
+    border-radius: 9px;
+    margin-top: 20px;
+    padding: 15px;
+    box-sizing: border-box;
+    background: #f9f9f9;
+    flex-direction: column;
+    gap: 12px;
+}
 
+.analogs-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.analogs-container {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f1f1f1;
+}
+
+.analog-item {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Стили для скроллбара (опционально) */
+.analogs-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.analogs-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.analogs-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+.analogs-container::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}

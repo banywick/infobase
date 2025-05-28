@@ -56,3 +56,29 @@ class GroupAdmin(BaseGroupAdmin):
 # Разрегистрируем стандартную админку Group и регистрируем свою
 admin.site.unregister(Group)
 admin.site.register(Group, GroupAdmin)
+
+
+class StandardValueInline(admin.TabularInline):
+    model = StandardValue
+    extra = 5  # Количество пустых строк для добавления
+    ordering = ('value',)  # Сортировка значений
+    show_change_link = True  # Ссылка на отдельное редактирование
+
+@admin.register(Standard)
+class StandardAdmin(admin.ModelAdmin):
+    list_display = ('name', 'values_count')
+    search_fields = ('name',)
+    inlines = [StandardValueInline]
+    
+    def values_count(self, obj):
+        return obj.values.count()
+    values_count.short_description = "Кол-во значений"
+
+@admin.register(StandardValue)
+class StandardValueAdmin(admin.ModelAdmin):
+    list_display = ('id', 'value', 'standard')  # Добавляем 'id' первым полем
+    list_display_links = ('id',)  # Указываем, что ссылка будет на 'id'
+    list_editable = ('value', 'standard')  # Теперь можно редактировать эти поля
+    list_filter = ('standard',)
+    search_fields = ('value',)
+    list_per_page = 100
