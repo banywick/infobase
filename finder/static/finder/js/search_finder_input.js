@@ -120,42 +120,75 @@ function renderTableData(data, tbody, not_found) {
         const row = document.createElement('tr');
         row.classList.add('table-row');
         
-        row.innerHTML = `
-            <td class="icon-column">
-                <button class="id_positoin_row" data-id="${item.id}">
-                    <img id="keep_icon" src="${staticUrls.keepIcon}" alt="">
-                </button>
-            </td>
-            <td class="icon-column">
-                ${item.notes_part ? `
-                    <div class="notes-icon-container">
-                        <img src="${staticUrls.commentIcon}" alt="" class="notes-icon">
-                        <div class="tooltip">${item.notes_part}</div>
-                    </div>` : ''}
-            </td>
-            <td class="data-column">${item.party}</td>
-            <td class="data-column">${item.article}</td>
-            <td class="data-column">${item.code}</td>
-            <td class="data-column">${item.title}</td>
-            <td class="icon-column">
-                <img src="${staticUrls.copyIcon}" alt="">
-            </td>
-            <td class="data-column">${item.quantity}</td>
-            <td class="data-column">${item.base_unit}</td>
-            <td class="data-column">${item.price}</td>
-            <td class="icon-column">
-                <div class="circle_table"
-                    style="background-color: ${item.status_color};
-                    width:10px;
-                    height:10px;
-                    border-radius:100%">
-                </div>
-            </td>
-            <td class="data-column">${item.project}</td>
-            <td class="data-column">${item.comment || ''}</td>
-        `;
+        // row.innerHTML = `
+        //     <td class="icon-column">
+        //         <button class="id_positoin_row" data-id="${item.id}">
+        //             <img id="keep_icon" src="${staticUrls.keepIcon}" alt="">
+        //         </button>
+        //     </td>
+        //     // <td class="icon-column">
+        //     //     ${item.notes_part ? `
+        //     //         <div class="notes-icon-container">
+        //     //             <img src="${staticUrls.commentIcon}" alt="" class="notes-icon">
+        //     //             <div class="tooltip">${item.notes_part}</div>
+        //     //         </div>` : ''}
+        //     // </td>
+        //     // <td class="data-column">${item.party}</td>
+        //     // <td class="data-column">${item.article}</td>
+        //     // <td class="data-column">${item.code}</td>
+        //     // <td class="data-column">${item.title}</td>
+        //     // <td class="icon-column">
+        //     // <div class="bany">
+        //     // <img src="${staticUrls.copyIcon}" alt="55555" class="copy-icon">
+        //     // </div>
+        //     // </td>
+        //     <td class="data-column">${item.quantity}</td>
+        //     <td class="data-column">${item.base_unit}</td>
+        //     <td class="data-column">${item.price}</td>
+        //     <td class="icon-column">
+        //         <div class="circle_table"
+        //             style="background-color: ${item.status_color};
+        //             width:10px;
+        //             height:10px;
+        //             border-radius:100%">
+        //         </div>
+        //     </td>
+        //     <td class="data-column">${item.project}</td>
+        //     <td class="data-column">${item.comment || ''}</td>
+        // `;
         
-        tbody.appendChild(row);
+        // tbody.appendChild(row);
+
+
+// Обработчик копирования
+tbody.addEventListener('click', function(event) {
+    if (event.target.closest('.copy-icon')) {
+        const row = event.target.closest('tr');
+        const article = row.querySelector('td:nth-child(4)').textContent; // 4-я ячейка - артикул
+        const title = row.querySelector('td:nth-child(6)').textContent;   // 6-я ячейка - название
+        console.log(article)
+        console.log(title)
+        // Создаем временный textarea для копирования
+        const textarea = document.createElement('textarea');
+        textarea.value = `${article} ${title}`;
+        textarea.style.position = 'fixed';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            document.execCommand('copy');
+            // Визуальная обратная связь
+            event.target.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                event.target.style.transform = 'scale(1)';
+            }, 300);
+        } catch (err) {
+            console.error('Ошибка копирования:', err);
+        }
+        
+        document.body.removeChild(textarea);
+    }
+});
     });
     
     // Обработчик для кнопок закрепления
