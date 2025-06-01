@@ -34,6 +34,7 @@ def find_standard_values(value):
     Returns:
         list: Список связанных стандартных значений или None если не найдено
     """
+    print(value,0000)
     try:
         # Находим исходное стандартное значение
         standard_value = StandardValue.objects.select_related('standard').get(value=value)

@@ -1,10 +1,11 @@
 import logging
 import time
 import json
+import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from finder.utils.filters_q import create_q_objects, create_q_objects_for_query, get_analogs_list, get_current_projects
+from finder.utils.filters_q import *
 from .utils.add_session_data import SessionManager
 from .models import LinkAccess, Remains
 from django.views.generic import TemplateView
@@ -14,7 +15,6 @@ from .utils.project_utils import ProjectUtils
 from finder.tasks import data_save_db, ping 
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import FileUploadSerializer
-import os
 from .utils.connect_redis_bd import connect_redis
 from .utils.file_name_document import get_file_name
 from celery.result import AsyncResult
@@ -103,6 +103,7 @@ class ProductSearchView(APIView):
         search_by_code = request.data.get('search_by_code', False)
         search_by_comment = request.data.get('search_by_comment', False)
         search_by_analog = request.data.get('search_by_analog', False)
+        search_by_kd = request.data.get('search_by_kd', False)
         search_terms = query.split()
         
         q_search = create_q_objects_for_query(
@@ -114,8 +115,10 @@ class ProductSearchView(APIView):
 
         # Получаем список аналогов
         list_analogs = get_analogs_list(search_terms, search_by_analog)
-        
-        print(q_search)
+
+
+        #Получаем сопоставление КД\ТН
+        list_kd = get_tn_kd(query, search_by_kd)
         
 
         
@@ -130,7 +133,8 @@ class ProductSearchView(APIView):
         serializer = RemainsSerializer(queryset, many=True)
         return Response({
         "results": serializer.data,  # основные результаты
-        "analogs": list_analogs
+        "analogs": list_analogs,
+        "analogs_kd": list_kd
 }, status=status.HTTP_200_OK)
 
 

@@ -80,8 +80,10 @@ header {
 }
 
 .filter_container {
-    width: 425px;
+    width: 373px;
     padding: 4px;
+    background: #e2892b29;
+    border-radius: 6px;
 }
 
 .filters {

@@ -97,3 +97,14 @@ def get_analogs_list(search_terms, search_by_analog=False):
 
 
 
+def get_tn_kd(string, search_by_kd=False):
+    
+    tn_kd_list = []
+
+    if not search_by_kd:
+        return tn_kd_list
+    kd_values = find_standard_values(string)
+    if kd_values:
+        tn_kd_list.extend(kd_values)
+
+    return tn_kd_list

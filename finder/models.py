@@ -123,7 +123,7 @@ class Standard(models.Model):
 
 class StandardValue(models.Model):
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='values', verbose_name='Коллекция')
-    value = models.CharField(max_length=50)  # Храним как строку для универсальности
+    value = models.CharField(max_length=100)  # Храним как строку для универсальности
 
     def __str__(self):
         return f"{self.value}"

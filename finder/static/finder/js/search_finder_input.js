@@ -46,6 +46,7 @@ function performSearch(searchData) {
     .then(data => {
         console.log('Results:', data.results);
         console.log('Analogs:', data.analogs);
+        console.log('Analogs_kd:', data.analogs_kd);
         
       // В функции performSearch, в части обработки аналогов:
         if (data.analogs && data.analogs.length > 0) {
@@ -60,6 +61,28 @@ function performSearch(searchData) {
         listContainer.className = 'analogs-container';
 
         data.analogs.forEach(analog => {
+            const analogItem = document.createElement('div');
+            analogItem.className = 'analog-item';
+            analogItem.textContent = analog;
+            listContainer.appendChild(analogItem);
+        });
+
+        infoWindow.innerHTML = ''; // Очищаем перед добавлением
+        infoWindow.appendChild(title);
+        infoWindow.appendChild(listContainer);
+        }
+        if (data.analogs_kd && data.analogs_kd.length > 0) {
+        infoWindow.style.display = 'flex'; // Изменено на flex
+        infoWindow.style.flexDirection = 'column';
+
+        const title = document.createElement('h3');
+        title.textContent = 'Сопоставление наименования КД \ ТН';
+        title.className = 'analogs-title';
+
+        const listContainer = document.createElement('div');
+        listContainer.className = 'analogs-container';
+
+        data.analogs_kd.forEach(analog => {
             const analogItem = document.createElement('div');
             analogItem.className = 'analog-item';
             analogItem.textContent = analog;
