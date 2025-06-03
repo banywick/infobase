@@ -111,36 +111,6 @@ td:nth-child(13) {
     background-color: rgba(216, 222, 227, 1);
 }
 
-
-
-.notes-icon-container {
-    position: relative;
-    cursor: pointer;
-    
-}
-
-.tooltip {
-    position: absolute;
-    background-color: rgb(221 221 221);
-    color: rgba(31, 58, 85, 1);
-    padding: 5px;
-    border: 1px solid rgb(165, 176, 187);
-    border-radius: 8px;
-    font-size: 14px;
-    white-space: nowrap;
-    top: -131%;
-    left: 18px;
-    height: 35px;
-    align-content: center;
-    display: none;
-    z-index: 1;
-    
-}
-
-.notes-icon-container:hover .tooltip {
-    display: block;
-}
-
 .not_found {
     display: flex;
     width: 224px;

@@ -1,6 +1,6 @@
 function setupCopyIconListener() {
     document.addEventListener('click', function(event) {
-        const iconColumn = event.target.closest('.icon-column');
+        const iconColumn = event.target.closest('.copy_visual_box');
         if (!iconColumn) return;
 
         event.stopPropagation();
