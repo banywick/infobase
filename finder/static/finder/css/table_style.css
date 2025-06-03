@@ -123,9 +123,8 @@ td:nth-child(13) {
 
 }
 
-.id_positoin_row img :hover {
-    background-color: aqua;
-
+.icon-column {
+    cursor: pointer;
 }
 
 
