@@ -5,6 +5,7 @@ let currentPage = 1;
 const ITEMS_PER_PAGE = 100; // Фиксированное количество элементов на страницу
 let hasMoreData = true;
 let abortController = null;
+console.log("Hf,jnftn d gthde. jxthtlm!!")
 
 // Обработчик клика на элементы проектов
 document.addEventListener('click', function(e) {
@@ -184,41 +185,56 @@ function renderTableData(data, tbody, notFound, clearTable = true) {
         row.innerHTML = `
             <td class="icon-column">
                 <button class="id_positoin_row" data-id="${item.id}">
-                    <img id="keep_icon" src="${staticUrls.keepIcon}" alt="">
+                    <img id="keep_icon" src="${staticUrls?.keepIcon || ''}" alt="Закрепить" title="Закрепить позицию">
                 </button>
             </td>
             <td class="icon-column">
-                ${item.notes_part ? `
-                    <div class="notes-icon-container">
-                        <img src="${staticUrls.commentIcon}" alt="" class="notes-icon">
-                        <div class="tooltip">${item.notes_part}</div>
-                    </div>` : ''}
+            ${item.notes_part ? `
+                <img src="${staticUrls?.commentIcon || ''}" 
+                    alt="Комментарий" 
+                    class="notes-icon" 
+                    title="${item.notes_part}">
+            ` : ''}
             </td>
-            <td class="data-column">${item.party}</td>
-            <td class="data-column">${item.article}</td>
-            <td class="data-column">${item.code}</td>
-            <td class="data-column">${item.title}</td>
+            <td class="data-column">${escapeHtml(item.party || '')}</td>
+            <td class="data-column">${escapeHtml(item.article || '')}</td>
+            <td class="data-column">${escapeHtml(item.code || '')}</td>
+            <td class="data-column">${escapeHtml(item.title || '')}</td>
             <td class="icon-column">
-                <img src="${staticUrls.copyIcon}" alt="">
+            <div class="copy_visual_box">
+                    <img src="${staticUrls?.copyIcon || ''}" alt="Копировать" class="copy-icon" title="Копировать артикул и наименование">
+            </div>        
             </td>
-            <td class="data-column">${item.quantity}</td>
-            <td class="data-column">${item.base_unit}</td>
-            <td class="data-column">${item.price}</td>
+            <td class="data-column">${escapeHtml(item.quantity || '')}</td>
+            <td class="data-column">${escapeHtml(item.base_unit || '')}</td>
+            <td class="data-column">${escapeHtml(item.price || '')}</td>
             <td class="icon-column">
-                <div class="circle_table"
-                    style="background-color: ${item.status_color};
-                    width:10px;
-                    height:10px;
-                    border-radius:100%">
+                <div class="circle_table" style="
+                    background-color: ${item.status_color || '#ccc'};
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 100%"
+                    title="Статус">
                 </div>
             </td>
-            <td class="data-column">${item.project}</td>
-            <td class="data-column">${item.comment || ''}</td>
+            <td class="data-column">${escapeHtml(item.project || '')}</td>
+            <td class="data-column">${escapeHtml(item.comment || '')}</td>
         `;
         
         tbody.appendChild(row);
     });
     
+
+    function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
     // Обработчик для кнопок закрепления
     tbody.addEventListener('click', function(event) {
         if (event.target.closest('.id_positoin_row')) {

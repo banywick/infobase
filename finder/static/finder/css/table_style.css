@@ -127,4 +127,83 @@ td:nth-child(13) {
     cursor: pointer;
 }
 
+/* Анимации для закрепленных позиций */
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
 
+@keyframes slideOut {
+    to {
+        transform: translateX(20px);
+        opacity: 0;
+        height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        border: none;
+    }
+}
+
+/* Классы для анимаций */
+.pinned-row {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.unpinning-row {
+    animation: slideOut 0.3s ease-in forwards;
+    overflow: hidden;
+}
+
+
+
+.unpin-button {
+    background-color: rgba(216, 222, 227, 1);
+}
+
+
+
+.unpin-button:hover #unpin_icon {
+    animation: shake 0.5s ease;
+}
+
+
+
+@keyframes shake {
+    25%, 100% { transform: rotate(-88deg); }
+    25% { transform: rotate(25deg); }
+    50% { transform: rotate(5deg); }
+    75% { transform: rotate(20deg); }
+}
+
+
+
+.copy-feedback {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    color: white;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+.copy-feedback.success {
+    background-color: #4CAF50;
+}
+
+.copy-feedback.error {
+    background-color: #F44336;
+}
+
+.copy-feedback.fade-out {
+    opacity: 0;
+}

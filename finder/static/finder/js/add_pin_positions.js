@@ -1,22 +1,35 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Выполняем fetch запрос при загрузке страницы
-    fetchData();
-
-    // Добавляем обработчик клика на элемент с классом id_positoin_row
-    document.addEventListener('click', function(event) {
-        if (event.target.closest('.id_positoin_row')) {
-            const button = event.target.closest('.id_positoin_row');
-            console.log(button, 'кнопка таблицы');
-
-            // Устанавливаем задержку в 1 секунду перед выполнением fetch запроса
-            setTimeout(function() {
-                fetchData();
-            }, 1000); // 1000 миллисекунд = 1 секунда
-        }
-    });
+    initPinnedRows();
 });
 
-function fetchData() {
+
+function initPinnedRows() {
+    fetchPinnedData();
+    document.getElementById('pinnedRows').addEventListener('click', handlePinnedRowClick);
+    document.getElementById('copy_all_pin').addEventListener('click', copyAllPinnedRows);
+    
+    // Обработчик для кнопок закрепления в основной таблице
+    document.addEventListener('click', function(event) {
+        const pinButton = event.target.closest('.id_positoin_row');
+        if (pinButton) {
+            // Добавляем визуальный эффект на кнопку
+            const icon = pinButton.querySelector('img');
+            if (icon) {
+                icon.classList.add('pinning-effect');
+                setTimeout(() => icon.classList.remove('pinning-effect'), 500);
+            }
+            
+            // Обновляем закрепленные позиции с задержкой
+            setTimeout(fetchPinnedData, 500);
+        }
+    });
+}
+
+
+
+
+
+function fetchPinnedData() {
     fetch('/finder/get_fixed_positions/', {
         method: 'GET',
         headers: {
@@ -24,116 +37,143 @@ function fetchData() {
             'X-CSRFToken': getCookie('csrftoken')
         },
     })
-    .then(response => response.json())
-    .then(data => {
-        // Данные из сессии с закрепленными позициями
-        // console.log('Success:', data);
-
-        // Преобразуем объект в массив значений
-        const dataArray = Object.values(data);
-        console.log(dataArray);
-
-        // Найдите элемент, в который нужно добавить строки
-        const pinnedRows = document.getElementById('pinnedRows');
-
-        // Очищаем текущие строки перед добавлением новых
-        pinnedRows.innerHTML = '';
-
-        // Добавляем новые строки в блок закрепленных позиций
-        dataArray.forEach(item => {
-            const row = document.createElement('tr'); // Используем document.createElement
-            row.classList.add('table-row');
-
-            // Иконка закрепления
-            row.innerHTML = `
-                <td class="icon-column">
-                    <button class="id_positoin_row_pin" data-id="${item.id}">
-                        <img id="keep_icon_pin" src="${staticUrls.keepIconRed}" alt="">
-                    </button>
-                </td>
-                <td class="icon-column">
-                    ${item.notes_part ? `
-                        <div class="notes-icon-container">
-                            <img src="${staticUrls.commentIcon}" alt="" class="notes-icon">
-                            <div class="tooltip">${item.notes_part}</div></div> ` : ''}
-                </td>
-                <td class="data-column">${item.party}</td>
-                <td class="data-column">${item.article}</td>
-                <td class="data-column">${item.code}</td>
-                <td class="data-column">${item.title}</td>
-                <td class="icon-column">
-                    <img src="${staticUrls.copyIcon}" alt="">
-                </td>
-                <td class="data-column">${item.quantity}</td>
-                <td class="data-column">${item.base_unit}</td>
-                <td class="data-column">${item.price}</td>
-                <td class="icon-column">
-                    <div class="circle_table"
-                        style="background-color: ${item.status_color};
-                        width:10px;
-                        height:10px;
-                        border-radius:100%">
-                    </div>
-                </td>
-                <td class="data-column">${item.project}</td>
-                <td class="data-column">${item.comment || ''}</td> <!-- Если комментарий null, выводим пустую строку -->
-            `;
-
-            pinnedRows.appendChild(row); // Добавляем строку в таблицу
-        });
-
-        pinnedRows.addEventListener('click', function(event) {
-            if (event.target.closest('.id_positoin_row_pin')) {
-                const button = event.target.closest('.id_positoin_row_pin');
-                const data_id = button.getAttribute('data-id');
-                console.log(data_id);
-
-                // Создаём URL внутри обработчика событий
-                const url = `/finder/remove_fix_positions_to_session/${data_id}/`;
-
-                // Отправляем fetch запрос
-                fetch(url, {
-                    method: 'POST', // или 'GET', в зависимости от вашего API
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    // Если нужно отправить данные в теле запроса, используйте body
-                    // body: JSON.stringify({ key: 'value' })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Success:', data);
-
-                    // Удаление всей строки из таблицы
-                    const rowToRemove = button.closest('tr');
-                    if (rowToRemove) {
-                        rowToRemove.remove();
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
-            }
-        });
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
     })
-    .catch((error) => {
-        console.error('Error:', error);
+    .then(data => {
+        renderPinnedRows(data);
+    })
+    .catch(error => {
+        console.error('Error fetching pinned data:', error);
     });
 }
 
-// Функция для получения CSRF-токена
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
+function renderPinnedRows(data) {
+    const pinnedRows = document.getElementById('pinnedRows');
+    if (!pinnedRows) return;
+
+    if (!data || Object.keys(data).length === 0) {
+        pinnedRows.innerHTML = '';
+        return;
     }
-    return cookieValue;
+
+    const dataArray = Object.values(data);
+    const currentIds = Array.from(pinnedRows.children).map(row => row.dataset.id);
+    const newIds = dataArray.map(item => item.id);
+
+    // Удаляем строки, которых больше нет в данных
+    Array.from(pinnedRows.children).forEach(row => {
+        if (!newIds.includes(row.dataset.id)) {
+            row.classList.add('unpinning-row');
+            row.addEventListener('animationend', () => row.remove());
+        }
+    });
+
+    // Добавляем новые строки с анимацией
+    dataArray.forEach(item => {
+        if (!currentIds.includes(item.id)) {
+            const row = createPinnedRow(item);
+            pinnedRows.appendChild(row);
+            // Запускаем анимацию после добавления в DOM
+            setTimeout(() => row.classList.add('pinned-row'), 10);
+        }
+    });
 }
+
+function createPinnedRow(item) {
+    const row = document.createElement('tr');
+    row.dataset.id = item.id;
+    
+    row.innerHTML = `
+        <td class="icon-column">
+        <button class="unpin-button" id="id_positoin_row" data-id="${item.id}" title="Открепить позицию">
+            <img id="unpin_icon" 
+                src="${staticUrls?.keepIcon || ''}" 
+                alt="Открепить"
+                style="filter: brightness(0) saturate(100%) invert(27%) sepia(91%) saturate(2476%) hue-rotate(346deg) brightness(104%) contrast(97%); 
+                        transform: rotate(-88deg);
+                        width: 24px;
+                        height: 24px;">
+        </button>
+        </td>
+        <td class="icon-column">
+            ${item.notes_part ? `
+                <img src="${staticUrls?.commentIcon || ''}" 
+                    alt="Комментарий" 
+                    class="notes-icon" 
+                    title="${escapeHtml(item.notes_part)}">
+            ` : ''}
+        </td>
+        <td class="data-column">${escapeHtml(item.party || '')}</td>
+        <td class="data-column">${escapeHtml(item.article || '')}</td>
+        <td class="data-column">${escapeHtml(item.code || '')}</td>
+        <td class="data-column">${escapeHtml(item.title || '')}</td>
+        <td class="icon-column">
+            <div class="copy_visual_box">
+                <img src="${staticUrls?.copyIcon || ''}" alt="Копировать" class="copy-icon" title="Копировать артикул и наименование">
+            </div>        
+        </td>
+        <td class="data-column">${escapeHtml(item.quantity || '')}</td>
+        <td class="data-column">${escapeHtml(item.base_unit || '')}</td>
+        <td class="data-column">${escapeHtml(item.price || '')}</td>
+        <td class="icon-column">
+                <div class="circle_table" style="
+                    background-color: ${item.status_color || '#ccc'};
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 100%"
+                    title="Статус">
+                </div>
+            </td>
+        <td class="data-column">${escapeHtml(item.project || '')}</td>
+        <td class="data-column">${escapeHtml(item.comment || '')}</td>
+    `;
+    
+    return row;
+}
+
+function handlePinnedRowClick(event) {
+    // Обработка открепления
+    if (event.target.closest('.unpin-button')) {
+        const button = event.target.closest('.unpin-button');
+        const row = button.closest('tr');
+        const data_id = button.getAttribute('data-id');
+        
+        // Анимация перед удалением
+        row.classList.add('unpinning-row');
+        
+        // Отправка запроса после начала анимации
+        setTimeout(() => {
+            fetch(`/finder/remove_fix_positions_to_session/${data_id}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка сети');
+                return response.json();
+            })
+            .then(data => {
+                // Удаляем строку после завершения анимации
+                row.addEventListener('animationend', () => row.remove());
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                row.classList.remove('unpinning-row');
+                alert('Ошибка при откреплении позиции');
+            });
+        }, 100);
+        return;
+    }
+    
+    // Обработка копирования
+    if (event.target.closest('.copy-icon')) {
+        handleCopyClick(event);
+        return;
+    }
+}
+
+// Остальные функции остаются без изменений

@@ -5,7 +5,7 @@ function getRowData(row) {
 
     // Определяем, в каком tbody находится строка
     if (row.closest('#pinnedRows')) {
-        rowData['ID'] = cells[0].querySelector('.id_positoin_row_pin').getAttribute('data-id');
+        rowData['ID'] = cells[0].querySelector('.unpin-button').getAttribute('data-id');
     } else {
         rowData['ID'] = cells[0].querySelector('.id_positoin_row').getAttribute('data-id');
     }
@@ -21,6 +21,13 @@ function getRowData(row) {
 // Оптимизированная функция обновления данных
 async function updateDetailsItem(data) {
     try {
+        // 3. Делаем ОДИН запрос к серверу
+        const response = await fetch(`get_details/article_id/${data.ID}/`);
+        if (!response.ok) throw new Error('Ошибка сети');
+        
+        const additionalData = await response.json();
+
+        
         // 1. Сначала обновляем данные, которые уже есть
         document.getElementById('position_name').textContent = data['Наименование'] || '';
         document.getElementById('position_article').textContent = data['Артикул'] || '';
@@ -30,11 +37,6 @@ async function updateDetailsItem(data) {
         const projectsContainer = document.getElementById('item_project_popup');
         projectsContainer.innerHTML = '';
         
-        // 3. Делаем ОДИН запрос к серверу
-        const response = await fetch(`get_details/article_id/${data.ID}/`);
-        if (!response.ok) throw new Error('Ошибка сети');
-        
-        const additionalData = await response.json();
         
         // 4. Гарантированное обновление цвета
         const colorElement = document.getElementById('project_color');

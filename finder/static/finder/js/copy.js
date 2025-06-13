@@ -52,4 +52,56 @@ function setupCopyIconListener() {
     });
 }
 
+// Новая функция для копирования всех закрепленных строк
+function copyAllPinnedRows() {
+    const pinnedRows = document.querySelectorAll('#pinnedRows tr');
+    if (pinnedRows.length === 0) {
+        showCopyFeedback('Нет закрепленных позиций для копирования', false);
+        return;
+    }
+
+    let clipboardText = '';
+    
+    pinnedRows.forEach(row => {
+        const cells = row.querySelectorAll('td.data-column');
+        if (cells.length >= 6) { // Проверяем, что есть нужные колонки
+            const article = cells[1].textContent.trim(); // 4-й data-column - артикул
+            const title = cells[3].textContent.trim();  // 6-й data-column - название
+            clipboardText += `${article}\t${title}\n`;  // \t для разделения табом, \n для новой строки
+        }
+    });
+
+    if (clipboardText) {
+        copyToClipboard(clipboardText.trim());
+        showCopyFeedback('Скопировано: ' + pinnedRows.length + ' позиций', true);
+        
+        // Визуальная обратная связь для иконки
+        const icon = document.querySelector('.copy_all_pin');
+        // icon.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+            icon.style.transform = 'scale(1)';
+        }, 300);
+    }
+}
+
+
+// Функция для показа уведомления о копировании
+function showCopyFeedback(message, isSuccess) {
+    const feedback = document.createElement('div');
+    feedback.className = `copy-feedback ${isSuccess ? 'success' : 'error'}`;
+    feedback.textContent = message;
+    
+    document.body.appendChild(feedback);
+    
+    setTimeout(() => {
+        feedback.classList.add('fade-out');
+        setTimeout(() => feedback.remove(), 500);
+    }, 2000);
+}
+
+
+
+
+
+
 document.addEventListener('DOMContentLoaded', setupCopyIconListener);

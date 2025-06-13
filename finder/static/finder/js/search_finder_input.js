@@ -171,6 +171,7 @@ function renderTableData(data, tbody, not_found) {
         `;
         
         tbody.appendChild(row);
+        console.log(item.status_color)
     });
 }
 

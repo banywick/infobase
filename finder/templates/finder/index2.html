@@ -200,7 +200,10 @@
                             <th class="header-cell">Код</th>
                             <th class="header-cell">Наименование</th>
                             <th class="icon-column">
-                                <img src="{% static 'finder/icon/content_copy.svg' %}" alt="Копировать" title='Копировать блок закрепленных позиций'>  
+                                <img id="copy_all_pin"
+                                src="{% static 'finder/icon/content_copy.svg' %}"
+                                alt="Копировать"
+                                title='Копировать блок закрепленных позиций'>  
                             </th>
                             <th class="header-cell">Количество на складе</th>
                             <th class="header-cell">Единицы измерения</th>
@@ -329,11 +332,12 @@
     <script src='{% static "finder/js/details.js"%}'></script> 
     <script src='{% static "finder/js/filters_projects.js"%}'></script> 
     <script src="{% static "finder/js/projectSelection.js" %}"></script>
-    {% comment %} <script src="{% static "finder/js/all_one_project.js" %}"></script> {% endcomment %}
+    <script src="{% static "finder/js/all_one_project.js" %}"></script>
     <script src='{% static "finder/js/upload_file.js"%}'></script> 
     <script src='{% static "finder/js/check_task_upload_status.js"%}'></script> 
     <script src='{% static "finder/js/link_permissions.js"%}'></script> 
     <script src='{% static "finder/js/copy.js"%}'></script> 
+    <script src='{% static "finder/js/copy_all_pin.js"%}'></script> 
     {% comment %} <script src='{% static "finder/js/switch_manual_finger.js"%}'></script>  {% endcomment %}
 </body>
 </html>
