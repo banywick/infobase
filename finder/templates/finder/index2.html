@@ -51,7 +51,7 @@
             </div>
             <div class="info_update">
                 <div>База обновлена</div>
-                <div>13.02.2025</div>
+                <div>{{file_name}}</div>
             </div>
         </header>
         <div class="filter_project_container">
@@ -186,9 +186,9 @@
                     </div>
 
             </div>
-            {% comment %} <div class="manual">
-                <img src="{% static 'finder/img/manual.jpg' %}" alt="Инструкция">
-            </div>  {% endcomment %}
+                <div class="manual">
+                    <img src="{% static 'finder/img/manual.jpg' %}" alt="Инструкция">
+                </div>
             <div class="table-container">
                 <table>
                     <thead>
@@ -231,7 +231,7 @@
                 <img src="{% static 'finder/icon/logo_finder.svg' %}" alt="Логотип">
             </div>
             <div class="menu_item">
-                <div class="menu_row">
+                <div id="menu_row_find" class="menu_row">
                     <img id="icon_color" src="{% static 'finder/icon/search.svg' %}" alt="Иконка поиска">
                     <div class="menu_link">
                         <a href="#">Поиск</a>
@@ -338,7 +338,7 @@
     <script src='{% static "finder/js/link_permissions.js"%}'></script> 
     <script src='{% static "finder/js/copy.js"%}'></script> 
     <script src='{% static "finder/js/copy_all_pin.js"%}'></script> 
-    {% comment %} <script src='{% static "finder/js/switch_manual_finger.js"%}'></script>  {% endcomment %}
+    <script src='{% static "finder/js/switch_manual_finger.js"%}'></script> 
 </body>
 </html>
 

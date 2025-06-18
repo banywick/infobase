@@ -5,7 +5,6 @@ let currentPage = 1;
 const ITEMS_PER_PAGE = 100; // Фиксированное количество элементов на страницу
 let hasMoreData = true;
 let abortController = null;
-console.log("Hf,jnftn d gthde. jxthtlm!!")
 
 // Обработчик клика на элементы проектов
 document.addEventListener('click', function(e) {

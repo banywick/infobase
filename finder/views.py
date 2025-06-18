@@ -52,10 +52,12 @@ class FileUploadView(APIView):
                 # Создаем подключение к Redis
                 redis_conn = connect_redis()
 
+
                 # Сохраняем строку в Redis
                 redis_conn.set('task_id', task.id)
-
-                return Response({'message': 'task created', 'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+                return Response({'message': 'task created',
+                                'task_id': task.id}, 
+                                status=status.HTTP_202_ACCEPTED)
             return Response({'message': 'Error celery'}, status=status.HTTP_202_ACCEPTED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

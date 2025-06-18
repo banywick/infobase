@@ -14,19 +14,15 @@
     position: absolute;
     top: 49%;
     transform: translate(-50%, -50%);
-    z-index: 2;
+    z-index: 15;
     width: 1282px;
-    height: 680px;
+    height: 700px;
     left: 674px;
     border-radius: 10px;
     background: rgb(255, 255, 255);
     border: 1px solid black;
-    text-align: center;
     /* Добавляем внутренние отступы и box-sizing */
     padding: 20px;
-    box-sizing: border-box;
-    /* Запрещаем переполнение по горизонтали */
-    overflow-x: hidden;
     display: none;
 }
 

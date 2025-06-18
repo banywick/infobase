@@ -301,21 +301,24 @@ header {
 }
 
 .manual {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    overflow-y: auto; /* Включаем вертикальную прокрутку для изображения */
+    height: 85vh; /* Фиксированная высота на весь экран */
+    overflow-y: auto; /* Включаем скролл при переполнении */
     display: none;
 }
+
+
+.manual img {
+    width: 100%;
+    height: auto;
+    min-height: 100vh; /* Гарантирует, что изображение будет больше экрана */
+    object-fit: contain; /* Сохраняет пропорции */
+}
+
 
 .table-container {
     display: block;
 }
 
-.manual img {
-    width: 100%;
-    height: auto;
-}
 
 .title_count {
     margin-right: 5px;

@@ -116,14 +116,14 @@ class LinkAccess(models.Model):
 
 
 class Standard(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name='Коллекция')  # Например "standart38"
+    name = models.CharField(max_length=255, unique=True, verbose_name='Коллекция')  # Например "standart38"
 
     def __str__(self) -> str:
         return f"{self.name}"
 
 class StandardValue(models.Model):
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='values', verbose_name='Коллекция')
-    value = models.CharField(max_length=100)  # Храним как строку для универсальности
+    value = models.CharField(max_length=255)  # Храним как строку для универсальности
 
     def __str__(self):
         return f"{self.value}"
