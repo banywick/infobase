@@ -137,10 +137,7 @@ class ProductSearchView(APIView):
         "results": serializer.data,  # основные результаты
         "analogs": list_analogs,
         "analogs_kd": list_kd
-}, status=status.HTTP_200_OK)
-
-
-
+        }, status=status.HTTP_200_OK)
 
 
 class StrictPagination(PageNumberPagination):
@@ -155,6 +152,7 @@ class StrictPagination(PageNumberPagination):
             'count': self.page.paginator.count,
             'results': data
         })
+
 
 class AllProdSelectedFilter(APIView):
     pagination_class = StrictPagination  # Используем наш строгий пагинатор
@@ -283,6 +281,7 @@ class RemainsDetailView(APIView):
         }
         
         return Response(data, status=status.HTTP_200_OK)    
+
 
 class ProjectListView(APIView):
     """
@@ -421,6 +420,7 @@ class GetSessionDataView(APIView):
         session_data = request.session.get('selected_projects', [])
         return Response({'selected_projects': session_data}, status=status.HTTP_200_OK)    
     
+
 class RemoveProjectFromSessionView(APIView):
     """
     Представление для удаления проекта из сессии пользователя.
@@ -470,6 +470,8 @@ class RemoveProjectFromSessionView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
 class ClearSelectedProjectsView(APIView):
     """
     Представление для полного удаления всех выбранных проектов из сессии пользователя.
@@ -585,7 +587,8 @@ class RemoveFixPositionToSession(APIView):
             del current_projects[fixed_position_id_str]
             request.session['selected_instance'] = current_projects    
             return Response({"message": "Fix position remove successfully."}, status=status.HTTP_200_OK)  
-    
+
+
 class GetFixPositionsToSession(APIView):
 
     """
@@ -616,6 +619,7 @@ class GetFixPositionsToSession(APIView):
         """
         current_projects = request.session.get('selected_instance', {})
         return Response(current_projects, status=status.HTTP_200_OK) 
+
 
 class CheckTaskStatus(APIView):
     """
@@ -676,6 +680,7 @@ class CheckTaskStatus(APIView):
             'status': task_result.status,  # Возвращаем статус задачи
             'result': result,  # Возвращаем результат или сообщение об ошибке
         })
+
 
 class CeleryStatusView(APIView):
     """
