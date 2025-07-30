@@ -14,26 +14,28 @@ WORKDIR /usr/src/app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
-# Копирование проекта
+# Копирование проекта (основной копирующий слой)
 COPY . .
 
-# Копируем только нужные файлы
-COPY ./src /usr/src/app
-COPY ./deploy/docker-entrypoint.prod.sh /
-
-# Настройка скрипта
-RUN chmod +x /docker-entrypoint.prod.sh && \
-    chown root:root /docker-entrypoint.prod.sh
+# Перенос entrypoint-скрипта (если он в deploy/)
+RUN if [ -f "/usr/src/app/deploy/docker-entrypoint.prod.sh" ]; then \
+        mv /usr/src/app/deploy/docker-entrypoint.prod.sh / && \
+        chmod +x /docker-entrypoint.prod.sh && \
+        chown root:root /docker-entrypoint.prod.sh; \
+    fi
 
 # Сборка статики
 RUN python manage.py collectstatic --noinput
 
 # Создание непривилегированного пользователя
-RUN useradd -m appuser && chown appuser:appuser /usr/src/app
+RUN useradd -m appuser && \
+    chown appuser:appuser -R /usr/src/app
+
 USER appuser
 
 # Порт приложения
 EXPOSE 8000
 
-# Команда запуска
+# Точка входа и команда
+ENTRYPOINT ["/docker-entrypoint.prod.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "config.wsgi:application"]
