@@ -1,24 +1,29 @@
 from .base import *
 
 DEBUG = False
+ALLOWED_HOSTS = ['yourdomain.com', 'localhost']
 
-ALLOWED_HOSTS = ['yourdomain.com']
+# Security
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
 
+# Static files
+STATIC_ROOT = '/usr/src/app/staticfiles'
+STATIC_URL = '/static/'
+
+# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB'),
         'USER': os.getenv('POSTGRES_USER'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('POSTGRES_HOST'),
-        'PORT': os.getenv('POSTGRES_PORT'),
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
-STATIC_ROOT = '/var/www/static'
-MEDIA_ROOT = '/var/www/media'
-
-# Security settings
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
+# Celery
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
