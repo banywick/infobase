@@ -1,0 +1,50 @@
+services:
+  web:
+    environment:
+        POSTGRES_HOST: db  # жёстко задаём, так как это имя сервиса
+        POSTGRES_PORT: 5432
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+  redis:
+    image: redis:alpine
+
+  celery:
+    build: .
+    command: celery -A config worker --loglevel=info
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev  # Явно указываем окружение
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: infobase_network
+    driver: bridge  

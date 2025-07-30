@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine
 from celery import shared_task
+from .utils.db_container_connect import get_db_engine
 
 
 # Проверка celery на работоспособность
@@ -92,8 +93,8 @@ def data_save_db(file_url):
         df["quantity"] = df["quantity"].astype(float).round(2)
 
         # Сохранение в базу данных
-        engine = create_engine("postgresql://sklad:sklad@127.0.0.1:5432/sklad_db")
-        df.to_sql("finder_remains", engine, if_exists="replace", index_label="id")
+        engine = get_db_engine()
+        df.to_sql("finder_remains", con=engine, if_exists="replace", index_label="id")
         success_message = 'Данные успешно загружены'
 
     except Exception as e:
