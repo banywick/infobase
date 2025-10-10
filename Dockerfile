@@ -1,27 +1,19 @@
-FROM python:3.12-slim-bookworm  
+FROM python:3.12-slim
 
-# Оптимизация Python
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Установка зависимостей
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    postgresql-client && \
-    apt-get purge -y --auto-remove && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# Рабочая директория
-WORKDIR /usr/src/app
-
-# Копирование зависимостей
+# Копируем зависимости и устанавливаем их
 COPY requirements.txt .
-
-# Установка Python-зависимостей
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копирование проекта
+# Копируем проект
 COPY . .
 
-# Команда по умолчанию (переопределяется в docker-compose)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Создаем пользователя для безопасности (опционально)
+RUN adduser --disabled-password --gecos '' myuser
+
+# Переключаемся на непривилегированного пользователя
+USER myuser

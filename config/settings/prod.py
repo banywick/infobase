@@ -1,12 +1,12 @@
 from .base import *
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG')
 ALLOWED_HOSTS = ['*']
 
-# Security
-# CSRF_COOKIE_SECURE = True
-# SESSION_COOKIE_SECURE = True
-# SECURE_SSL_REDIRECT = True
+#Security
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
 
 # Static files
 STATIC_ROOT = '/usr/src/app/staticfiles'

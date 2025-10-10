@@ -1,50 +1,59 @@
+version: '3.8'
+
 services:
   web:
-    environment:
-        POSTGRES_HOST: db  # жёстко задаём, так как это имя сервиса
-        POSTGRES_PORT: 5432
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/usr/src/app
+      - .:/app
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - .env  
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
     depends_on:
       - db
       - redis
+    stdin_open: true
+    tty: true
 
   db:
     image: postgres:16
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env  
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
   celery:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     command: celery -A config worker --loglevel=info
     volumes:
-      - .:/usr/src/app
+      - .:/app
+    env_file:
+      - .env  
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
     depends_on:
       - db
       - redis
-    env_file:
-      - .env
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.dev  # Явно указываем окружение
 
 volumes:
-  postgres_data:
-
-networks:
-  default:
-    name: infobase_network
-    driver: bridge  
+  postgres_data_dev:

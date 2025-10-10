@@ -11,3 +11,8 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 # Автоподгрузка задач из всех зарегистрированных приложений
 app.autodiscover_tasks()
+
+
+# ЯВНО указываем использование Redis
+app.conf.broker_url = 'redis://redis:6379/0'
+app.conf.result_backend = 'redis://redis:6379/0'
