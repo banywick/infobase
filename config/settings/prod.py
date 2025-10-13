@@ -1,16 +1,20 @@
 from .base import *
 
-DEBUG = os.getenv('DEBUG')
-ALLOWED_HOSTS = ['*']
+DEBUG = False
+ALLOWED_HOSTS = ['172.17.10.208', 'localhost', '127.0.0.1']
 
 #Security
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = True
 
 # Static files
-STATIC_ROOT = '/usr/src/app/staticfiles'
+STATIC_ROOT = '/app/staticfiles'
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    '/app/static',  # основная папка static в корне проекта
+]
 
 # Database
 DATABASES = {

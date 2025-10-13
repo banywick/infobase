@@ -24,7 +24,7 @@ packaging==24.2
 pandas==2.2.3
 prometheus_client==0.21.1
 prompt_toolkit==3.0.48
-psycopg2-binary==2.9.10
+psycopg2==2.9.7
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.2
@@ -39,3 +39,4 @@ tzdata==2024.2
 uritemplate==4.1.1
 vine==5.1.0
 wcwidth==0.2.13
+gunicorn==21.2.0
