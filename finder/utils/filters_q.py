@@ -43,6 +43,7 @@ def create_q_objects(values, field_name):
 
 # q обекты для фильтрации значений с инпута
 def create_q_objects_for_query(values, search_by_code=False, search_by_comment=False, search_by_analog=False):
+    print('banix')
     q_objects = Q()
     for value in values:
         if search_by_code:
@@ -50,7 +51,10 @@ def create_q_objects_for_query(values, search_by_code=False, search_by_comment=F
         elif search_by_comment:
             q_objects &= Q(comment__icontains=value)
         else:
-            value_q = Q(title__icontains=value) | Q(comment__icontains=value)
+            value_q = (Q(title__icontains=value) | 
+            Q(comment__icontains=value) | 
+            Q(article__icontains=value) | 
+            Q(party__icontains=value))
             
             if search_by_analog:
                 standard_values = find_standard_values(value)

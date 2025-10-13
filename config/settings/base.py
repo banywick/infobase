@@ -58,6 +58,9 @@ AUTH_PASSWORD_VALIDATORS = [
     # ... ваши валидаторы паролей ...
 ]
 
+HOME_PAGE_URL = 'home_finder'  # имя URL из urlpatterns
+
+
 LANGUAGE_CODE = 'ru'
 TIME_ZONE = 'Europe/Minsk'
 USE_I18N = True

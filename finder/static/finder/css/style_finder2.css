@@ -199,8 +199,7 @@ header {
 }
 
 .button_wrapper_update {
-    background: rgb(12, 207, 19);
-    opacity: 0.3;
+    background: rgb(12 207 19 / 47%);
     margin-bottom: 5px;
 }
 
