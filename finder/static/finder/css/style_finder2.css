@@ -209,10 +209,6 @@ header {
 }
 
 
-
-
-
-
 .details_item {
     display: none;
 }
@@ -501,4 +497,9 @@ header {
 .analogs-container::-webkit-scrollbar-thumb:hover {
     background: #aaa;
 }
+
+
+
+
+
 

@@ -172,7 +172,7 @@ transition: transform 0.3s ease, opacity 0.3s ease;
     transform: translate(-50%, -50%);
     z-index: 10; /* Убедитесь, что popup находится поверх фона */
     width: 610px;
-    height: 545px;
+    height: 585px;
     left: 655px;
     border-radius: 10px;
     background: rgb(255, 255, 255);
