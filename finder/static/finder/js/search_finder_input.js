@@ -57,10 +57,6 @@ function performSearch(searchData) {
         return response.json();
     })
     .then(data => {
-        console.log('Results:', data.results);
-        console.log('Analogs:', data.analogs);
-        console.log('Analogs_kd:', data.analogs_kd);
-        
         renderInfoWindow(data, infoWindow);
         renderTableData(data.results, tbody, not_found);
     })
@@ -171,7 +167,6 @@ function renderTableData(data, tbody, not_found) {
         `;
         
         tbody.appendChild(row);
-        console.log(item.status_color)
     });
 }
 
@@ -231,7 +226,6 @@ function handlePinClick(event) {
         return response.json();
     })
     .then(data => {
-        console.log('Success:', data);
         button.closest('tr')?.remove();
     })
     .catch(error => {

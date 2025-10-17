@@ -13,7 +13,6 @@ document.addEventListener('click', function(e) {
         const projectSpan = projectContent.querySelector('span');
         if (projectSpan) {
             selectedProject = projectSpan.textContent.trim();
-            console.log('Выбран проект:', selectedProject);
             
             // Сброс пагинации при выборе нового проекта
             resetPagination();
@@ -91,7 +90,6 @@ async function loadMoreData(isInitialLoad = false) {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
-        console.log('Получены данные:', data);
         
         // Удаляем индикатор загрузки
         removeLoadingIndicator(tbody);
@@ -249,7 +247,6 @@ function renderTableData(data, tbody, notFound, clearTable = true) {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Success:', data);
                 button.closest('tr')?.remove();
             })
             .catch((error) => {

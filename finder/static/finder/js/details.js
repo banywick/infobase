@@ -76,7 +76,6 @@ function addRowClickListener(tbody) {
         const target = event.target.closest('tr');
         if (target) {
             const data = getRowData(target);
-            console.log(data.ID);
             updateDetailsItem(data);
             detailsItem.style.display = 'block';
         }
