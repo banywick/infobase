@@ -1,0 +1,21 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="import-excel/" class="addlink">
+      📥 {% trans "Импорт из Excel" %}
+    </a>
+  </li>
+  <li>
+    <a href="download-template/" class="viewlink">
+      📋 {% trans "Шаблон Excel" %}
+    </a>
+  </li>
+  <li>
+    <a href="view-analogs/" class="viewlink">
+      📊 {% trans "Просмотр аналогов" %}
+    </a>
+  </li>
+  {{ block.super }}
+{% endblock %}
