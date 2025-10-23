@@ -174,7 +174,8 @@ header {
 .button_wrapper_update,
 .button_wrapper_close,
 .button_wrapper_filter_view_all,
-.button_wrapper_filter_submit
+.button_wrapper_filter_submit,
+.button_login
 {
     height: 40px;
     display: flex;
@@ -206,6 +207,10 @@ header {
 .button_wrapper_close {
     background: rgb(246, 78, 17);
 
+}
+
+.button_login {
+    background: rgb(12 207 19 / 47%);
 }
 
 

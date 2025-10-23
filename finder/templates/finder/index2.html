@@ -188,6 +188,34 @@
                 <div class="manual">
                     <img src="{% static 'finder/img/manual.jpg' %}" alt="Инструкция">
                 </div>
+            <div class="auth_popup">
+                <div id="close_update" class='close'>
+                    <img id="icon_color" src="{% static 'finder/icon/close.svg' %}" alt="Закрыть">  
+                </div>
+                <div class="popup_content">
+                    <div class="logo">
+                        <img src="{% static 'finder/icon/logo_white.svg' %}" alt="Логотип">
+                    </div>
+                    
+                <div class="auth_title">
+                </div>       
+                    <p>Вход</p>
+                </div>
+                <div class="auth_form_wrapper">
+                <form action="">
+                    {% csrf_token %}
+                    <div class="input_wrapper">
+                        <input type="text" placeholder="логин" required>
+                    </div>
+                    <div class="input_wrapper">
+                    <input type="password" placeholder="пароль" required>
+                    </div>
+                    <button class="button_login" type="button" id="login-btn">Войти</button>
+                    
+                </form>
+                <a href="#" class="registration-link">Регистрация</a>
+            </div>
+            </div>  
             <div class="table-container">
                 <table>
                     <thead>
@@ -326,6 +354,7 @@
         };
     </script>
     <script src='{% static "finder/js/popups.js"%}'></script> 
+    <script src='{% static "finder/js/auth.js"%}'></script> 
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
     <script src='{% static "finder/js/add_pin_positions.js"%}'></script>
     <script src='{% static "finder/js/details.js"%}'></script> 

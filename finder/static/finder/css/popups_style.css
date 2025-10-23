@@ -194,6 +194,39 @@ transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 
+.auth_popup {
+    position: absolute;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    z-index: 10; /* Убедитесь, что popup находится поверх фона */
+    width: 350px;
+    height: 450px;
+    left: 450px;
+    border-radius: 10px;
+    background: rgb(255, 255, 255);
+    border: 1px solid black;
+
+}
+
+.auth_title p {
+    color: var( --primary-color);
+    font-family: var(--font-family);
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 36px;
+    letter-spacing: 0%;
+    text-align: center;
+    border: 1px;
+
+}
+
+.auth_title {
+    margin-top: -30px;
+}
+
+.auth_form_wrapper {
+    border: 1px;
+}
 
 
 /* Основные стили popup */
