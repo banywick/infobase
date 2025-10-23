@@ -95,8 +95,7 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - ./deploy/nginx.prod.conf:/etc/nginx/conf.d/default.conf
-      - ./deploy/ssl/infobase-01.okbtsp.corp.crt:/etc/nginx/ssl/infobase-01.okbtsp.corp.crt  # Путь к сертификату
-      - ./deploy/ssl/infobase-01.okbtsp.corp.key:/etc/nginx/ssl/infobase-01.okbtsp.corp.key      # Путь к ключу
+      - ./deploy/ssl/ :/etc/nginx/ssl/ # Путь к сертификату
     ports:
       - "80:80"
       - "443:443"  # Проброс порта для HTTPS
