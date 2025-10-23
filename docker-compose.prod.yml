@@ -95,7 +95,7 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - ./deploy/nginx.prod.conf:/etc/nginx/conf.d/default.conf
-      - ./deploy/ssl/ :/etc/nginx/ssl/ # Путь к сертификату
+      - ./deploy/ssl/:/etc/nginx/ssl/ # Путь к сертификату
     ports:
       - "80:80"
       - "443:443"  # Проброс порта для HTTPS
