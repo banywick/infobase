@@ -1,12 +1,11 @@
 from .base import *
 
 DEBUG = False
-ALLOWED_HOSTS = ['172.17.10.208', '10.10.44.10', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['infobase-01.okbtsp.corp', 'localhost', '127.0.0.1']
 
-#Security
-# CSRF_COOKIE_SECURE = True
-# SESSION_COOKIE_SECURE = True
-# SECURE_SSL_REDIRECT = True
+CSRF_COOKIE_SECURE = True    # Передавать CSRF-куки только по HTTPS
+SESSION_COOKIE_SECURE = True # Передавать сессионные куки только по HTTPS
+SECURE_SSL_REDIRECT = True   # Автоматически редиректить HTTP-запросы на HTTPS
 
 # Static files
 STATIC_ROOT = '/app/staticfiles'
