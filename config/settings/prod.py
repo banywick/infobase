@@ -3,9 +3,13 @@ from .base import *
 DEBUG = False
 ALLOWED_HOSTS = ['infobase-01.okbtsp.corp', 'localhost', '127.0.0.1']
 
-CSRF_COOKIE_SECURE = True    # Передавать CSRF-куки только по HTTPS
-SESSION_COOKIE_SECURE = True # Передавать сессионные куки только по HTTPS
-SECURE_SSL_REDIRECT = True   # Автоматически редиректить HTTP-запросы на HTTPS
+# CSRF_COOKIE_SECURE = True    # Передавать CSRF-куки только по HTTPS
+# SESSION_COOKIE_SECURE = True # Передавать сессионные куки только по HTTPS
+
+# Настройки для работы за прокси (NGINX)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
 
 # Static files
 STATIC_ROOT = '/app/staticfiles'
