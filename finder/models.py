@@ -120,6 +120,10 @@ class Standard(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name}"
+    
+    class Meta:
+        verbose_name = "Стандарт"  # Единственное число
+        verbose_name_plural = "Стандарты"  # Множественное число
 
 class StandardValue(models.Model):
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='values', verbose_name='Коллекция')
@@ -131,5 +135,26 @@ class StandardValue(models.Model):
     class Meta:
         unique_together = ('standard', 'value')  # Запрещаем дубликаты
         ordering = ['value']  # Сортировка по значению
-        verbose_name = "Аналоги"
-        verbose_name_plural = "Аналоги"
+
+
+
+class AccountingData(models.Model):
+    accounting_code = models.CharField(
+        max_length=50, 
+        verbose_name="Код бухгалтерский",
+    )
+    nomenclature_kd = models.CharField(
+        max_length=255, 
+        verbose_name="Номенклатура КД"
+    )
+    accounting_name = models.CharField(
+        max_length=500, 
+        verbose_name="Наименование бухгалтерское"
+    )
+
+    class Meta:
+        verbose_name = "Данные сопоставления ТН\КД"
+        verbose_name_plural = "Данные сопоставления ТН\КД"
+
+    def __str__(self):
+        return f"{self.accounting_code} - {self.nomenclature_kd}"

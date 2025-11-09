@@ -1,0 +1,14 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools %}
+  <div class="object-tools">
+    <ul>
+      <li>
+        <a href="import-excel/" class="addlink">
+          Импорт из Excel
+        </a>
+      </li>
+    </ul>
+    {{ block.super }}
+  </div>
+{% endblock %}
