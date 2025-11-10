@@ -1,0 +1,209 @@
+:root {
+    --primary-color: rgb(31, 58, 85);
+    --secondary-color: rgb(251, 184, 160);
+    --text-color: rgb(255, 255, 255);
+    --font-family: 'Inter', sans-serif;
+    --border-color: black;
+    --red-color: rgb(246, 78, 17);
+
+}
+.table-container {
+    overflow-y: auto; /* Включаем вертикальную прокрутку */
+    height: 82vh; /* Высота экрана */
+    position: relative; /* Устанавливаем относительное позиционирование для контейнера таблицы */
+}
+
+
+
+
+
+
+
+thead {
+    position: sticky;
+    top: 0;
+    background-color: #f1f1f1;
+    z-index: 1;
+}
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    word-wrap: break-word;
+}
+
+.table-header {
+    background-color: rgba(158, 236, 160, 1);
+}
+
+#keep_icon {
+    background: white;
+
+}
+
+/* Ширина для 1,2,7 (иконка) */
+th:nth-child(1),
+td:nth-child(1),
+td:nth-child(2),
+td:nth-child(7) {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+}
+
+/* Ширина для 11 столбца (круг) */
+th:nth-child(11),
+td:nth-child(11) {
+    min-width: 30px;
+    max-width: 30px;
+    
+}
+
+/* Ширина для третьего столбца (Партия), четвертого столбца (Артикул) и пятого столбца (Код) */
+th:nth-child(3),
+td:nth-child(3),
+td:nth-child(4),
+td:nth-child(5) {
+    min-width: 126px;
+    max-width: 126px;
+    text-align: center;
+}
+
+/* Ширина для шестого столбца (Наименование) */
+th:nth-child(6),
+td:nth-child(6) {
+    min-width: 368px;
+    max-width: 368px;
+    text-align: left;
+}
+/* Ширина для шестого столбца (Количество) */
+th:nth-child(8),
+td:nth-child(8) {
+    min-width: 115px;
+    max-width: 115px;
+    text-align: center;
+}
+/* Ширина для шестого столбца (Единица) */
+th:nth-child(9),
+td:nth-child(9) {
+    width: 105px;
+    min-width: 105px;
+    max-width: 105px;
+    text-align: center;
+}
+/* Ширина для 11 столбца (Комментарий), 12 (Проект) */
+th:nth-child(12),
+td:nth-child(12),
+td:nth-child(13) {
+    min-width: 180px;
+    max-width: 180px;
+    text-align: left;
+}
+
+/* Изменение фона строк внутри pinned-block и элемента с id keep_icon */
+.pinned-block tr,
+#keep_icon_pin {
+    background-color: rgba(216, 222, 227, 1);
+}
+
+.not_found {
+    display: flex;
+    width: 224px;
+    text-align: center;
+    align-items: center;
+    font-family: var(--font-family);
+    font-size: 18px;
+    display: none;
+    
+
+}
+
+.icon-column {
+    cursor: pointer;
+}
+
+/* Анимации для закрепленных позиций */
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    to {
+        transform: translateX(20px);
+        opacity: 0;
+        height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        border: none;
+    }
+}
+
+/* Классы для анимаций */
+.pinned-row {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.unpinning-row {
+    animation: slideOut 0.3s ease-in forwards;
+    overflow: hidden;
+}
+
+
+
+.unpin-button {
+    background-color: rgba(216, 222, 227, 1);
+}
+
+
+
+.unpin-button:hover #unpin_icon {
+    animation: shake 0.5s ease;
+}
+
+
+
+@keyframes shake {
+    25%, 100% { transform: rotate(-88deg); }
+    25% { transform: rotate(25deg); }
+    50% { transform: rotate(5deg); }
+    75% { transform: rotate(20deg); }
+}
+
+
+
+.copy-feedback {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    color: white;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+.copy-feedback.success {
+    background-color: #4CAF50;
+}
+
+.copy-feedback.error {
+    background-color: #F44336;
+}
+
+.copy-feedback.fade-out {
+    opacity: 0;
+}

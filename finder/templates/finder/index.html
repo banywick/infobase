@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'finder/css/style_finder.css' %}">
+    <title>Infobase Search</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Загрузите ваш файл</h1>
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" id="fileInput" name="doc" accept=".xlsx" required>
+            <br>
+            <button type="button" class="button">Загрузить</button>
+        </form>
+        <div style="display: none;" class="load_animation">
+            <div class="load_info">
+                <p>Пожалуйста подождите! Данные обрабатываются!</p>
+                <p class="load_error" style="color:red"> </p>
+                <p class="update_success" style="color:green"> </p>
+            </div>
+            <div class="animate_process">
+                <img src="{% static '/finder/icon/shest.gif' %}" alt="" />
+            </div>
+        </div>
+    </div>
+    <h1>{{file_name}}</h1>
+    <div class="container">
+        <div class="sidebar">
+            <h2>infobase поиск</h2>
+            <h3>Пользователь {{ user.username }}</h3>
+            <h3>состоит в группе <span id="user-group">{{ user_group }}</span></h3>
+        
+            <ul>
+                <li><a style="color:white" href="{% url 'home_finder' %}" data-link-name="поиск">Поиск</a></li>
+                <li><a style="color:white" href="{% url 'notes_home' %}" data-link-name="заметки">Заметки</a></li>
+                <li><a style="color:white" href="{% url 'sahr_home' %}" data-link-name="сахр">Сахр</a></li>
+                <li><a style="color:white" href="{% url 'get_archive_page' %}" data-link-name="архив">Архив</a></li>
+                <li><a style="color:white" href="{% url 'home_commers' %}" data-link-name="недопоставки">Недопоставки</a></li>
+                <li><a style="color:white" href="#" data-link-name="инвентаризация">Инвентаризация</a></li>
+                <li><a style="color:white" href="#" data-link-name="таблица аналогов">Таблица аналогов</a></li>
+                <li><a style="color:white" href="#" data-link-name="бтк">БТК</a></li>
+            </ul>
+            <a style="color:green" href="#" data-link-name="обновить базу">Обновить базу</a>
+            <br>
+            <button>Выйти</button>
+            <br>
+            <a style="color:white" href="{% url 'home_review' %}" data-link-name="отзывы и предложения">Отзывы и предложения</a>
+        </div>
+        <span id="allowed-link-names">{{ allowed_link_names|safe }}</span>
+        <div class="content">
+            <div class="search-bar">
+                <form id="search-form" method="post">
+                    {% csrf_token %}
+                    <input type="text" name="query" placeholder="Enter search query">
+                    <input type="checkbox" name="search_by_code" value="true"> Search by Code<br>
+                    <input type="checkbox" name="search_by_comment" value="true"> Search by Comment<br>
+                    <input type="checkbox" name="search_by_analogs" value="true"> Search by Analogs<br>
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+            <div class="filters">
+                <span>фильтр проектов</span>
+                <span>название проекта</span>
+                <span>длинное название проекта</span>
+                <span>очень длинное название проекта</span>
+                <button>Сбросить фильтры</button>
+            </div>
+            <div class="table">
+                <div class="table-header">
+                    <div class="table-cell">партия</div>
+                    <div class="table-cell">артикул</div>
+                    <div class="table-cell">код</div>
+                    <div class="table-cell">наименование</div>
+                    <div class="table-cell">количество на складе</div>
+                    <div class="table-cell">единицы измерения</div>
+                    <div class="table-cell">цена</div>
+                    <div class="table-cell">проект</div>
+                    <div class="table-cell">комментарий</div>
+                </div>
+                <div>Закрепы!!!</div>
+                <div>Закрепы!!!</div>
+                <div>Закрепы!!!</div>
+                <div class="table-row">
+                    <div class="table-cell">P00027570</div>
+                    <div class="table-cell">600035849</div>
+                    <div class="table-cell">600035849</div>
+                    <div class="table-cell">Винт ZM5-6g4.5.88.019 ГОСТ 10337-80</div>
+                    <div class="table-cell">331,0</div>
+                    <div class="table-cell">шт</div>
+                    <div class="table-cell">0,07</div>
+                    <div class="table-cell">Длинное название проекта</div>
+                    <div class="table-cell">Комментарий</div>
+                </div>
+                <!-- Повторите аналогичные строки по мере необходимости -->
+            </div>
+            <div class="pagination">
+                <span>1</span>
+                <span>2</span>
+                <span>3</span>
+                <span>4</span>
+                <span>5</span>
+                <span>...</span>
+                <span>24</span>
+                <span>25</span>
+            </div>
+        </div>
+    </div>
+    <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
+    <script src='{% static "finder/js/upload_file.js"%}'></script> 
+    <script src='{% static "finder/js/check_task_upload_status.js"%}'></script> 
+    <script src='{% static "finder/js/link_permissions.js"%}'></script> 
+</body>
+</html>

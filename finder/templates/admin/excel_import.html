@@ -1,0 +1,105 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div id="content-main">
+  <h1>{{ title }}</h1>
+  
+  <div class="module">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div class="form-row">
+        {{ form.excel_file.label_tag }}
+        {{ form.excel_file }}
+        {% if form.excel_file.help_text %}
+        <div class="help">{{ form.excel_file.help_text }}</div>
+        {% endif %}
+        {% if form.excel_file.errors %}
+        <div class="error">{{ form.excel_file.errors }}</div>
+        {% endif %}
+      </div>
+      
+      <div class="submit-row">
+        <input type="submit" value="{% trans 'Импортировать' %}" class="default">
+        <a href="../" class="button">{% trans 'Отмена' %}</a>
+      </div>
+    </form>
+  </div>
+  
+  <div class="module">
+    <h2>📥 Скачать шаблон</h2>
+    <p>Используйте этот шаблон для правильного заполнения данных:</p>
+    <a href="download-template/" class="button">📋 Скачать шаблон Excel</a>
+  </div>
+  
+  <div class="module">
+    <h2>📋 Формат файла</h2>
+    <p>Excel файл должен содержать следующие колонки:</p>
+    
+    <table style="border-collapse: collapse; width: 100%; margin: 15px 0; font-size: 13px;">
+      <thead>
+        <tr style="background-color: #f5f5f5;">
+          <th style="border: 1px solid #ddd; padding: 8px;">Группа</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">id</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Стандарт</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Аналог 1</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Аналог 2</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Аналог 3</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 1px solid #ddd; padding: 8px;">Болт</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">1</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">7808</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">7796</td>
+          <td style="border: 1px solid #ddd; padding: 8px;"></td>
+          <td style="border: 1px solid #ddd; padding: 8px;"></td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #ddd; padding: 8px;">Болт</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">2</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">37.001.101</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">7798</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">7805</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">931</td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #ddd; padding: 8px;">Гайка</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">4</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">37.001.124</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">5915</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">5927</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">934</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <p><strong>Инструкция по заполнению:</strong></p>
+    <ul>
+      <li><strong>Группа</strong> - тип изделия (Болт, Гайка, Шайба и т.д.)</li>
+      <li><strong>id</strong> - уникальный номер строки</li>
+      <li><strong>Стандарт</strong> - основной артикул</li>
+      <li><strong>Аналог 1, Аналог 2, ...</strong> - аналогичные артикулы</li>
+      <li>Пустые ячейки в аналогах игнорируются</li>
+    </ul>
+  </div>
+</div>
+
+<style>
+.form-row {
+    padding: 10px 0;
+}
+.help {
+    color: #666;
+    font-size: 12px;
+    margin-top: 5px;
+}
+.error {
+    color: #ba2121;
+    font-size: 12px;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'finder/css/style_finder2.css' %}">
+    <link rel="stylesheet" href="{% static 'finder/css/popups_style.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'finder/css/table_style.css' %}"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/index_all.css' %}">
+    <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
+    <link rel="stylesheet" href="{% static 'notes/css/style_notes.css'%}">
+    <title>Заметки</title>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="main_note">
+            <div class="add_note_container">
+                <div class='block_add_note '>
+                    <img id="add_notes" src="{% static 'notes/img/add_note_block.svg' %}" alt="Добавить заметку">
+                {{username}}
+                </div>  
+            </div>
+            <div class="background-overlay"></div>
+                <div id="notification" class="notification">
+                    <div class="notification-content">
+                        <span class="notification-message">Заметка успешно сохранена!</span>
+                    </div>
+                </div>
+
+            <div class="notes_place">
+                <ul>
+                    <li>bany</li>
+                    <li>bany</li>
+                    <li>bany</li>
+                    <li>bany</li>
+                    <li>bany</li>
+                    <li>bany</li>
+                    <li>bany</li>
+                    <li>bany</li>
+                </ul>
+            </div>
+
+            <div class="background-overlay"></div>
+
+            <div class="popup_note" id="notePopup">
+                <div class="popup_content">
+                    <div class="popup_header">
+                        <h3>Добавить заметку</h3>
+                        <span class="close_popup">&times;</span>
+                    </div>
+                    
+                    <form id="noteForm" method="POST" data-user-id="{{ request.user.id }}">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <textarea class="note_textarea" name="text" placeholder="Текст заметки" required></textarea>
+                        </div>
+                        
+                        <div class="popup_buttons">
+                            <button type="button" class="cancel_btn">Отменить</button>
+                            <button type="submit" class="add_btn">Добавить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div class="logo">
+                <img src="{% static 'finder/icon/logo_finder.svg' %}" alt="Логотип">
+            </div>
+            <div class="menu_item">
+                <div id="menu_row_find" class="menu_row">
+                    <img id="icon_color" src="{% static 'finder/icon/search.svg' %}" alt="Иконка поиска">
+                    <div class="menu_link">
+                        <a href="{% url 'home_finder' %}">Поиск</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/notes.svg' %}" alt="Иконка заметок">
+                    <div class="menu_link">
+                        <a href="{% url 'notes_home'%}">Заметки</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/sahr.svg' %}" alt="Иконка С.А.ХР">
+                    <div class="menu_link">
+                        <a href="#">С.А.ХР</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/archive.svg' %}" alt="Иконка архива">
+                    <div class="menu_link">
+                        <a href="#">Архив</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/comers.svg' %}" alt="Иконка недопоставок">
+                    <div class="menu_link">
+                        <a href="#">Недопоставки</a>
+                    </div>
+                </div>
+                <div class="menu_row">
+                    <img src="{% static 'finder/icon/inventory.svg' %}" alt="Иконка инвентаризации">
+                    <div class="menu_link">
+                        <a href="#">Инвентаризация</a>
+                    </div>
+                </div>
+
+
+
+            </div> 
+            <div class="down_menu">
+                <div class="button_wrapper_update">
+                    <img src="{% static 'finder/icon/update_base.svg' %}" alt="Иконка обновления базы">
+                    <div>Обновить базу</div>
+                </div>
+                <div class="menu_row_down">
+                    <img src="{% static 'finder/icon/login.svg' %}" alt="Иконка входа">
+                    <div class="menu_link">
+                        <a href="#">Войти</a>
+                    </div>
+                </div>
+                <div class="menu_row_down">
+                    <img src="{% static 'finder/icon/revievs.svg' %}" alt="Иконка отзывов">
+                    <div class="menu_link">
+                        <a id='revievs_link' href="#">Отзывы и предложения</a>
+                    </div>
+                </div>
+                <p>Ваш отзыв поможет <br> улучшить продукт</p>
+            </div> 
+        </div>
+    </div>
+        <script src='{% static "notes/js/notes_popup.js"%}'></script> 
+        <script src='{% static "notes/js/notes.js"%}'></script> 
+</body>
+</html>
+
+

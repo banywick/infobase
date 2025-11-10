@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'comers/css/style.css'%}">
+    <link rel="stylesheet" href="{% static 'comers/css/data_form.css'%}">
+    <title>Недопоставки</title>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <div class="input_data" onclick="openPopup('menu_filter')">
+                <p>Фильтр</p>
+            </div>
+            <div class="filter_view">
+                <ul>
+                    <li>Выбранный фильтр:</li>
+                    <li>Поставщик: {% if filters.supplier_name  %}<span class="filter-value">{{ filters.supplier_name  }}</span>{% else %} Нет фильтра {% endif %}</li>
+                    <li>Ведущий: {% if filters.leading_name  %}<span class="filter-value">{{ filters.leading_name  }}</span>{% else %}Нет фильтра{% endif %}</li>
+                    <li>Сбросить</li>
+                </ul>
+            </div>
+            <div class="input_data" onclick="openPopup('input_data_form')">
+                <p>Ввести данные</p>
+            </div>
+            <div class="input_data" onclick="openPopup('add_suppler')">
+                <p>Добавить поставщика</p>
+            </div>
+            <div class="user_block">
+                <div class="logout_button">
+                    {% if request.user.is_authenticated %}
+                    <p>{{ user.username }}</p>
+                    <p class="auth_text">
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+        <div class="menu_windows">
+            <div class="menu_filter">
+                <p>Фильтр</p>
+                <form id="add_filter_form" method="post">
+                    {% csrf_token %}
+                    {{ filter_form.as_p }}
+                    <button class='filter_button' type="button">Применить фильтр</button>
+                </form>
+            </div>
+            <div class="add_suppler">
+                <p>Добавить поставщика</p>
+                <form id="add_supler_form" method="post" action="/comers/add_supplier/">
+                    {% csrf_token %}
+                    {{ add_suppler_form.as_p }}
+                    <button type="submit">Сохранить</button>
+                </form>
+            </div>
+            
+            <div class="input_data_form">
+                <p>Внести данные</p>
+                <form  id="inputDataForm" method="post">
+                    {% csrf_token %}
+                    {{ input_data_form.as_p }}
+                    <button type='button' class='send_data_form_button'>Сохранить</button>
+                </form>
+            </div>    
+        </div>
+        <div class="overlay" onclick="closePopup()"></div>
+        <div class="container">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Номер накладной</th>
+                            <th>Дата</th>
+                            <th>Поставщик</th>
+                            <th>Артикул</th>
+                            <th>Название</th>
+                            <th>Единица измерения</th>
+                            <th>Количество</th>
+                            <th>Комментарий</th>
+                            <th>Описание</th>
+                            <th>Специалист</th>
+                            <th>Ведущий</th>
+                            <th>Статус</th>
+                            <th>Примечания</th>
+                            <th>Редактировать</th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                            <tr style="{% if invoice.project == 'БУК-МБ2-6' %}background-color: #ffe60024;{% endif %}">
+                                <td>{{ invoice.invoice_number }}</td>
+                                <td>{{ invoice.date }}</td>
+                                <td>{{ invoice.supplier }}</td>
+                                <td>{{ invoice.article }}</td>
+                                <td>{{ invoice.name }}</td>
+                                <td>{{ invoice.unit }}</td>
+                                <td>{{ invoice.quantity }}</td>
+                                <td>{{ invoice.comment }}</td>
+                                <td>{% if invoice.description_problem %}{{ invoice.description_problem}}{% else %}{% endif %}</td>
+                                <td>{{ invoice.specialist }}</td>
+                                <td>{{ invoice.leading }}</td>
+                                <td style="{% if invoice.status.name == 'Обработка' %}background-color: #daff0073;
+                                {% elif invoice.status.name == 'На списание' %}background-color: #36d3399c;
+                                {% elif invoice.status.name == 'Допоставка' %}background-color: #20B2AA;
+                                {% elif invoice.status.name == 'Ждем ответ' %}background-color: #f56d6dde;{% endif %}">
+                                {{ invoice.status.name }}</td>
+                                <td>{% if invoice.description  %}{{ invoice.description  }}{% else %}{% endif %}</td>
+                                <td>
+                                    <div class="edit_row">
+                                        <a href="{% url 'edit_row' invoice.id %}" class="button">Редактировать</a>
+                                    </div>
+                                    <div class="edit_status">
+                                        <a href="{% url 'edit_status' invoice.id %}" class="button">Установить статус</a>
+                                    </div>
+                                    <div class="del_row">
+                                        <a href="{% url 'delete_row' invoice.id %}" class="button">Удалить строку</a>
+                                    </div>
+                                </div>
+                            </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if flag == 'row' %}
+                <div class="overlay" style="display: block"></div>
+                <form class='edit_form'  method="post">
+                    <p class='title_edit'>Редактировать запись</p>
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="buttons_block">
+                        <button type="submit" class="button_edit_form">Сохранить</button>
+                        <div class="cancel_button">
+                            <a href="{% url 'shortfalls' %}" class="button_edit_form cancel">Отмена</a>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+                {% if flag == 'status' %}
+                <div class="overlay" style="display: block"></div>
+                <form class='edit_form'  method="post">
+                    <p class='title_edit'>Установить статус</p>
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="buttons_block">
+                        <button type="submit" class="button_edit_form">Сохранить</button>
+                        <div class="cancel_button">
+                            <a href="{% url 'shortfalls' %}" class="button_edit_form cancel">Отмена</a>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <script src='{% static 'comers/js/popups.js' %}'></script>
+    <script src="{% static 'comers/js/auto_fields.js' %}"></script>
+    <script src="{% static 'comers/js/validate_form.js' %}"></script>
+    <script src="{% static 'comers/js/filters.js' %}"></script>
+    <script src="{% static 'comers/js/get_all_data_load_page.js' %}"></script>
+</body>
+</html>

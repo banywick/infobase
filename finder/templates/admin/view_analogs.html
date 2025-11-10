@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div id="content-main">
+  <h1>{{ title }}</h1>
+  
+  <div class="module">
+    <div style="margin-bottom: 20px;">
+      <p><strong>Всего групп аналогов:</strong> {{ groups_count }}</p>
+      <a href="../" class="button">← Назад к стандартам</a>
+      <a href="import-excel/" class="button">📥 Загрузить новые данные</a>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background-color: #f5f5f5;">
+          <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">ID (Standard.name)</th>
+          <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Группа</th>
+          <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Основной стандарт</th>
+          <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Все значения (StandardValue)</th>
+          <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Аналоги</th>
+          <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Кол-во</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for group in groups %}
+        <tr>
+          <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold; background: #f0f8ff;">
+            {{ group.id }}
+          </td>
+          <td style="border: 1px solid #ddd; padding: 10px;"><strong>{{ group.group }}</strong></td>
+          <td style="border: 1px solid #ddd; padding: 10px; background-color: #fffacd;">
+            <strong>{{ group.standard }}</strong>
+          </td>
+          <td style="border: 1px solid #ddd; padding: 10px;">
+            {% for value in group.all_values %}
+              <span style="display: inline-block; background: {% if value == group.standard %}#fffacd{% else %}#e7f3ff{% endif %}; 
+                         padding: 2px 8px; margin: 2px; border-radius: 3px; font-size: 12px; border: 1px solid {% if value == group.standard %}#ffd700{% else %}#b3d9ff{% endif %};">
+                {{ value }}
+              </span>
+            {% endfor %}
+          </td>
+          <td style="border: 1px solid #ddd; padding: 10px;">
+            {% for analog in group.analogs %}
+              <span style="display: inline-block; background: #e7f3ff; padding: 2px 8px; margin: 2px; border-radius: 3px; font-size: 12px;">
+                {{ analog }}
+              </span>
+            {% endfor %}
+          </td>
+          <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+            {{ group.values_count }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="border: 1px solid #ddd; padding: 20px; text-align: center;">
+            Нет загруженных данных. <a href="import-excel/">Загрузите Excel файл</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.module table {
+    font-size: 13px;
+}
+.module th {
+    font-weight: 600;
+    background: #f5f5f5;
+}
+</style>
+{% endblock %}

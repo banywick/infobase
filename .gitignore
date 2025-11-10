@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Сертификаты и ключи
+deploy\ssl\infobase-01.okbtsp.corp.crt
+deploy\ssl\infobase-01.okbtsp.corp.key
 # Distribution / packaging
 .Python
 build/
@@ -129,6 +132,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.prod
 .venv
 env/
 venv/
@@ -169,3 +173,5 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+.gitignore

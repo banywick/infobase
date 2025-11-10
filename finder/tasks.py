@@ -1,137 +1,110 @@
-# import os
-# import pandas as pd
-# import pytz
-# from sqlalchemy import create_engine
-# from celery import shared_task
-# from datetime import datetime
-# from finder.models import Data_Table
-# from inventory.models import OrderInventory
+import os
+import pandas as pd
+from sqlalchemy import create_engine
+from celery import shared_task
+from .utils.db_container_connect import get_db_engine
 
 
-# @shared_task
-# def data_save_db(file_url):
-#     try:
-#         # Шаблон колонок
-#         columns_template = [
-#             "Цена",
-#             "Комментарий",
-#             "Код",
-#             "Артикул",
-#             "Партия.Код",
-#             "Номенклатура",
-#             "Базовая единица измерения",
-#             "Склад",
-#             "Конечный остаток (Количество)",
-#         ]
+# Проверка celery на работоспособность
+@shared_task
+def ping():
+    return "pong"
 
-#         # Читаем файл
-#         df = pd.read_excel(file_url, usecols=[0, 11, 12, 13, 14, 15, 16, 17, 18])
+
+
+@shared_task()
+def data_save_db(file_url):
+    try:
+        # Шаблон колонок
+        required_columns = [
+            "Цена",
+            "Партия.Примечание",
+            "Комментарий",
+            "Код",
+            "Артикул",
+            "Партия.Код",
+            "Номенклатура",
+            "Базовая единица измерения",
+            "Склад",
+            "Конечный остаток (Количество)",
+        ]
+
+        # Читаем строки 7 и 9 для поиска заголовков
+        header_df = pd.read_excel(file_url, header=None, nrows=10)
         
-#         # Проверяем порядок столбцов
-#         order_columns = df.iloc[7].fillna("Конечный остаток (Количество)").tolist()
-#         if order_columns != columns_template:
-#             raise ValueError("Не соответствует порядок столбцов в документе")
+        # Ищем основной заголовок "Конечный остаток" в 7 строке (индекс 6)
+        seventh_row = header_df.iloc[6].fillna("").astype(str)
+        quantity_col = None
+        for col_idx, value in seventh_row.items():
+            if "Конечный остаток" in value:
+                quantity_col = col_idx
+                break
+        
+        if quantity_col is None:
+            raise ValueError("Не найден столбец 'Конечный остаток (Количество)' в 7 строке")
+        
+        # Ищем остальные заголовки в 9 строке (индекс 8)
+        ninth_row = header_df.iloc[8].fillna("").astype(str)
+        
+        column_indices = {}
+        missing_columns = []
+        
+        for col in required_columns:
+            if col == "Конечный остаток (Количество)":
+                column_indices[col] = quantity_col
+                continue
+                
+            found = False
+            for col_idx, value in ninth_row.items():
+                if value.strip() == col:
+                    column_indices[col] = col_idx
+                    found = True
+                    break
+            if not found:
+                missing_columns.append(col)
+        
+        if missing_columns:
+            raise ValueError(f"Не найдены следующие столбцы в 9-й строке: {', '.join(missing_columns)}")
+        
+        # Упорядочиваем индексы согласно порядку в required_columns
+        ordered_indices = [column_indices[col] for col in required_columns]
+        
+        # Читаем файл, пропуская первые 10 строк и используя только нужные столбцы
+        df = pd.read_excel(
+            file_url,
+            usecols=ordered_indices,
+            skiprows=10,
+            header=None,
+            names=[
+                "price",
+                "notes_part",
+                "comment",
+                "code",
+                "article",
+                "party",
+                "title",
+                "base_unit",
+                "project",
+                "quantity",
+            ]
+        )
 
-#         # Удаляем первые 10 строк
-#         df = df.iloc[10:]
+        # Обработка данных
+        df["quantity"] = df["quantity"].astype(float).round(2)
 
-#         # Переименование колонок
-#         df.columns = [
-#             "price",
-#             "comment",
-#             "code",
-#             "article",
-#             "party",
-#             "title",
-#             "base_unit",
-#             "project",
-#             "quantity",
-#         ]
+        # Сохранение в базу данных
+        engine = get_db_engine()
+        df.to_sql("finder_remains", con=engine, if_exists="replace", index_label="id")
+        success_message = 'Данные успешно загружены'
 
-#         # Обработка данных
-#         df["quantity"] = df["quantity"].astype(float).round(2)
+    except Exception as e:
+        error_message = f"Ошибка загрузки: {e}"
+        raise ValueError(error_message)
 
-#         # Сохранение в базу данных
-#         engine = create_engine("postgresql://sklad:sklad@127.0.0.1:5432/sklad_db")
-#         df.to_sql("finder_remains", engine, if_exists="replace", index_label="id")
-#         success_message = 'Данные успешно загружены'  # Задаем сообщение об успехе
+    finally:
+        # Удаляем файл вне зависимости от результата выполнения
+        if file_url and os.path.exists(file_url):
+            os.remove(file_url)
 
-
-#     except Exception as e:
-#         raise ValueError(f"Ошибка при обработке файла: {e}")
-
-#     finally:
-#         # Удаляем файл вне зависимости от результата выполнения
-#         if file_url and os.path.exists(file_url):
-#             os.remove(file_url)
-
-#     return success_message  # Возвращаем сообщение об успехе (или None, если была ошибка)
-    
-
-
-# def backup_sahr_table():
-#     timezone = pytz.timezone('Europe/Minsk')
-#     current_date = datetime.now(timezone).strftime('%d.%m.%Y %H:%M:%S')
-#     queryset = Data_Table.objects.all()  # Получите все записи из модели
-#     df = pd.DataFrame(list(queryset.values()))  # Преобразуйте в DataFrame
-#     df.drop(df.columns[[0, 1]], axis=1, inplace=True)
-#     folder_path = 'finder/document/backup_sahr'  # Замените на свой путь
-#     # Сохраняем в файл Excel с читаемой датой в названии
-#     file_path = os.path.join(folder_path, f'CAXP_{current_date}.xlsx')
-#     n = f'CAXP_{current_date}.xlsx'
-#     df.to_excel(file_path, index=False)
-#     filename = f'CAXP_{current_date}.xlsx'
-#     return [file_path, filename]  
-
-
-# def backup_inventory_table():
-#     timezone = pytz.timezone('Europe/Minsk')
-#     current_date = datetime.now(timezone).strftime('%d.%m.%Y %H:%M:%S')
-    
-#     # Получите данные из базы
-#     queryset = OrderInventory.objects.select_related('product', 'user').values(
-#         'user__username',
-#         'product__article', 
-#         'product__title', 
-#         'product__base_unit', 
-#         'product__status', 
-#         'quantity_ord', 
-#         'created_at', 
-#         'address', 
-#         'comment',
-#     ).filter(product__status__iexact='Сошлось')
-    
-#     # Преобразование в DataFrame
-#     df = pd.DataFrame(list(queryset))
-
-#     # Переименовываем столбцы
-#     df.rename(columns={
-#         'user__username': 'Пользователь',
-#         'product__article': 'Артикул',
-#         'product__title': 'Наименование',
-#         'product__base_unit': 'Единица',
-#         'quantity_ord': 'Посчитанно',
-#         'address': 'Адрес',
-#         'comment': 'Комментарий',
-#         'created_at': 'Дата создания',
-#         'product__status': 'Статус',
-#     }, inplace=True)
-
-#     # Задайте порядок столбцов
-#     columns_order = ['Пользователь','Артикул', 'Наименование', 
-#                     'Единица', 'Посчитанно', 'Адрес', 'Комментарий',
-#                     'Дата создания', 'Статус']  # Замените на нужный порядок
-#     df = df[columns_order]  # Измените порядок столбцов
-    
-#     # Задайте путь к папке и создайте его, если он не существует
-#     folder_path = os.path.join('finder', 'document', 'report_inventory')  # путь к папке
-#     os.makedirs(folder_path, exist_ok=True)
-    
-#     # Сохраняем в файл Excel с читаемой датой в названии
-#     file_path = os.path.join(folder_path, f'report_inv.xlsx')
-#     df.to_excel(file_path, index=True)
-    
-#     return [file_path, f'report_inv.xlsx']
-
-
-
+    print(success_message)
+    return success_message

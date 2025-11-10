@@ -1,0 +1,36 @@
+@font-face {
+    font-family: 'Inter';
+    src: url('/static/fonts/inter/Inter_18pt-Light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.input_wrapper {
+    
+    width: 375px;
+    height: 40px;
+    left: 40px;
+    top: 16px;
+    display: flex;
+    padding: 8px 16px 8px 16px;
+    border: 1px solid rgb(165, 176, 187);
+    border-radius: 40px;
+}
+
+.input_container {
+    display: flex;
+    align-items: center;
+}
+
+input {
+    width: 319px;
+    padding: 8px 16px 8px 16px;
+    
+}
+
+input::placeholder {
+    color: rgb(216, 222, 227); /* Цвет текста плейсхолдера */
+    font-family: Inter; /* Шрифт для плейсхолдера */
+    font-size: 16px; /* Размер шрифта плейсхолдера */
+}
+

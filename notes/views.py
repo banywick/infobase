@@ -1,0 +1,103 @@
+from django.views.generic import TemplateView
+from rest_framework import generics, status
+from rest_framework.response import Response
+from .models import Note
+from .serializers import NoteSerializer
+from common.utils.access_mixin import UserGroupRequiredMixin
+
+class BaseNotePositionView(generics.GenericAPIView):
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+    lookup_field = 'id'
+
+class NotesView(UserGroupRequiredMixin,TemplateView):
+    """
+    Представление для отображения страницы заметок.
+
+    Этот класс наследуется от TemplateView и используется для отображения HTML-шаблона,
+    который содержит интерфейс для работы с заметками.
+
+    Attributes:
+        template_name (str): Путь к HTML-шаблону, который будет использоваться для отображения страницы.
+    """
+    template_name = 'notes/index.html'
+    group_required = ['update_base','sklad','commers','btk', 'other']
+
+class AddNoteView(BaseNotePositionView, generics.CreateAPIView):
+    """
+    Представление для создания новой заметки.
+
+    Этот класс наследуется от CreateAPIView и используется для обработки POST-запросов
+    на создание новых заметок. Он использует сериализатор NoteSerializer для валидации
+    и сохранения данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для валидации и сохранения данных.
+    """
+    pass
+
+class GetAllNotes(BaseNotePositionView, generics.ListAPIView):
+    """
+    Представление для получения всех заметок.
+
+    Этот класс наследуется от ListAPIView и используется для обработки GET-запросов
+    на получение всех заметок. Он использует сериализатор NoteSerializer для сериализации данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для сериализации данных.
+    """
+    pass
+
+class EditNote(BaseNotePositionView, generics.RetrieveUpdateAPIView):
+    """
+    Представление для редактирования заметки.
+
+    Этот класс наследуется от UpdateAPIView и используется для обработки PUT- и PATCH-запросов
+    на редактирование заметок. Он использует сериализатор NoteSerializer для валидации и сохранения данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для валидации и сохранения данных.
+        lookup_field (str): Поле, используемое для поиска объекта.
+
+    Methods:
+        update(request, *args, **kwargs): Обновляет объект и возвращает ответ с обновленными данными.
+    """
+    pass
+
+class RemoveNote(generics.DestroyAPIView):
+    """
+    Представление для удаления заметки.
+
+    Этот класс наследуется от DestroyAPIView и используется для обработки DELETE-запросов
+    на удаление заметок. Он использует сериализатор NoteSerializer для валидации данных.
+
+    Attributes:
+        queryset (QuerySet): QuerySet, содержащий все объекты модели Note.
+        serializer_class (Serializer): Сериализатор, используемый для валидации данных.
+        lookup_field (str): Поле, используемое для поиска объекта.
+
+    Methods:
+        destroy(request, *args, **kwargs): Удаляет объект и возвращает ответ с сообщением об успешном удалении.
+    """
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+    lookup_field = 'id'
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Удаляет объект и возвращает ответ с сообщением об успешном удалении.
+
+        Args:
+            request (Request): Объект запроса.
+            *args: Дополнительные аргументы.
+            **kwargs: Дополнительные именованные аргументы.
+
+        Returns:
+            Response: Ответ с сообщением об успешном удалении.
+        """
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'message': 'successfully deleted'}, status=status.HTTP_200_OK)

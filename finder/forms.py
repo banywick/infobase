@@ -1,5 +1,9 @@
 from django import forms
 from finder.models import Review
+from django import forms
+from django.core.exceptions import ValidationError
+import pandas as pd
+import io
 
 
 class InputValue(forms.Form):
@@ -31,3 +35,32 @@ class ReviewForm(forms.ModelForm):
                 'placeholder': 'Напишите отзыв',
             }),
         }
+
+
+
+class ExcelImportForm(forms.Form):
+    excel_file = forms.FileField(
+        label='Excel файл',
+        help_text='Файл должен содержать колонки: Uni66s, Koholo, Brent и другие'
+    )
+    
+    def clean_excel_file(self):
+        excel_file = self.cleaned_data['excel_file']
+        
+        if not excel_file.name.endswith(('.xlsx', '.xls')):
+            raise ValidationError('Файл должен быть в формате Excel (.xlsx или .xls)')
+        
+        try:
+            # Читаем файл
+            df = pd.read_excel(excel_file)
+            
+            # Проверяем обязательные колонки
+            required_columns = ['Uni66s', 'Koholo', 'Brent']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                raise ValidationError(f'Отсутствуют обязательные колонки: {", ".join(missing_columns)}')
+            
+            return df
+        except Exception as e:
+            raise ValidationError(f'Ошибка чтения файла: {str(e)}')        

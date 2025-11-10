@@ -1,0 +1,149 @@
+.main_note {
+    border: 1px solid black;
+    height: 100vh;
+    margin-left: 253px;
+
+}
+
+.add_note_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid black;
+}
+
+
+
+.popup_note {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 665px;
+    width: 548px;
+    z-index: 10;
+    align-items: center;
+}
+
+
+.popup_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.close_popup {
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.3s;
+}
+
+.close_popup:hover {
+    color: #000;
+}
+.popup_content {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.popup_content h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+
+
+
+.note_textarea {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 15px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: none;
+}
+
+.popup_buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.popup_buttons button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.cancel_btn {
+    background-color: #f0f0f0;
+}
+
+.cancel_btn:hover {
+    background-color: #e0e0e0;
+}
+
+.add_btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.add_btn:hover {
+    background-color: #45a049;
+}
+
+#add_notes {
+    transition: transform 0.3s ease;
+}
+
+#add_notes:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+.notification {
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+    transform: translateX(200%);
+    transition: all 0.3s ease-in-out;
+    opacity: 0;
+    max-width: 300px;
+}
+
+.notification.error {
+    background-color: #f44336;
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification.hide {
+    transform: translateX(200%);
+    opacity: 0;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notification-close {
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 15px;
+    font-size: 20px;
+}

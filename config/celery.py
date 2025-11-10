@@ -1,8 +1,18 @@
 import os
 from celery import Celery
-from django.conf import settings
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-app = Celery("finder")
+# Устанавливаем переменную окружения для настроек Django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")  # Явно указываем dev
+
+app = Celery("config")  # Используем имя основного модуля вместо finder
+
+# Загружаем настройки из Django, используя namespace CELERY
 app.config_from_object("django.conf:settings", namespace="CELERY")
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+
+# Автоподгрузка задач из всех зарегистрированных приложений
+app.autodiscover_tasks()
+
+
+# ЯВНО указываем использование Redis
+app.conf.broker_url = 'redis://redis:6379/0'
+app.conf.result_backend = 'redis://redis:6379/0'
