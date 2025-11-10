@@ -1,0 +1,65 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Импорт данных из Excel</h1>
+    
+    <div class="module">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                {{ form.excel_file.label_tag }}
+                {{ form.excel_file }}
+                {% if form.excel_file.help_text %}
+                <div class="help">{{ form.excel_file.help_text }}</div>
+                {% endif %}
+                {% if form.excel_file.errors %}
+                <div class="error">{{ form.excel_file.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="submit-row">
+                <input type="submit" value="Импортировать" class="default">
+                <a href="../" class="button">Отмена</a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="module">
+        <h2>Требования к файлу:</h2>
+        <ul>
+            <li>Файл должен быть в формате Excel (.xlsx или .xls)</li>
+            <li>Обязательные столбцы: Код бухгалтерский, Номенклатура КД, Наименование бухгалтерское</li>
+            <li>Первая строка должна содержать заголовки столбцов</li>
+        </ul>
+        
+        <h3>Пример структуры файла:</h3>
+        <table style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+            <thead>
+                <tr style="background-color: #f5f5f5;">
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Код бухгалтерский</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Номенклатура КД</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Наименование бухгалтерское</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Б00083984</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Винт DIN 912 M2x4-A4</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Винт 2*4 DIN 912 A4 ви шг нерж</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Б00083985</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Винт DIN 912 M2x6-A4</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Винт 2*6 DIN 912 A4 ви шг нерж</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p style="margin-top: 15px; font-style: italic;">
+            <strong>Примечание:</strong> В файле могут присутствовать другие столбцы, но будут использоваться только указанные три.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -121,6 +121,13 @@ class ProductSearchView(APIView):
 
         #Получаем сопоставление КД\ТН
         list_kd = get_tn_kd(query, search_by_kd)
+
+        # ДОБАВЛЯЕМ: Если нашли коды через КД\ТН, добавляем их в поиск
+        if list_kd:
+            kd_q_objects = Q()
+            for code in list_kd:
+                kd_q_objects |= Q(code__iexact=code)  # Замените 'code' на поле в вашей основной таблице
+            q_search |= kd_q_objects  # Добавляем к основному поиску
         
 
         
@@ -136,7 +143,7 @@ class ProductSearchView(APIView):
         return Response({
         "results": serializer.data,  # основные результаты
         "analogs": list_analogs,
-        "analogs_kd": list_kd
+        # "analogs_kd": list_kd
         }, status=status.HTTP_200_OK)
 
 

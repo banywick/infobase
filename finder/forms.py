@@ -64,3 +64,39 @@ class ExcelImportForm(forms.Form):
             return df
         except Exception as e:
             raise ValidationError(f'Ошибка чтения файла: {str(e)}')        
+        
+
+
+
+
+
+class ExcelImportFormEquivalent(forms.Form):
+    excel_file = forms.FileField(
+        label='Выберите Excel файл',
+        help_text='Файл должен содержать столбцы: Код бухгалтерский, Номенклатура КД, Наименование бухгалтерское'
+    )
+    
+    def clean_excel_file(self):
+        excel_file = self.cleaned_data['excel_file']
+        
+        # Проверка расширения файла
+        if not excel_file.name.endswith(('.xlsx', '.xls')):
+            raise ValidationError('Файл должен быть в формате Excel (.xlsx или .xls)')
+        
+        try:
+            # Чтение файла
+            df = pd.read_excel(excel_file)
+            
+            # Проверка обязательных столбцов
+            required_columns = ['Код бухгалтерский', 'Номенклатура КД', 'Наименование бухгалтерское']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                raise ValidationError(
+                    f'Отсутствуют обязательные колонки: {", ".join(missing_columns)}'
+                )
+            
+            return excel_file
+            
+        except Exception as e:
+            raise ValidationError(f'Ошибка чтения файла: {str(e)}')
