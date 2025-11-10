@@ -1,6 +1,7 @@
 import re
 from django.db.models import Q
 
+from finder.models import AccountingData
 from finder.utils.standarts import find_standard_values
 from .metiz import process_metiz_value
 
@@ -102,13 +103,45 @@ def get_analogs_list(search_terms, search_by_analog=False):
 
 
 def get_tn_kd(string, search_by_kd=False):
-    
-    tn_kd_list = []
-
+    """
+    Ищет в AccountingData по строке и возвращает список accounting_code для основного поиска
+    """
     if not search_by_kd:
-        return tn_kd_list
-    kd_values = find_standard_values(string)
-    if kd_values:
-        tn_kd_list.extend(kd_values)
-
-    return tn_kd_list
+        return []
+    
+    clean_string = ' '.join(string.split()).strip()
+    if not clean_string:
+        return []
+    
+    # Сначала ищем точное совпадение в accounting_code
+    accounting_codes = list(AccountingData.objects.filter(
+        accounting_code__iexact=clean_string
+    ).values_list('accounting_code', flat=True).distinct())
+    
+    # Если не нашли в accounting_code, ищем в nomenclature_kd
+    if not accounting_codes:
+        accounting_codes = list(AccountingData.objects.filter(
+            nomenclature_kd__iexact=clean_string
+        ).values_list('accounting_code', flat=True).distinct())
+    
+    # Если все еще не нашли, пробуем поиск по отдельным словам
+    if not accounting_codes and len(clean_string.split()) > 1:
+        search_terms = clean_string.split()
+        for term in search_terms:
+            term = term.strip()
+            if term:
+                # Ищем в accounting_code
+                codes_from_code = list(AccountingData.objects.filter(
+                    accounting_code__iexact=term
+                ).values_list('accounting_code', flat=True).distinct())
+                if codes_from_code:
+                    accounting_codes.extend(codes_from_code)
+                
+                # Ищем в nomenclature_kd  
+                codes_from_kd = list(AccountingData.objects.filter(
+                    nomenclature_kd__iexact=term
+                ).values_list('accounting_code', flat=True).distinct())
+                if codes_from_kd:
+                    accounting_codes.extend(codes_from_kd)
+    
+    return list(set(accounting_codes))  # Убираем дубликаты

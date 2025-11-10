@@ -280,40 +280,7 @@ class StandardAdmin(admin.ModelAdmin):
             'groups_count': len(parsed_groups),
         }
         return render(request, 'admin/view_analogs.html', context)
-        # """Просмотр загруженных аналогов в виде таблицы"""
-        # standards = Standard.objects.all().order_by('name')
-        
-        # parsed_groups = []
-        
-        # for standard in standards:
-        #     values = standard.values.all()
-            
-        #     # Определяем группу по логике или контексту
-        #     group_name = self.get_group_info(standard)
-        #     main_standard = self.get_main_standard(standard)
-            
-        #     # Собираем все артикулы
-        #     analogs = [value.value for value in values]
-            
-        #     # Убираем основной стандарт из списка аналогов для чистоты отображения
-        #     analogs_display = [a for a in analogs if a != main_standard]
-            
-        #     parsed_groups.append({
-        #         'id': standard.name,
-        #         'group': group_name,
-        #         'standard': main_standard,
-        #         'analogs': analogs_display,
-        #         'all_values': analogs,
-        #         'values_count': len(analogs)
-        #     })
-        
-        # context = {
-        #     'title': 'Загруженные аналоги',
-        #     'opts': self.model._meta,
-        #     'groups': parsed_groups,
-        #     'groups_count': len(parsed_groups),
-        # }
-        # return render(request, 'admin/view_analogs.html', context)
+
 
 @admin.register(AccountingData)
 class AccountingDataAdmin(admin.ModelAdmin):
@@ -331,7 +298,7 @@ class AccountingDataAdmin(admin.ModelAdmin):
     
     def import_excel(self, request):
         if request.method == 'POST':
-            form = ExcelImportFormEquivalent(request.POST, request.FILES)  # Используем вашу форму
+            form = ExcelImportFormEquivalent(request.POST, request.FILES)
             if form.is_valid():
                 excel_file = request.FILES['excel_file']
                 
@@ -343,37 +310,31 @@ class AccountingDataAdmin(admin.ModelAdmin):
                     required_columns = ['Код бухгалтерский', 'Номенклатура КД', 'Наименование бухгалтерское']
                     df = df[required_columns]
                     
-                    # Удаляем пустые строки
-                    df = df.dropna()
+                    # Удаляем полностью пустые строки, но не строки с частичными данными
+                    df = df.dropna(how='all')
                     
                     # Создание объектов
                     created_count = 0
-                    updated_count = 0
                     errors = []
                     
                     for index, row in df.iterrows():
                         try:
-                            accounting_code = str(row['Код бухгалтерский']).strip()
-                            nomenclature_kd = str(row['Номенклатура КД']).strip()
-                            accounting_name = str(row['Наименование бухгалтерское']).strip()
+                            accounting_code = str(row['Код бухгалтерский']).strip() if pd.notna(row['Код бухгалтерский']) else ""
+                            nomenclature_kd = str(row['Номенклатура КД']).strip() if pd.notna(row['Номенклатура КД']) else ""
+                            accounting_name = str(row['Наименование бухгалтерское']).strip() if pd.notna(row['Наименование бухгалтерское']) else ""
                             
-                            # Пропускаем строки с пустыми значениями
-                            if not all([accounting_code, nomenclature_kd, accounting_name]):
+                            # Пропускаем только полностью пустые строки
+                            if not any([accounting_code, nomenclature_kd, accounting_name]):
                                 continue
                             
-                            # Создание или обновление записи
-                            obj, created = AccountingData.objects.update_or_create(
+                            # ВАЖНО: Создаем новую запись каждый раз, даже если есть дубликаты
+                            obj = AccountingData.objects.create(
                                 accounting_code=accounting_code,
-                                defaults={
-                                    'nomenclature_kd': nomenclature_kd,
-                                    'accounting_name': accounting_name
-                                }
+                                nomenclature_kd=nomenclature_kd,
+                                accounting_name=accounting_name
                             )
                             
-                            if created:
-                                created_count += 1
-                            else:
-                                updated_count += 1
+                            created_count += 1
                                 
                         except Exception as e:
                             errors.append(f"Строка {index + 2}: {str(e)}")
@@ -382,8 +343,6 @@ class AccountingDataAdmin(admin.ModelAdmin):
                     # Сообщения о результате
                     if created_count > 0:
                         messages.success(request, f'Успешно создано записей: {created_count}')
-                    if updated_count > 0:
-                        messages.info(request, f'Обновлено записей: {updated_count}')
                     if errors:
                         messages.error(request, f'Ошибки при обработке {len(errors)} записей')
                         for error in errors[:10]:
@@ -396,81 +355,7 @@ class AccountingDataAdmin(admin.ModelAdmin):
                 except Exception as e:
                     messages.error(request, f'Ошибка при обработке файла: {str(e)}')
         else:
-            form = ExcelImportFormEquivalent()  # Используем вашу форму
-        
-        context = {
-            'form': form,
-            'title': 'Импорт данных из Excel',
-            'opts': self.model._meta,
-        }
-        return render(request, 'admin/excel_import_equivalents.html', context)
-        if request.method == 'POST':
-            form = ExcelImportForm(request.POST, request.FILES)
-            if form.is_valid():
-                excel_file = request.FILES['excel_file']
-                
-                try:
-                    # Чтение Excel файла
-                    df = pd.read_excel(excel_file)
-                    
-                    # Берем только нужные столбцы (игнорируем лишние)
-                    required_columns = ['Код бухгалтерский', 'Номенклатура КД', 'Наименование бухгалтерское']
-                    df = df[required_columns]
-                    
-                    # Удаляем пустые строки
-                    df = df.dropna()
-                    
-                    # Создание объектов
-                    created_count = 0
-                    updated_count = 0
-                    errors = []
-                    
-                    for index, row in df.iterrows():
-                        try:
-                            accounting_code = str(row['Код бухгалтерский']).strip()
-                            nomenclature_kd = str(row['Номенклатура КД']).strip()
-                            accounting_name = str(row['Наименование бухгалтерское']).strip()
-                            
-                            # Пропускаем строки с пустыми значениями
-                            if not all([accounting_code, nomenclature_kd, accounting_name]):
-                                continue
-                            
-                            # Создание или обновление записи
-                            obj, created = AccountingData.objects.update_or_create(
-                                accounting_code=accounting_code,
-                                defaults={
-                                    'nomenclature_kd': nomenclature_kd,
-                                    'accounting_name': accounting_name
-                                }
-                            )
-                            
-                            if created:
-                                created_count += 1
-                            else:
-                                updated_count += 1
-                                
-                        except Exception as e:
-                            errors.append(f"Строка {index + 2}: {str(e)}")
-                            continue
-                    
-                    # Сообщения о результате
-                    if created_count > 0:
-                        messages.success(request, f'Успешно создано записей: {created_count}')
-                    if updated_count > 0:
-                        messages.info(request, f'Обновлено записей: {updated_count}')
-                    if errors:
-                        messages.error(request, f'Ошибки при обработке {len(errors)} записей')
-                        for error in errors[:10]:
-                            messages.warning(request, error)
-                    else:
-                        messages.success(request, 'Импорт завершен успешно!')
-                    
-                    return redirect('..')
-                    
-                except Exception as e:
-                    messages.error(request, f'Ошибка при обработке файла: {str(e)}')
-        else:
-            form = ExcelImportForm()
+            form = ExcelImportFormEquivalent()
         
         context = {
             'form': form,
