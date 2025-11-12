@@ -1,64 +1,144 @@
-/* .wrapper {
-    border: 1px solid black;
-    height: 100vh;
-} */
 
-header {
-    width: 100%;
-    height: 100px;
+.arrow_back_page {
     display: flex;
     align-items: center;
-    padding-left: 5px;
-    padding-top: 5px;
-    justify-content: space-around;
+}
+.add_data_user {
+    display: grid;
+    gap: 10px;
 }
 
-header p:hover  {
-    color: rgb(231, 218, 96);
-}
-header p  {
-    font-size: 24px;
-    cursor: pointer;
-}
-
-
-.menu_windows {
+.navigate_back_page {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
-.menu_filter, .input_data_form, .add_suppler{
-    display: none;
-    position: absolute;
-    top: 100px; /* Высота хедера */
-    left: 50%;
-    transform: translateX(-50%);
-    border: 1px solid black;
-    background-color: white;
-    padding: 20px;
-    z-index: 1000;
+.info_sting_report {
+    display: flex;
+    justify-content: space-between;
 }
 
-.menu_filter p {
+.filter_choises {
+    display: flex;
+    justify-content: space-between;
+    background: aqua;
+    height: 100px;
+    align-items: center;
+}
+
+.filter_choises div {
+    margin-bottom: 10px;
+}
+
+.filter_choises label {
+    display: block;
+    margin-bottom: 3px;
+}
+
+.filter-section {
+    height: 179px;
+    width: auto;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+#supplierFilter, #leadingFilter, #statusFilter {
+    width: 396px;
+    height: 40px;
+    box-sizing: border-box;
+    border: 1px solid var(rgba(165, 176, 187, 1));
+    border-radius: 40px;
+    background: var(rgba(255, 255, 255, 1));
+}
+
+.clear, .apply {
+    width: 171px;
+    height: 40px;
+    border-radius: 40px;
+}
+
+.clear {
+    background-color: rgba(246, 78, 17, 1);
+}
+
+.apply {
+    background-color:rgba(12, 207, 19, 1) ;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f2f2f2;
+}
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
     text-align: center;
 }
-
-.edit_form {
-    display: block;
-    width: 400px;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 1px solid black;
-    background-color: white;
+.status-delivered {
+    background-color: #4CAF50;
+}
+.status-processed {
+    background-color: #2196F3;
+}
+.status-waiting {
+    background-color: #FF9800;
+}
+.status-error {
+    background-color: #F44336;
+}
+.status-not-listed {
+    background-color: #9E9E9E;
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
     padding: 20px;
-    z-index: 1000;
+    border: 1px solid #888;
+    width: 80%;
+    border-radius: 8px;
 }
-
-
-.input_data_form {
-    width: 400px;
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
 }
-
+.close:hover {
+    color: black;
+}
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
 .overlay {
     display: none;
     position: fixed;
@@ -67,106 +147,5 @@ header p  {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-}
-
-.container {
-    width: 100%;
-    margin: 0;
-    background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-}
-.table-container {
-    overflow: auto;
-    height: 90vh;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-    
-}
-th, td {
-    padding: 12px;
-    text-align: center;
-    border: 1px solid #ddd;
-    
-}
-th {
-    position: sticky;
-    top: 0;
-    background-color: #575759;
-    /* border: 2px solid black; */
-    color: #fff;
-}
-
-
-.button {
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 4px;
-    width: 150px; /* Фиксированная ширина */
-    box-sizing: border-box; /* Учитывает padding и border в ширине */
-    color: white;
-}
-.edit_row {
-    width: 25px;
-}
-
-.edit_row .button {
-    background-color: #4CAF50; /* Зеленый цвет */
-}
-
-.edit_status .button {
-    background-color: #6b1fec; /* Красный цвет */
-}
-.del_row .button {
-    background-color: #ec1f1f; /* Красный цвет */
-}
-
-.button:hover {
-    transform: scale(1.1);
-}
-
-.title_edit {
-    text-align: center;
-    font-size: 24px;
-    padding: 14px;
-}
-.buttons_block {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.button_edit_form {
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 4px;
-    color: white;
-    background-color: green; /* Зеленый цвет для кнопки "Сохранить" */
-    border: none;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-
-.button_edit_form.cancel {
-    background-color: red; /* Красный цвет для кнопки "Отмена" */
-}
-
-.error {
-    color: rgb(206, 72, 72);
-    font-size: 0.9em;
-    margin-top: 5px;
-}
-
-.filter-value {
-    color: #0aff63; /* Красноватый цвет */
+    z-index: 1;
 }

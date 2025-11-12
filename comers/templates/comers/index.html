@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 {% load static %}
 <html lang="ru">
@@ -5,159 +6,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'comers/css/style.css'%}">
-    <link rel="stylesheet" href="{% static 'comers/css/data_form.css'%}">
-    <title>Недопоставки</title>
+    <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
+    <title>Установка фильтров</title>
 </head>
 <body>
-    <div class="wrapper">
-        <header>
-            <div class="input_data" onclick="openPopup('menu_filter')">
-                <p>Фильтр</p>
-            </div>
-            <div class="filter_view">
-                <ul>
-                    <li>Выбранный фильтр:</li>
-                    <li>Поставщик: {% if filters.supplier_name  %}<span class="filter-value">{{ filters.supplier_name  }}</span>{% else %} Нет фильтра {% endif %}</li>
-                    <li>Ведущий: {% if filters.leading_name  %}<span class="filter-value">{{ filters.leading_name  }}</span>{% else %}Нет фильтра{% endif %}</li>
-                    <li>Сбросить</li>
-                </ul>
-            </div>
-            <div class="input_data" onclick="openPopup('input_data_form')">
-                <p>Ввести данные</p>
-            </div>
-            <div class="input_data" onclick="openPopup('add_suppler')">
-                <p>Добавить поставщика</p>
-            </div>
-            <div class="user_block">
-                <div class="logout_button">
-                    {% if request.user.is_authenticated %}
-                    <p>{{ user.username }}</p>
-                    <p class="auth_text">
-                    {% endif %}
+    <div class="container">
+        <div class="filter-section">
+            <div class="navigate_back_page">
+                <div class="arrow_back_page">
+                    <img  src="{% static 'comers/icon/arrow_back.png' %}" alt="<">   
+                        <p>На главную</p>
                 </div>
-            </div>
-        </header>
-        <div class="menu_windows">
-            <div class="menu_filter">
-                <p>Фильтр</p>
-                <form id="add_filter_form" method="post">
-                    {% csrf_token %}
-                    {{ filter_form.as_p }}
-                    <button class='filter_button' type="button">Применить фильтр</button>
-                </form>
-            </div>
-            <div class="add_suppler">
-                <p>Добавить поставщика</p>
-                <form id="add_supler_form" method="post" action="/comers/add_supplier/">
-                    {% csrf_token %}
-                    {{ add_suppler_form.as_p }}
-                    <button type="submit">Сохранить</button>
-                </form>
-            </div>
-            
-            <div class="input_data_form">
-                <p>Внести данные</p>
-                <form  id="inputDataForm" method="post">
-                    {% csrf_token %}
-                    {{ input_data_form.as_p }}
-                    <button type='button' class='send_data_form_button'>Сохранить</button>
-                </form>
-            </div>    
-        </div>
-        <div class="overlay" onclick="closePopup()"></div>
-        <div class="container">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Номер накладной</th>
-                            <th>Дата</th>
-                            <th>Поставщик</th>
-                            <th>Артикул</th>
-                            <th>Название</th>
-                            <th>Единица измерения</th>
-                            <th>Количество</th>
-                            <th>Комментарий</th>
-                            <th>Описание</th>
-                            <th>Специалист</th>
-                            <th>Ведущий</th>
-                            <th>Статус</th>
-                            <th>Примечания</th>
-                            <th>Редактировать</th>
+                        <div>   
+                            <div>
+                                <p>База обновлена 22.11.2025</p>
+                            </div>
                             
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for invoice in invoices %}
-                            <tr style="{% if invoice.project == 'БУК-МБ2-6' %}background-color: #ffe60024;{% endif %}">
-                                <td>{{ invoice.invoice_number }}</td>
-                                <td>{{ invoice.date }}</td>
-                                <td>{{ invoice.supplier }}</td>
-                                <td>{{ invoice.article }}</td>
-                                <td>{{ invoice.name }}</td>
-                                <td>{{ invoice.unit }}</td>
-                                <td>{{ invoice.quantity }}</td>
-                                <td>{{ invoice.comment }}</td>
-                                <td>{% if invoice.description_problem %}{{ invoice.description_problem}}{% else %}{% endif %}</td>
-                                <td>{{ invoice.specialist }}</td>
-                                <td>{{ invoice.leading }}</td>
-                                <td style="{% if invoice.status.name == 'Обработка' %}background-color: #daff0073;
-                                {% elif invoice.status.name == 'На списание' %}background-color: #36d3399c;
-                                {% elif invoice.status.name == 'Допоставка' %}background-color: #20B2AA;
-                                {% elif invoice.status.name == 'Ждем ответ' %}background-color: #f56d6dde;{% endif %}">
-                                {{ invoice.status.name }}</td>
-                                <td>{% if invoice.description  %}{{ invoice.description  }}{% else %}{% endif %}</td>
-                                <td>
-                                    <div class="edit_row">
-                                        <a href="{% url 'edit_row' invoice.id %}" class="button">Редактировать</a>
-                                    </div>
-                                    <div class="edit_status">
-                                        <a href="{% url 'edit_status' invoice.id %}" class="button">Установить статус</a>
-                                    </div>
-                                    <div class="del_row">
-                                        <a href="{% url 'delete_row' invoice.id %}" class="button">Удалить строку</a>
-                                    </div>
-                                </div>
-                            </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% if flag == 'row' %}
-                <div class="overlay" style="display: block"></div>
-                <form class='edit_form'  method="post">
-                    <p class='title_edit'>Редактировать запись</p>
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <div class="buttons_block">
-                        <button type="submit" class="button_edit_form">Сохранить</button>
-                        <div class="cancel_button">
-                            <a href="{% url 'shortfalls' %}" class="button_edit_form cancel">Отмена</a>
-                        </div>
-                    </div>
-                </form>
-                {% endif %}
-                {% if flag == 'status' %}
-                <div class="overlay" style="display: block"></div>
-                <form class='edit_form'  method="post">
-                    <p class='title_edit'>Установить статус</p>
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <div class="buttons_block">
-                        <button type="submit" class="button_edit_form">Сохранить</button>
-                        <div class="cancel_button">
-                            <a href="{% url 'shortfalls' %}" class="button_edit_form cancel">Отмена</a>
-                        </div>
-                    </div>
-                </form>
-                {% endif %}
+                        </div>     
             </div>
+                <div class="info_sting_report ">
+                        <p class="set_filters">Установка фильтров</p>
+                        <p class="download_report">Скачать отчет</p>
+                </div>
+            <div class="filter_choises">
+                <div>   
+                        <label class="filter-label">Выбор поставщика</label>
+                        <select id="supplierFilter">
+                            <option>ЗАО профессиональные профессионалы</option>
+                        </select>
+                </div> 
+                <div>
+                        <label>Выбор ведущего накладную</label>
+                        <select id="leadingFilter">
+                            <option>Иванов Иван Иванович</option>
+                        </select>
+                </div>
+                <div>
+                        <label>Выбор статуса</label>
+                        <select id="statusFilter">
+                            <option>Все</option>
+                        </select>
+                </div>
+                <div>
+                    <button class="clear" onclick="clearFilters()">Сбросить</button>
+                    <button class="apply" onclick="applyFilters()">Применить</button>
+                </div>
+                <div class="add_data_user">
+                    <button id="addSupplierBtn" onclick="openPopup('addSupplierModal')">Добавить поставщика</button>
+                    <button id="addDataBtn" onclick="openPopup('addDataModal')">Внести данные</button>
+                </div>
+
+            </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>номер накладной</th>
+                    <th>дата накладной</th>
+                    <th>поставщик</th>
+                    <th>артикул</th>
+                    <th>наименование</th>
+                    <th>единицы измерения</th>
+                    <th>количество</th>
+                    <th>комментарий</th>
+                    <th>описание</th>
+                    <th>специалист</th>
+                    <th>ведущий</th>
+                    <th>статус</th>
+                    <th>примечание</th>
+                    <th>действия</th>
+                </tr>
+            </thead>
+            <tbody id="invoiceTableBody">
+                <!-- Data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Supplier Modal -->
+    <div id="addSupplierModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePopup('addSupplierModal')">&times;</span>
+            <h2>Добавить поставщика</h2>
+            <form id="addSupplierForm" onsubmit="addSupplier(event)">
+                <label for="supplierName">Название поставщика:</label>
+                <input type="text" id="supplierName" name="supplierName" required>
+                <br>
+                <button type="submit">Добавить</button>
+            </form>
         </div>
     </div>
-    <script src='{% static 'comers/js/popups.js' %}'></script>
-    <script src="{% static 'comers/js/auto_fields.js' %}"></script>
-    <script src="{% static 'comers/js/validate_form.js' %}"></script>
-    <script src="{% static 'comers/js/filters.js' %}"></script>
-    <script src="{% static 'comers/js/get_all_data_load_page.js' %}"></script>
+
+    <!-- Add Data Modal -->
+    <div id="addDataModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePopup('addDataModal')">&times;</span>
+            <h2>Внести данные</h2>
+            <form id="addDataForm" onsubmit="addData(event)">
+                <label for="invoiceNumber">Номер накладной:</label>
+                <input type="text" id="invoiceNumber" name="invoiceNumber" required>
+                <br>
+                <label for="invoiceDate">Дата накладной:</label>
+                <input type="date" id="invoiceDate" name="invoiceDate" required>
+                <br>
+                <label for="supplier">Поставщик:</label>
+                <input type="text" id="supplier" name="supplier" required>
+                <br>
+                <label for="article">Артикул:</label>
+                <input type="text" id="article" name="article" required>
+                <br>
+                <label for="productName">Наименование:</label>
+                <input type="text" id="productName" name="productName" required>
+                <br>
+                <label for="unit">Единицы измерения:</label>
+                <input type="text" id="unit" name="unit" required>
+                <br>
+                <label for="quantity">Количество:</label>
+                <input type="number" id="quantity" name="quantity" required>
+                <br>
+                <label for="comment">Комментарий:</label>
+                <input type="text" id="comment" name="comment">
+                <br>
+                <label for="description">Описание:</label>
+                <input type="text" id="description" name="description">
+                <br>
+                <label for="specialist">Специалист:</label>
+                <input type="text" id="specialist" name="specialist" required>
+                <br>
+                <label for="leader">Ведущий:</label>
+                <input type="text" id="leader" name="leader" required>
+                <br>
+                <label for="status">Статус:</label>
+                <select id="status" name="status" required>
+                    <option value="delivered">депестовка</option>
+                    <option value="processed">обработка</option>
+                    <option value="waiting">ждём ответ</option>
+                    <option value="not-listed">на списании</option>
+                </select>
+                <br>
+                <button type="submit">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay" onclick="closePopup()"></div>
+
+    
+    <script src='{% static 'comers/js/query.js' %}'></script>
 </body>
 </html>
