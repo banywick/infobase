@@ -1,0 +1,3 @@
+<svg class="circle" width="10" height="10">
+    <circle cx="10" cy="10" r="10" fill="gray" /> <!-- Цвет по умолчанию -->
+</svg>

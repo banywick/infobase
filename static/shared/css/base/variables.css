@@ -1,0 +1,19 @@
+:root {
+    /* ВАШИ СТАРЫЕ ПЕРЕМЕННЫЕ (сохраняем как есть) */
+    --primary-color: rgb(31, 58, 85);
+    --secondary-color: rgb(251, 184, 160);
+    --text-color: rgb(255, 255, 255);
+    --font-family: 'Inter', sans-serif;
+    --border-color: black;
+    --red-color: rgb(246, 78, 17);
+
+    /* НОВЫЕ ПЕРЕМЕННЫЕ (дополняем) */
+    --success-color: rgba(158, 236, 160, 1);
+    --gray-light: rgb(216, 222, 227);
+    --gray-medium: rgb(165, 176, 187);
+    
+    /* Размеры из ваших старых стилей */
+    --sidebar-width: 254px;
+    --header-height: 96px;
+    --table-height: 82vh;
+}

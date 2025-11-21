@@ -4,11 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'finder/css/style_finder2.css' %}">
-    <link rel="stylesheet" href="{% static 'finder/css/popups_style.css' %}">
-    <link rel="stylesheet" href="{% static 'finder/css/table_style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/index_all.css' %}">
-    <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
+    <link rel="stylesheet" href="{% static 'finder/css/finder.css' %}">
+    <link rel="stylesheet" href="{% static 'finder/css/style_finder.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'finder/css/popups_style.css' %}">
+    <link rel="stylesheet" href="{% static 'finder/css/table_style.css' %}">  {% endcomment %}
+
+    <!-- ДОБАВЛЯЕМ НОВУЮ СТРУКТУРУ -->
+
     <title>Поисковик</title>
 </head>
 <body>
@@ -22,7 +24,7 @@
                             <div class="input_container">
                                 <input id="search_input" type="text" name="query" placeholder="поиск по названию, коду, артикулу">
                             </div>
-                            <img id="search_icon" src="{% static 'icon/lupa_input.png' %}" alt="Иконка поиска">
+                            <img id="search_icon" src="{% static '/finder/icon/lupa_input.png' %}" alt="Иконка поиска">
                         </div>
                         <div class="filter_container"> 
                             <div class="filters">
@@ -56,7 +58,7 @@
         </header>
         <div class="filter_project_container">
             <div class="button_wrapper" id="button_filter_projects">
-                <img src="{% static 'icon/filter.png' %}" alt="Иконка фильтра">  
+                <img src="{% static '/finder/icon/filter.png' %}" alt="Иконка фильтра">  
                 <div>Фильтр проектов</div>
             </div>
             <div class="selected-projects-container">

@@ -1,0 +1,42 @@
+/* Из style_finder2.css - ВСЕ стили сайдбара */
+.sidebar {
+    position: fixed;
+    width: 254px;
+    min-height: 100vh;
+    background: var(--primary-color);
+    padding: 0 15px;
+    border: 1px solid black;
+}
+
+.sidebar p {
+    color: rgb(165, 176, 187);
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 15px;
+    margin-bottom: 5px;
+}
+
+.menu_row, .menu_row_down {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    gap: 8px;
+}
+
+.menu_link a {
+    color: var(--text-color);
+    font-size: 18px;
+    transition: color 0.3s ease;
+    text-decoration: none;
+    margin-right: 5px;
+}
+
+
+.sidebar {
+    width: 200px;
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px;
+}
+
+/* И так далее - КОПИРУЕМ ВСЕ стили связанные с сайдбаром */

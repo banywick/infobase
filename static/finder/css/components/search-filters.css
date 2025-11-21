@@ -1,0 +1,44 @@
+/* Специфичные стили поиска и фильтров */
+.find_container {
+    margin-left: 50px;
+    width: 375px;
+    height: 96px;
+}
+
+.filter_container {
+    width: 373px;
+    padding: 4px;
+    background: #e2892b29;
+    border-radius: 6px;
+}
+
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+}
+
+.filters {
+    margin-bottom: 20px;
+}
+
+.filters span {
+    background-color: #e74c3c;
+    color: white;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+}
+
+
+.filter_project_container {
+    margin-left: 254px;
+    min-height: 72px;
+    background: var(--text-color);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+}

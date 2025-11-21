@@ -1,0 +1,7 @@
+.pagination {
+    margin-top: 20px;
+}
+.pagination span {
+    margin-right: 5px;
+    cursor: pointer;
+}
