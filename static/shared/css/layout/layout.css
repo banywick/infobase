@@ -1,4 +1,8 @@
 /* Переносим из style_finder2.css */
+body {
+    font-family: var(--font-family);
+}
+
 .wrapper {
     width: 100%;
     height: auto;
