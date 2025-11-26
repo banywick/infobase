@@ -22,13 +22,14 @@ header {
     overflow: hidden;
 }
 
-.filter_project_container {
-    margin-left: 254px;
-    min-height: 72px;
-    background: var(--text-color);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
+
+.background-overlay {
+    display: none; /* Скрываем фон по умолчанию */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(31, 58, 85, 0.3);
+    z-index: 9; /* Убедитесь, что фон находится под popup */
 }

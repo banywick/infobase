@@ -13,12 +13,35 @@
     position: relative; /* Устанавливаем относительное позиционирование для контейнера таблицы */
 }
 
+.table-container {
+    display: block;
+}
 
 
+.table {
+    display: table;
+    width: 100%;
+}
+.table-header, .table-row {
+    display: table-row;
+}
+.table-cell {
+    display: table-cell;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+.table-header .table-cell {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
 
+.table-row {
+    transition: background-color 0.2s ease;
+}
 
-
-
+.table-row:hover{
+    background-color: #f0f0f0;
+}
 thead {
     position: sticky;
     top: 0;

@@ -30,6 +30,7 @@
 .button_wrapper_update {
     background: rgb(12 207 19 / 47%);
     margin-bottom: 5px;
+    gap: 10px;
 }
 
 .button_wrapper_close {

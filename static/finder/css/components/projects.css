@@ -84,3 +84,21 @@
     font-size: 30px;
     font-weight: bold;
 }
+
+.project_item, .any_projects {
+    display: flex;
+    align-items: center;
+}
+
+
+.any_projects {
+    cursor: pointer;
+}
+
+.any_projects p {
+    color:  var(--red-color);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 19px;
+    text-align: left;
+}
