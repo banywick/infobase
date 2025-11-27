@@ -8,17 +8,15 @@
 .menu_link a {
     color: var(--text-color);
     font-size: 18px;
-    transition: color 0.3s ease;
-    text-decoration: none;
-    margin-right: 5px;
+ 
 }
 
 .menu_row:hover  .menu_link a {
-    color: var(--secondary-color);
+    color: var(--button_clear)
 }
 
 .menu_row_down:hover  .menu_link a {
-    color: var(--secondary-color);
+    color: var(--button_clear)
 }
 
 .down_menu {
@@ -26,3 +24,4 @@
     position: fixed;
     bottom: 0;
 }
+

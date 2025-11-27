@@ -1,14 +1,4 @@
 /* CSS переменные для удобства */
-:root {
-    --primary-color: rgb(31, 58, 85);
-    --secondary-color: rgb(251, 184, 160);
-    --text-color: rgb(255, 255, 255);
-    --font-family: 'Inter', sans-serif;
-    --border-color: black;
-    --red-color: rgb(246, 78, 17);
-}
-
-
 
 .choice_project_popup {
     position: absolute;
@@ -203,8 +193,8 @@ transition: transform 0.3s ease, opacity 0.3s ease;
     top:48%;
     transform: translate(-50%, -50%);
     z-index: 10; /* Убедитесь, что popup находится поверх фона */
-    width: 400px;
-    height: 765px;
+    width: 360px;
+    height: 670px;
     left: 655px;
     border-radius: 10px;
     background: rgb(255, 255, 255);

@@ -1,6 +1,9 @@
 /* Переносим из style_finder2.css */
 body {
     font-family: var(--font-family);
+    font-weight: var(--body_text_weight);
+    color: var(--body_text_color);
+    font-size: 15px;
 }
 
 .wrapper {

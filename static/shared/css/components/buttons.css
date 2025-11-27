@@ -18,23 +18,23 @@
 }
 
 .button_wrapper {
-    background: var(--primary-color);
+    background: var(--sidebar);
     margin-left: 45px;
 }
 
 .button_wrapper_clear {
-    background: var(--secondary-color);
+    background: var(--button_clear);
     margin-right: 40px;
 }
 
 .button_wrapper_update {
-    background: rgb(12 207 19 / 47%);
+    background: var(--button_update_access);
     margin-bottom: 5px;
     gap: 10px;
 }
 
 .button_wrapper_close {
-    background: rgb(246, 78, 17);
+    background: var(--button_close);
 }
 
 .button_wrapper_filter_view_all {

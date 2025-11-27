@@ -44,6 +44,13 @@
     
 }
 
+#search_icon {
+    cursor: pointer;
+}
+
+.check_box {
+    cursor: pointer;
+}
 
 .close {
     display: flex;
@@ -69,6 +76,8 @@
 .info_update {
     text-align: center;
     margin-right: 40px;
+    color: var(--body_text_color);
+    font-weight: var(--body_text_weight);
 }
 
 .logo {
@@ -82,7 +91,7 @@
     font-size: 18px;
     font-weight: 500;
     line-height: 22px;
-    text-align: center;
+    margin-bottom: 5px;
 }
 
 .position_title {
@@ -137,7 +146,7 @@
 }
 
 
-/* .name_position {
+.name_position {
     color: rgb(31, 58, 85);
     font-family: var(--font-family);
     font-size: 16px;
@@ -147,4 +156,4 @@
     margin-left: 30px;
     margin-bottom: 20px;
     margin-top: 10px;
-} */
+}

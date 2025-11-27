@@ -1,12 +1,4 @@
-:root {
-    --primary-color: rgb(31, 58, 85);
-    --secondary-color: rgb(251, 184, 160);
-    --text-color: rgb(255, 255, 255);
-    --font-family: 'Inter', sans-serif;
-    --border-color: black;
-    --red-color: rgb(246, 78, 17);
 
-}
 .table-container {
     overflow-y: auto; /* Включаем вертикальную прокрутку */
     height: 82vh; /* Высота экрана */
@@ -33,14 +25,21 @@
 .table-header .table-cell {
     background-color: #f2f2f2;
     font-weight: bold;
+    font-size: 16px;
 }
 
 .table-row {
     transition: background-color 0.2s ease;
 }
 
+.id_positoin_row {
+    background-color: #f5f5f5;;
+    border-radius: 50px;
+}
+
 .table-row:hover{
-    background-color: #f0f0f0;
+    background-color: #bafaca6b;
+    cursor: pointer;
 }
 thead {
     position: sticky;
@@ -61,13 +60,13 @@ th, td {
 }
 
 .table-header {
-    background-color: rgba(158, 236, 160, 1);
+    background-color: var(--headr_table);
 }
 
-#keep_icon {
+/* #keep_icon {
     background: white;
 
-}
+} */
 
 /* Ширина для 1,2,7 (иконка) */
 th:nth-child(1),
@@ -229,4 +228,8 @@ td:nth-child(13) {
 
 .copy-feedback.fade-out {
     opacity: 0;
+}
+
+.header-cell {
+    color: var(--body_text_color);
 }
