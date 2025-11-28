@@ -105,7 +105,7 @@ function createPinnedRow(item) {
         <td class="data-column">${escapeHtml(item.title || '')}</td>
         <td class="icon-column">
             <div class="copy_visual_box">
-                <img src="${staticUrls?.copyIcon || ''}" alt="Копировать" class="copy-icon" title="Копировать артикул и наименование">
+                <img src="${staticUrls?.copyIcon || ''}" alt="Копировать" class="copy-icon" title="Копировать код и наименование">
             </div>        
         </td>
         <td class="data-column">${escapeHtml(item.quantity || '')}</td>
