@@ -134,7 +134,10 @@ class ProductSearchView(APIView):
 
         # Выполняем запрос
         queryset = ProjectUtils.get_annotated_remains()
-        queryset = queryset.filter(q_search & q_projects)[:200]
+        queryset = queryset.filter(q_search & q_projects)
+
+        #Сортировка проектов для группировки
+        queryset = queryset.order_by('project')[:200]
 
         if not queryset.exists():
             return Response({"detail": "Ничего не найдено"}, status=status.HTTP_200_OK)
