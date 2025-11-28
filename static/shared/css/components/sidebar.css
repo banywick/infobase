@@ -1,0 +1,21 @@
+/* Из style_finder2.css - ВСЕ стили сайдбара */
+.sidebar {
+    position: fixed;
+    width: 254px;
+    min-height: 100vh;
+    background: var(--sidebar);
+    padding: 0 15px;
+    border: 1px solid black;
+}
+
+.sidebar p {
+    color: rgb(165, 176, 187);
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 15px;
+    margin-bottom: 5px;
+}
+
+
+
+

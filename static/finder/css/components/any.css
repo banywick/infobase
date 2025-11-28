@@ -1,0 +1,159 @@
+.info_window {
+    z-index: 1;
+    display: none;
+    max-width: 430px;
+    border: 1px solid #e0e0e0;
+    border-radius: 9px;
+    margin-top: 20px;
+    padding: 15px;
+    box-sizing: border-box;
+    background: #f9f9f9;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.info_result_items_title,
+.final_result_sum_unit,
+.final_result_sum {
+    font-size: 16px;
+    font-weight: bold;
+    font-family: var(--font-family);
+    color: rgb(31, 58, 85);
+
+}
+
+.close_div {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.final_result_sum_unit {
+    margin-right: 13px;
+}
+.final_result_sum {
+    margin-left: 175px;
+}
+
+.info_result_items {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    
+}
+
+#search_icon {
+    cursor: pointer;
+}
+
+.check_box {
+    cursor: pointer;
+}
+
+.close {
+    display: flex;
+    justify-content: right;
+    padding: 5px;
+}
+.close img {
+    cursor: pointer;
+    margin-right: 10px;
+    margin-top: 5px;
+}
+
+
+.check_box {
+    width: 17px;
+    height: 14px;
+}
+
+.search_bar {
+    margin-top: 16px;
+}
+
+.info_update {
+    text-align: center;
+    margin-right: 40px;
+    color: var(--body_text_color);
+    font-weight: var(--body_text_weight);
+}
+
+.logo {
+    text-align: center;
+    height: 150px;
+    padding: 20px 0;
+}
+
+.info_title {
+    color: var(--text-color);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 22px;
+    margin-bottom: 5px;
+}
+
+.position_title {
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 19px;
+    text-align: left;
+}
+
+.position_title p {
+    color: var(--text-color);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 17px;
+    text-align: left;
+}
+
+
+.circle {
+    width: 11px;
+    height: 10px;
+    background-color: var(--red-color);
+    border-radius: 100%;
+    margin-right: 5px;
+}
+
+
+.hide_info {
+    color: rgb(165, 176, 187);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 19px;
+    text-align: center;
+    cursor: pointer;
+}
+
+
+
+.title_count {
+    margin-right: 5px;
+}
+
+.arrow_img {
+    margin-left: 5px;
+    margin-bottom: 5px;
+}
+
+.total_contauner {
+    display: flex;
+    gap: 10px;
+}
+
+
+.name_position {
+    color: rgb(31, 58, 85);
+    font-family: var(--font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 19px;
+    text-align: left;
+    margin-left: 30px;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}

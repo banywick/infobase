@@ -1,0 +1,21 @@
+:root {
+      /* Компоненты */
+    --color-success: rgba(12, 207, 19, 1);
+    --color-success-muted: color-mix(in srgb, var(--color-success) 30%, transparent);
+    /* шрифт */
+    --font-family: 'Inter', sans-serif;
+
+    /* Переменные */
+    --sidebar: rgb(31, 58, 85);
+    --button_clear: rgb(251, 184, 160);
+    --button_update_access: rgba(12, 207, 19, 1);
+    --button_update_denited: var(--color-success-muted);
+    --button__filter_view_all: var(--button_update_access);
+    --button_filter_submit: var(--sidebar);
+    --button_close: rgb(246, 78, 17);
+    --headr_table: rgba(158, 236, 160, 1);
+    --text-color: rgb(255, 255, 255);
+    --body_text_color: rgba(31, 58, 85, 1);
+    --body_text_weight: 500;
+}
+

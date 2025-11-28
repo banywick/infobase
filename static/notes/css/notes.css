@@ -1,0 +1,37 @@
+/* Import shared styles */
+@import url('../../shared/css/base/reset.css');
+@import url('../../shared/css/base/variables.css');
+@import url('../../shared/css/base/typography.css');
+
+@import url('../../shared/css/layout/layout.css');
+@import url('../../shared/css/components/buttons.css');
+@import url('../../shared/css/components/forms.css');
+@import url('../../shared/css/components/popups.css');
+
+/* Notes specific components */
+@import url('components/note-editor.css');
+@import url('components/notes-grid.css');
+@import url('components/note-card.css');
+
+/* Notes specific styles */
+.notes-app {
+    background: var(--color-gray-50);
+    min-height: 100vh;
+}
+
+.note-card {
+    background: var(--color-white);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+    border: 1px solid var(--color-gray-200);
+}
+
+.note-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.note-card.pinned {
+    border-left: 4px solid var(--color-accent);
+}

@@ -1,0 +1,55 @@
+/* Из index_all.css */
+.input_wrapper {
+    width: 375px;
+    height: 40px;
+    left: 40px;
+    top: 16px;
+    display: flex;
+    padding: 8px 16px 8px 16px;
+    border: 1px solid rgb(165, 176, 187);
+    border-radius: 40px;
+}
+
+.input_container {
+    display: flex;
+    align-items: center;
+}
+
+input {
+    width: 319px;
+    padding: 8px 16px 8px 16px;
+}
+
+input::placeholder {
+    color: rgb(216, 222, 227);
+    font-family: Inter;
+    font-size: 16px;
+}
+
+/* Из popups_style.css */
+.search-input {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    width: 300px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.file-upload-wrapper {
+    width: 100%;
+    margin: 16px 0;
+}
+
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    background-color: #f9fafb;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}

@@ -1,0 +1,27 @@
+.menu_row, .menu_row_down {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    gap: 8px;
+}
+
+.menu_link a {
+    color: var(--text-color);
+    font-size: 18px;
+ 
+}
+
+.menu_row:hover  .menu_link a {
+    color: var(--button_clear)
+}
+
+.menu_row_down:hover  .menu_link a {
+    color: var(--button_clear)
+}
+
+.down_menu {
+    height: 150px;
+    position: fixed;
+    bottom: 0;
+}
+
