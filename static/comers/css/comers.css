@@ -14,29 +14,3 @@
 @import url('components/supplier-cards.css');
 @import url('components/comers-table.css');
 
-/* Comers specific styles */
-.comers-app {
-    background: var(--color-gray-50);
-}
-
-.delivery-status {
-    padding: 4px 8px;
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-}
-
-.delivery-status.delayed {
-    background: var(--color-error);
-    color: var(--color-white);
-}
-
-.delivery-status.ontime {
-    background: var(--color-success);
-    color: var(--color-white);
-}
-
-.delivery-status.pending {
-    background: var(--color-warning);
-    color: var(--color-gray-900);
-}
