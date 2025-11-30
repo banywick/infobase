@@ -10,7 +10,7 @@
 @import url('../../shared/css/components/popups.css');
 
 /* Comers specific components */
-@import url('components/delivery-list.css');
+@import url('components/style.css');
 @import url('components/supplier-cards.css');
 @import url('components/comers-table.css');
 

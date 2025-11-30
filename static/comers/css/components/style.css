@@ -4,7 +4,7 @@
     align-items: center;
 }
 .add_data_user {
-    display: grid;
+    display: grid;filter_choises
     gap: 10px;
 }
 
@@ -23,7 +23,7 @@
 .filter_choises {
     display: flex;
     justify-content: space-between;
-    background: aqua;
+    /* background: aqua; */
     height: 100px;
     align-items: center;
 }
@@ -37,6 +37,14 @@
     margin-bottom: 3px;
 }
 
+.buttons_navigate_choice {
+    display: flex;
+}
+
+.container_header {
+    border: 1px solid black;
+} 
+
 .filter-section {
     height: 179px;
     width: auto;
@@ -45,28 +53,9 @@
     align-items: center;
 }
 
-#supplierFilter, #leadingFilter, #statusFilter {
-    width: 396px;
-    height: 40px;
-    box-sizing: border-box;
-    border: 1px solid var(rgba(165, 176, 187, 1));
-    border-radius: 40px;
-    background: var(rgba(255, 255, 255, 1));
-}
 
-.clear, .apply {
-    width: 171px;
-    height: 40px;
-    border-radius: 40px;
-}
 
-.clear {
-    background-color: rgba(246, 78, 17, 1);
-}
 
-.apply {
-    background-color:rgba(12, 207, 19, 1) ;
-}
 
 table {
     width: 100%;

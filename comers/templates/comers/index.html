@@ -5,12 +5,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% comment %} <link rel="stylesheet" href="{% static 'comers/css/style.css'%}"> {% endcomment %}
-    <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
+    <link rel="stylesheet" href="{% static 'comers/css/comers.css' %}">
     <title>Установка фильтров</title>
 </head>
 <body>
-    <div class="container">
+    <div class="container_header">
         <div class="filter-section">
             <div class="navigate_back_page">
                 <div class="arrow_back_page">
@@ -31,29 +30,35 @@
             <div class="filter_choises">
                 <div>   
                         <label class="filter-label">Выбор поставщика</label>
-                        <select id="supplierFilter">
+                        <select id="supplierFilter" class="input_wrapper">
                             <option>ЗАО профессиональные профессионалы</option>
                         </select>
                 </div> 
                 <div>
                         <label>Выбор ведущего накладную</label>
-                        <select id="leadingFilter">
+                        <select id="leadingFilter" class="input_wrapper">
                             <option>Иванов Иван Иванович</option>
                         </select>
                 </div>
                 <div>
                         <label>Выбор статуса</label>
-                        <select id="statusFilter">
+                        <select id="statusFilter" class="input_wrapper">
                             <option>Все</option>
                         </select>
                 </div>
-                <div>
-                    <button class="clear" onclick="clearFilters()">Сбросить</button>
-                    <button class="apply" onclick="applyFilters()">Применить</button>
+                <div class="buttons_navigate_choice">
+                    <button class="button_wrapper_filter_clear button_wrapper_clear" onclick="clearFilters()">Сбросить</button>
+                    <button class="button_wrapper_update button_wrapper_filter_view_all" onclick="applyFilters()">Применить</button>
                 </div>
                 <div class="add_data_user">
-                    <button id="addSupplierBtn" onclick="openPopup('addSupplierModal')">Добавить поставщика</button>
-                    <button id="addDataBtn" onclick="openPopup('addDataModal')">Внести данные</button>
+                    < <div class="button_wrapper" id="button_filter_projects">
+                        <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
+                        <div>Внести данные</div>
+                    </div>
+                    <div class="button_wrapper" id="button_filter_projects">
+                        <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
+                        <div>Внести данные</div>
+                    </div>
                 </div>
 
             </div>
