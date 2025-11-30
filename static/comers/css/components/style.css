@@ -4,7 +4,7 @@
     align-items: center;
 }
 .add_data_user {
-    display: grid;filter_choises
+    display: grid;
     gap: 10px;
 }
 
@@ -28,9 +28,6 @@
     align-items: center;
 }
 
-.filter_choises div {
-    margin-bottom: 10px;
-}
 
 .filter_choises label {
     display: block;

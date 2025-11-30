@@ -9,7 +9,7 @@
     <title>Установка фильтров</title>
 </head>
 <body>
-    <div class="container_header">
+
         <div class="filter-section">
             <div class="navigate_back_page">
                 <div class="arrow_back_page">
@@ -51,7 +51,7 @@
                     <button class="button_wrapper_update button_wrapper_filter_view_all" onclick="applyFilters()">Применить</button>
                 </div>
                 <div class="add_data_user">
-                    < <div class="button_wrapper" id="button_filter_projects">
+                    <div class="button">
                         <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
                         <div>Внести данные</div>
                     </div>
@@ -63,7 +63,7 @@
 
             </div>
 
-        <table>
+        {% comment %} <table>
             <thead>
                 <tr>
                     <th>номер накладной</th>
@@ -86,7 +86,6 @@
                 <!-- Data will be loaded here -->
             </tbody>
         </table>
-    </div>
 
     <!-- Add Supplier Modal -->
     <div id="addSupplierModal" class="modal">
@@ -154,7 +153,7 @@
         </div>
     </div>
 
-    <div id="overlay" class="overlay" onclick="closePopup()"></div>
+    <div id="overlay" class="overlay" onclick="closePopup()"></div> {% endcomment %}
 
     
     <script src='{% static 'comers/js/query.js' %}'></script>

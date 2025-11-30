@@ -285,7 +285,7 @@ transition: transform 0.3s ease, opacity 0.3s ease;
     justify-content: center;
     gap: 12px;
     border-radius: 24px;
-    background-color: #4f46e5;
+    background-color: var(--color-green);
     color: white;
     font-size: 16px;
     font-weight: 500;
