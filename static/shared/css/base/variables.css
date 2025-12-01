@@ -13,6 +13,7 @@
   --color-dark-blue: #1F3A55;
   --color-light-blue: #C2D9FD;
   --color-very-light-blue: #E9F1FF;
+  --color-white: var(--color-white)
   
   /* Альтернативные цвета */
   --color-green-alt: #9ECCA0;  
@@ -21,46 +22,9 @@
   
   /* Нейтральные цвета */
   --color-placeholder: #DBDEE3;
-  
-  /* ===== СЕМАНТИЧЕСКИЕ ЦВЕТА ===== */
-  
-  /* Статусы и состояния */
-  --color-success: var(--color-green);
-  --color-success-muted: color-mix(in srgb, var(--color-success) 30%, transparent);
-  --color-warning: var(--color-orange);
-  --color-warning-muted: color-mix(in srgb, var(--color-warning) 30%, transparent);
-  
-  /* ===== КОМПОНЕНТЫ ===== */
-  
-  /* Layout */
-  --sidebar-bg: var(--color-dark-blue);
-  
+
   /* Таблицы */
   --table-header-bg: rgba(158, 236, 160, 1);
-  
-  /* Кнопки - с семантичными названиями */
-  --button-primary-bg: var(--color-success);
-  --button-primary-text: var(--text-color-white);
-  
-  --button-secondary-bg: var(--color-light-blue);
-  --button-secondary-text: var(--body-text-color);
-  
-  --button-accent-bg: var(--color-warning);
-  --button-accent-text: var(--text-color-white);
-  
-  --button-dark-bg: var(--color-dark-blue);
-  --button-dark-text: var(--text-color-white);
-  
-  --button-light-bg: var(--color-very-light-blue);
-  --button-light-text: var(--body-text-color);
-  
-  /* Специфичные кнопки (можно заменить на семантичные выше) */
-  --button-clear-bg: var(--color-orange-alt);
-  --button-update-access-bg: var(--color-success);
-  --button-update-denied-bg: var(--color-success-muted);
-  --button-filter-view-all-bg: var(--color-success);
-  --button-filter-submit-bg: var(--color-dark-blue);
-  --button-close-bg: var(--color-warning);
   
   /* Состояния кнопок */
   --button-disabled-opacity: 0.3;
