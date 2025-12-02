@@ -1,0 +1,144 @@
+/* Базовый стиль для всех попапов */
+.my-popup {
+    /* Скрываем окно по умолчанию */
+    display: none;
+    
+    /* Занимает весь экран как фон */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    /* Поверх всего */
+    z-index: 1000;
+    
+    /* Фон с прозрачностью */
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Когда окно активно - показываем */
+.my-popup.active {
+    display: block;
+}
+
+/* Белый прямоугольник по центру */
+.popup-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    /* Белый фон */
+    background-color: white;
+    
+    /* Скругленные углы */
+    border-radius: 10px;
+    
+    /* Тень для эффекта "над" страницей */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    
+    /* Чтобы окно не было слишком широким */
+    width: 90%;
+    max-width: 500px;
+    
+    /* Минимальная высота */
+    min-height: 200px;
+    
+    /* Нельзя выделять текст при перетаскивании */
+    user-select: none;
+}
+
+/* Заголовок окна - за него будем таскать */
+.popup-header {
+    background-color: #4a6bff;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+    cursor: move; /* Курсор "перемещение" */
+}
+
+/* При перетаскивании */
+.popup-header.dragging {
+    cursor: grabbing;
+    background-color: #3a5bef;
+}
+
+/* Иконка перетаскивания */
+.drag-handle {
+    font-size: 20px;
+    margin-right: 10px;
+    cursor: move;
+}
+
+/* Заголовок */
+.popup-header h2 {
+    margin: 0;
+    flex-grow: 1;
+    font-size: 1.3rem;
+}
+
+/* Кнопка закрытия */
+.close-btn {
+    font-size: 28px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: white;
+    padding: 0 10px;
+    margin-left: 10px;
+}
+
+.close-btn:hover {
+    color: #ffdddd;
+}
+
+/* Область для контента */
+.content-area {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Простая форма */
+.simple-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.simple-form input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.simple-form button {
+    padding: 12px;
+    background-color: #4a6bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.simple-form button:hover {
+    background-color: #3a5bef;
+}
+
+/* Разные размеры окон */
+.popup-content.small {
+    max-width: 400px;
+}
+
+.popup-content.medium {
+    max-width: 600px;
+}
+
+.popup-content.large {
+    max-width: 800px;
+}

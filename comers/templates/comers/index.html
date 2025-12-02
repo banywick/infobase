@@ -13,7 +13,7 @@
         <div class="filter-section">
             <div class="navigate_back_page">
                 <div class="arrow_back_page">
-                    <img  src="{% static 'comers/icon/arrow_back.png' %}" alt="<">   
+                    <img  src="{% static '/comers/icons/arrow_back.png' %}" alt="<">   
                         <p>На главную</p>
                 </div>
                         <div>   
@@ -25,7 +25,10 @@
             </div>
                 <div class="info_sting_report ">
                         <p class="set_filters">Установка фильтров</p>
-                        <p class="download_report">Скачать отчет</p>
+                        <div class="button button--white ">
+                            <img src="{% static '/comers/icons/icon_report.png' %}" alt="Скачать отчет">  
+                            <div>Скачать отчет</div>
+                        </div>
                 </div>
             <div class="filter_choises">
                 <div>   
@@ -47,20 +50,110 @@
                         </select>
                 </div>
                 <div class="buttons_navigate_choice">
-                    <button class="button_wrapper_filter_clear button_wrapper_clear" onclick="clearFilters()">Сбросить</button>
-                    <button class="button_wrapper_update button_wrapper_filter_view_all" onclick="applyFilters()">Применить</button>
+                    <button class="button button--red">Сбросить</button>
+                    <button class="button button--green">Применить</button>
+                    <!-- Внесение данных popup1-->
+                    <button class="open-btn" data-popup="popup1">
+                        <div class="button button--dark-blue ">
+                            <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
+                            <div>Внести данные</div>
+                        </div>
+                    </button>
                 </div>
-                <div class="add_data_user">
-                    <div class="button">
-                        <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
-                        <div>Внести данные</div>
-                    </div>
-                    <div class="button_wrapper" id="button_filter_projects">
-                        <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
-                        <div>Внести данные</div>
-                    </div>
-                </div>
+                
+            </div>
 
+            <div class="container">
+               
+                
+                <button class="open-btn" data-popup="popup2">
+                    ℹ️ Информационное окно
+                </button>
+                
+                <button class="open-btn" data-popup="popup3">
+                    🎨 Пустое окно
+                </button>
+
+                <button class="open-btn" data-popup="popup4">
+                    Мое окно
+                </button>
+            </div>
+        
+            <!-- Окно 1: с формой -->
+            <div id="popup1" class="my-popup">
+                <div class="popup-content">
+                    <div class="popup-header">
+                        <span class="drag-handle">☰</span>
+                        <h2>Внести данные</h2>
+                        <span class="close-btn">&times;</span>
+                    </div>
+                    <div class="content-area">
+                        <div class="add_data_user">
+                            <div class="button button--white ">
+                                <img src="{% static '/comers/icons/icon_add_supplier.png' %}" alt="Внести данные">  
+                                <div>Добавить поставщика</div>
+                            </div>
+                            <div class="button button--dark-blue ">
+                                <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
+                                <div>Внести данные</div>
+                            </div>
+                        </div>
+                        
+
+
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Окно 2: информационное -->
+            <div id="popup2" class="my-popup">
+                <div class="popup-content">
+                    <div class="popup-header">
+                        <span class="drag-handle">☰</span>
+                        <h2>Информация</h2>
+                        <span class="close-btn">&times;</span>
+                    </div>
+                    <div class="content-area">
+                        <p>Это информационное окно можно перемещать по экрану.</p>
+                        <p>Просто зажмите заголовок (☰) и перетащите окно в нужное место.</p>
+                        <p>Окно не выйдет за границы экрана.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Окно 3: пустое для вашего контента -->
+            <div id="popup3" class="my-popup">
+                <div class="popup-content">
+                    <div class="popup-header">
+                        <span class="drag-handle">☰</span>
+                        <h2>Ваше окно</h2>
+                        <span class="close-btn">&times;</span>
+                    </div>
+                    <div class="content-area" id="custom-content">
+                        <!-- Сюда вы добавите свой контент -->
+                        <p style="text-align: center; color: #666; padding: 40px;">
+                            Это пустая область.<br>
+                            Добавьте сюда свою форму или любой другой контент.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="popup4" class="my-popup">
+                <div class="popup-content">
+                    <div class="popup-header">
+                        <span class="drag-handle">☰</span>
+                        <h2>Ваше окно</h2>
+                        <span class="close-btn">&times;</span>
+                    </div>
+                    <div class="content-area" id="custom-content">
+                        <!-- Сюда вы добавите свой контент -->
+                        <p style="text-align: center; color: #666; padding: 40px;">
+                            Это пустая область.<br>
+                            Сам создал!!.
+                        </p>
+                    </div>
+                </div>
             </div>
 
         {% comment %} <table>
@@ -156,6 +249,6 @@
     <div id="overlay" class="overlay" onclick="closePopup()"></div> {% endcomment %}
 
     
-    <script src='{% static 'comers/js/query.js' %}'></script>
+    <script src='{% static 'shared\js\components\popup_manager.js' %}'></script>
 </body>
 </html>

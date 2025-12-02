@@ -3,6 +3,17 @@
     display: flex;
     align-items: center;
 }
+
+.arrow_back_page img {
+    width: 30px;
+}
+
+
+.download_report {
+    color: var(--color-orange);
+}
+
+
 .add_data_user {
     display: grid;
     gap: 10px;
@@ -12,20 +23,31 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    padding: 20px 20px 20px;
+    align-items: center;
+    font-weight: var(--body-text-weight);
+    color: var(--body-text-color);
 }
 
 .info_sting_report {
     display: flex;
     justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-weight: var(--body-text-weight);
+    font-size: 18px;
+    color: var(--body-text-color);
+    align-items: center;
 }
 
 .filter_choises {
     display: flex;
     justify-content: space-between;
-    /* background: aqua; */
     height: 100px;
     align-items: center;
+    color: var(--body-text-color);
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 
@@ -36,6 +58,8 @@
 
 .buttons_navigate_choice {
     display: flex;
+    margin-top: 18px;
+    gap: 17px;
 }
 
 .container_header {

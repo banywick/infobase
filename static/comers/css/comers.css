@@ -7,7 +7,7 @@
 @import url('../../shared/css/components/buttons.css');
 @import url('../../shared/css/components/forms.css');
 @import url('../../shared/css/components/tables.css');
-@import url('../../shared/css/components/popups.css');
+@import url('../../shared/css/components/popup_base.css');
 
 /* Comers specific components */
 @import url('components/style.css');

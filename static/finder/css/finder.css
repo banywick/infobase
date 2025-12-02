@@ -8,12 +8,12 @@
 /* Фаза 2: Компоненты */
 @import url('../../shared/css/components/buttons.css');
 @import url('../../shared/css/components/forms.css');
-@import url('../../shared/css/components/sidebar.css');
-@import url('../../shared/css/components/popups.css');
+@import url('../../shared/css/layout/layout.css');
 
 /* Фаза 3: Специфичные стили finder (позже перенесем сюда) */
 
-@import url('../../shared/css/layout/layout.css');
+@import url('components/sidebar.css');
+@import url('components/popups.css');
 @import url('components/search-filters.css');
 @import url('components/table-finder.css');
 @import url('components/pagination.css');

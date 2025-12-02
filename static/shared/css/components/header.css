@@ -1,8 +1,0 @@
-header {
-    margin-left: 254px;
-    height: 96px;
-    background: var(--text-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
