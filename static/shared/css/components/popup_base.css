@@ -39,7 +39,7 @@
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
     
     /* Чтобы окно не было слишком широким */
-    width: 90%;
+    /* width: 90%; */
     max-width: 500px;
     
     /* Минимальная высота */
@@ -51,7 +51,7 @@
 
 /* Заголовок окна - за него будем таскать */
 .popup-header {
-    background-color: #4a6bff;
+    background-color: var(--color-dark-blue);
     color: white;
     padding: 15px 20px;
     border-radius: 10px 10px 0 0;
@@ -63,7 +63,7 @@
 /* При перетаскивании */
 .popup-header.dragging {
     cursor: grabbing;
-    background-color: #3a5bef;
+    background-color:  var(--color-orange-alt);;
 }
 
 /* Иконка перетаскивания */
@@ -132,8 +132,11 @@
 
 /* Разные размеры окон */
 .popup-content.small {
-    max-width: 400px;
-}
+    position: absolute;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}   
 
 .popup-content.medium {
     max-width: 600px;
