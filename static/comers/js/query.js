@@ -59,39 +59,39 @@ function clearFilters() {
 
 // Load data into the table
 function loadData() {
-    // Example data
-    // const data = [
-    //     {
-    //         invoiceNumber: '2430606',
-    //         date: '1 сентября 2023 г.',
-    //         supplier: 'ЗАО профессиональные профессионалы',
-    //         article: 'B00021069',
-    //         name: 'Шайба 4,3 DIN 433 A2',
-    //         unit: 'шт.',
-    //         quantity: '1000',
-    //         comment: 'недовоз',
-    //         description: '11 гаек, 1 фитинг',
-    //         specialist: 'Петров П.П.',
-    //         leading: 'Иванов И.И.',
-    //         status: '<span class="status status-delivered">депестовка</span>',
-    //         note: 'Поставщик до поставить данную продукцию не сможет.'
-    //     },
-    //     {
-    //         invoiceNumber: '2430606',
-    //         date: '1 сентября 2023 г.',
-    //         supplier: 'ЗАО профессиональные профессионалы',
-    //         article: 'B00021069',
-    //         name: 'Шайба 4,3 DIN 433 A2',
-    //         unit: 'шт.',
-    //         quantity: '1000',
-    //         comment: 'брак',
-    //         description: 'Пробита тара, вытекло 350 г',
-    //         specialist: 'Петров П.П.',
-    //         leading: 'Иванов И.И.',
-    //         status: '<span class="status status-processed">обработка</span>',
-    //         note: 'Поставщик до поставить данную продукцию не сможет.'
-    //     }
-    // ];
+    Example data
+    const data = [
+        {
+            invoiceNumber: '2430606',
+            date: '1 сентября 2023 г.',
+            supplier: 'ЗАО профессиональные профессионалы',
+            article: 'B00021069',
+            name: 'Шайба 4,3 DIN 433 A2',
+            unit: 'шт.',
+            quantity: '1000',
+            comment: 'недовоз',
+            description: '11 гаек, 1 фитинг',
+            specialist: 'Петров П.П.',
+            leading: 'Иванов И.И.',
+            status: '<span class="status status-delivered">депестовка</span>',
+            note: 'Поставщик до поставить данную продукцию не сможет.'
+        },
+        {
+            invoiceNumber: '2430606',
+            date: '1 сентября 2023 г.',
+            supplier: 'ЗАО профессиональные профессионалы',
+            article: 'B00021069',
+            name: 'Шайба 4,3 DIN 433 A2',
+            unit: 'шт.',
+            quantity: '1000',
+            comment: 'брак',
+            description: 'Пробита тара, вытекло 350 г',
+            specialist: 'Петров П.П.',
+            leading: 'Иванов И.И.',
+            status: '<span class="status status-processed">обработка</span>',
+            note: 'Поставщик до поставить данную продукцию не сможет.'
+        }
+    ];
 
     const tableBody = document.getElementById('invoiceTableBody');
     tableBody.innerHTML = '';

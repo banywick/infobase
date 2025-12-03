@@ -152,10 +152,9 @@
                                             class="input_wrapper"
                                             required
                                         >
-                                            
-                                            {% for supplier in input_data_form.supplier %}
-                                                <option value="{{ supplier.id}}">{{ supplier}}</option>
-                                            {% endfor %}
+                                            {%for supplier in input_data_form.supplier%}
+                                                {{supplier}}
+                                            {%endfor%}
                                         </select>
                                     </div>
                     
@@ -210,9 +209,8 @@
                                             class="input_wrapper"
                                             required
                                         >
-                                            <option value="">Выберите вариант</option>
                                             {% for comment in input_data_form.comment %}
-                                                <option value="{{ comment.id }}">{{ comment }}</option>
+                                                        {{ comment }}
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -226,7 +224,7 @@
                                             id="{{ input_data_form.description_problem.id_for_label }}"
                                             name="{{ input_data_form.description_problem.html_name }}"
                                             placeholder="Опишите проблему"
-                                            class="form-textarea text_area_form"
+                                            class="text_area_form"
                                         ></textarea>
                                     </div>
                     
@@ -241,25 +239,16 @@
                                         >
                                             <option value="">Выберите вариант</option>
                                             {% for specialist in input_data_form.specialist %}
-                                                <option value="{{ specialist.id }}">{{ specialist }}</option>
+                                                        {{specialist}}
                                             {% endfor %}
                                         </select>
                                     </div>
                     
                                     <!-- Ведущий накладную -->
                                     <div class="form-group">
-                                        <label for="{{ input_data_form.leading.id_for_label }}">Ведущий накладную*</label>
-                                        <select
-                                            id="{{ input_data_form.leading.id_for_label }}"
-                                            name="{{ input_data_form.leading.html_name }}"
-                                            class="input_wrapper"
-                                            required
-                                        >
-                                            <option value="">Выберите вариант</option>
-                                            {% for leading in input_data_form.leading %}
-                                                <option value="{{ leading.id }}">{{ leading }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        {{ input_data_form.leading.label_tag }}  <!-- Автоматический лейбл -->
+                                        {{ input_data_form.leading }}  <!-- Django сам подставит класс и required -->
+                                        {{ input_data_form.leading.errors }}  <!-- Ошибки будут показаны здесь -->
                                     </div>
                                 </div>
                             </div>
@@ -299,7 +288,9 @@
                     </div>
                 </div>
             </div>
-
+            {% for supplier in input_data_form.supplier %}
+            {{supplier.id}}{{supplier}}
+             {% endfor %}
             <table>
                 <thead>
                     <tr>

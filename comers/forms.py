@@ -5,11 +5,8 @@ class InputDataForm(forms.Form):
     invoice_number = forms.CharField(
         error_messages={'required': 'Не указан № накладной'},
         max_length=20,
-        widget=forms.TextInput(attrs={
-        'placeholder': 'Номер накладной',
-        'class':'input_wrapper'
-        }),
-        label='Накладная'
+        widget=forms.TextInput(
+        ),
     )
     date = forms.DateField(
         error_messages={'required': 'Выберите дату'},
@@ -17,18 +14,17 @@ class InputDataForm(forms.Form):
         'type': 'date',
         'class':'input_wrapper'
         }),
-        label='Дата'
     )
+
     supplier = forms.ModelChoiceField(
         queryset=Supler.objects.all(),
         error_messages={'required': 'Не указан поставщик'},
         widget=forms.Select(attrs={
         'class':'input_wrapper',    
-        'placeholder': 'Выберите вариант'
         }),
         empty_label="Выберите вариант",
-        label='Поставщик'
     )
+
     article_mirror = forms.CharField(
         error_messages={'required': 'Введите артикул'},
         widget=forms.TextInput(attrs={
@@ -43,6 +39,7 @@ class InputDataForm(forms.Form):
         'placeholder': 'Автоматическая подстановка наименования'}),
         label=''
     )
+
     quantity = forms.FloatField(
         error_messages={'required': 'Введите количество'},
         widget=forms.TextInput(attrs={
@@ -53,6 +50,7 @@ class InputDataForm(forms.Form):
     comment = forms.ModelChoiceField(
         queryset=Comment.objects.all(),
         error_messages={'required': 'Введите вариант'},
+        
     )
     description_problem = forms.CharField(
         widget=forms.Textarea(attrs={
@@ -67,18 +65,17 @@ class InputDataForm(forms.Form):
         error_messages={'required': 'Фамилия специалиста'},
         widget=forms.Select(attrs={
         'class':'input_wrapper', 
-        'placeholder': 'Специалист'}),
+        }),
         empty_label="Выберите вариант",
-        label='Специалист на приемке'
     )
     leading = forms.ModelChoiceField(
         queryset=Leading.objects.all(),
         error_messages={'required': 'Ведущий'},
         widget=forms.Select(attrs={
         'class':'input_wrapper',     
-        'placeholder': 'Ведущий накладную'}),
-        empty_label="Ведущий накладную",
-        label='Ведущий накладную'
+        }),
+        empty_label="Выберите вариант",
+        label='Ведущий накладную*'
     )
     unit = forms.CharField(
         widget=forms.HiddenInput(attrs={'id': 'hidden_unit'})  # Скрытое поле с id
