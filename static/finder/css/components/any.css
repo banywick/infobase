@@ -157,3 +157,8 @@
     margin-bottom: 20px;
     margin-top: 10px;
 }
+
+
+.animate_process svg {
+    align-content: center;
+}

@@ -40,7 +40,7 @@
     
     /* Чтобы окно не было слишком широким */
     /* width: 90%; */
-    max-width: 500px;
+    /* max-width: 500px; */
     
     /* Минимальная высота */
     min-height: 200px;
@@ -49,6 +49,10 @@
     user-select: none;
 }
 
+/* Область для контента */
+.content-area {
+    padding: 20px;
+}
 /* Заголовок окна - за него будем таскать */
 .popup-header {
     background-color: var(--color-dark-blue);
@@ -95,12 +99,6 @@
     color: #ffdddd;
 }
 
-/* Область для контента */
-.content-area {
-    padding: 20px;
-    max-height: 400px;
-    overflow-y: auto;
-}
 
 /* Простая форма */
 .simple-form {

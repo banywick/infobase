@@ -1,4 +1,38 @@
-.button_supplier {
-    margin: 0 auto;
-    margin-top: 25px;
+
+
+.form-columns {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+
+.form-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+
+.button_mod_width {
+    width: 178px;
 }

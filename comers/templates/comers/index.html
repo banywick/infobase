@@ -62,20 +62,6 @@
                     </div>
                 </div>
             </div>
-            <div class="container">
-                
-                <button class="open-btn" data-popup="popup2">
-                    ℹ️ Информационное окно
-                </button>
-                
-                <button class="open-btn" data-popup="popup3">
-                    🎨 Пустое окно
-                </button>
-
-                <button class="open-btn" data-popup="popup4">
-                    Мое окно
-                </button>
-            </div>
         
             <!-- Окно 1: с формой -->
             <div id="popup1" class="my-popup">
@@ -119,19 +105,180 @@
             
             <!-- Окно 3: Форма с заявкой -->
             <div id="popup3" class="my-popup">
-                <div class="popup-content">
+                <div class="add_data_mode popup-content">
                     <div class="popup-header">
                         <span class="drag-handle">☰</span>
-                        <h2>Ваше окно</h2>
+                        <h2>Форма внесения данных</h2>
                         <span class="close-btn">&times;</span>
                     </div>
                     <div class="content-area">
-                        <form  id="inputDataForm" method="post" >
+                        <form id="inputDataForm" method="post" class="data-entry-form">
                             {% csrf_token %}
-                            {{ input_data_form.as_div }}
-                            <button type="submit">Сохранить</button>
+                    
+                            <div class="form-columns">
+                                <!-- Левая колонка -->
+                                <div class="form-column">
+                                    <!-- Накладная -->
+                                    <div class="form-group">
+                                        <label for="{{ input_data_form.invoice_number.id_for_label }}">Документ*</label>
+                                        <input
+                                            type="text"
+                                            id="{{ input_data_form.invoice_number.id_for_label }}"
+                                            name="{{ input_data_form.invoice_number.html_name }}"
+                                            placeholder="Введите номер документа"
+                                            class="input_wrapper"
+                                            required
+                                        >
+                                    </div>
+                    
+                                    <!-- Дата -->
+                                    <div class="form-group">
+                                        <label for="{{ input_data_form.date.id_for_label }}">Дата документа*</label>
+                                        <input
+                                            type="date"
+                                            id="{{ input_data_form.date.id_for_label }}"
+                                            name="{{ input_data_form.date.html_name }}"
+                                            class="input_wrapper"
+                                            required
+                                        >
+                                    </div>
+                    
+                                    <!-- Поставщик -->
+                                    <div class="form-group">
+                                        <label for="{{ input_data_form.supplier.id_for_label }}">Выбор поставщика*</label>
+                                        <select
+                                            id="{{ input_data_form.supplier.id_for_label }}"
+                                            name="{{ input_data_form.supplier.html_name }}"
+                                            class="input_wrapper"
+                                            required
+                                        >
+                                            
+                                            {% for supplier in input_data_form.supplier %}
+                                                <option value="{{ supplier.id}}">{{ supplier}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                    
+                                    <!-- Артикул и Количество -->
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="{{ input_data_form.article_mirror.id_for_label }}">Артикул*</label>
+                                            <input
+                                                type="text"
+                                                id="{{ input_data_form.article_mirror.id_for_label }}"
+                                                name="{{ input_data_form.article_mirror.html_name }}"
+                                                placeholder="Артикул"
+                                                class="check_article button_mod_width button button--white"
+                                                required
+                                            >
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="{{ input_data_form.quantity.id_for_label }}">Количество*</label>
+                                            <input
+                                                type="number"
+                                                id="{{ input_data_form.quantity.id_for_label }}"
+                                                name="{{ input_data_form.quantity.html_name }}"
+                                                placeholder="Количество"
+                                                class="button_mod_width button button--white"
+                                                required
+                                            >
+                                        </div>
+                                    </div>
+                    
+                                    <!-- Наименование -->
+                                    <div class="form-group">
+                                        <label for="{{  input_data_form.name.id_for_label }}">Наименование*</label>
+                                        <input
+                                            type="text"
+                                            id="{{ input_data_form.name.id_for_label }}"
+                                            name="{{ input_data_form.name.html_name }}"
+                                            placeholder="Подставляется автоматически"
+                                            class="views_title input_wrapper"
+                                            readonly
+                                        >
+                                    </div>
+                                </div>
+                    
+                                <!-- Правая колонка -->
+                                <div class="form-column">
+                                    <!-- Комментарий по товару -->
+                                    <div class="form-group">
+                                        <label for="{{ input_data_form.comment.id_for_label }}">Установите комментарий*</label>
+                                        <select
+                                            id="{{ input_data_form.comment.id_for_label }}"
+                                            name="{{ input_data_form.comment.html_name }}"
+                                            class="input_wrapper"
+                                            required
+                                        >
+                                            <option value="">Выберите вариант</option>
+                                            {% for comment in input_data_form.comment %}
+                                                <option value="{{ comment.id }}">{{ comment }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                    
+                                    <!-- Описание проблемы -->
+                                    <div class="form-group">
+                                        <label for="{{ input_data_form.description_problem.id_for_label }}">
+                                            Описание проблемы (не обязательно)
+                                        </label>
+                                        <textarea
+                                            id="{{ input_data_form.description_problem.id_for_label }}"
+                                            name="{{ input_data_form.description_problem.html_name }}"
+                                            placeholder="Опишите проблему"
+                                            class="form-textarea text_area_form"
+                                        ></textarea>
+                                    </div>
+                    
+                                    <!-- Специалист -->
+                                    <div class="form-group">
+                                        <label for="{{ input_data_form.specialist.id_for_label }}">Принял товар*</label>
+                                        <select
+                                            id="{{ input_data_form.specialist.id_for_label }}"
+                                            name="{{ input_data_form.specialist.html_name }}"
+                                            class="input_wrapper"
+                                            required
+                                        >
+                                            <option value="">Выберите вариант</option>
+                                            {% for specialist in input_data_form.specialist %}
+                                                <option value="{{ specialist.id }}">{{ specialist }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                    
+                                    <!-- Ведущий накладную -->
+                                    <div class="form-group">
+                                        <label for="{{ input_data_form.leading.id_for_label }}">Ведущий накладную*</label>
+                                        <select
+                                            id="{{ input_data_form.leading.id_for_label }}"
+                                            name="{{ input_data_form.leading.html_name }}"
+                                            class="input_wrapper"
+                                            required
+                                        >
+                                            <option value="">Выберите вариант</option>
+                                            {% for leading in input_data_form.leading %}
+                                                <option value="{{ leading.id }}">{{ leading }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <!-- Скрытые поля -->
+                            <input type="hidden" id="hidden_unit" name="{{ input_data_form.unit.html_name }}">
+                            <input type="hidden" id="hidden_article" name="{{ input_data_form.article.html_name }}">
+                            <input type="hidden" id="hidden_project" name="{{ input_data_form.project.html_name }}">
+                    
+                            <!-- Кнопки -->
+                            <div class="form-buttons">
+                                <button type="button" class="button button--red ">Отменить</button>
+                                <button type="button" class="send_data_form_button button button--green">Внести данные</button>
+                            </div>
                         </form>
                     </div>
+                    
+                    
+                    
                 </div>
             </div>
             <!-- Окно 3: Меню с отчетом -->
@@ -153,29 +300,29 @@
                 </div>
             </div>
 
-    {% comment %} <table>
-            <thead>
-                <tr>
-                    <th>номер накладной</th>
-                    <th>дата накладной</th>
-                    <th>поставщик</th>
-                    <th>артикул</th>
-                    <th>наименование</th>
-                    <th>единицы измерения</th>
-                    <th>количество</th>
-                    <th>комментарий</th>
-                    <th>описание</th>
-                    <th>специалист</th>
-                    <th>ведущий</th>
-                    <th>статус</th>
-                    <th>примечание</th>
-                    <th>действия</th>
-                </tr>
-            </thead>
-            <tbody id="invoiceTableBody">
-                <!-- Data will be loaded here -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>номер накладной</th>
+                        <th>дата накладной</th>
+                        <th>поставщик</th>
+                        <th>артикул</th>
+                        <th>наименование</th>
+                        <th>единицы измерения</th>
+                        <th>количество</th>
+                        <th>комментарий</th>
+                        <th>описание</th>
+                        <th>специалист</th>
+                        <th>ведущий</th>
+                        <th>статус</th>
+                        <th>примечание</th>
+                        <th>действия</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceTableBody">
+                    <!-- Data will be loaded here -->
             </tbody>
-        </table> {% endcomment %}
+             </table>
 
  
 

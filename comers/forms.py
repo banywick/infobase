@@ -5,48 +5,59 @@ class InputDataForm(forms.Form):
     invoice_number = forms.CharField(
         error_messages={'required': 'Не указан № накладной'},
         max_length=20,
-        widget=forms.TextInput(attrs={'placeholder': 'Номер накладной'}),
+        widget=forms.TextInput(attrs={
+        'placeholder': 'Номер накладной',
+        'class':'input_wrapper'
+        }),
         label='Накладная'
     )
     date = forms.DateField(
         error_messages={'required': 'Выберите дату'},
-        widget=forms.DateInput(attrs={'type': 'date'}),
+        widget=forms.DateInput(attrs={
+        'type': 'date',
+        'class':'input_wrapper'
+        }),
         label='Дата'
     )
     supplier = forms.ModelChoiceField(
         queryset=Supler.objects.all(),
         error_messages={'required': 'Не указан поставщик'},
-        widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
+        widget=forms.Select(attrs={
+        'class':'input_wrapper',    
+        'placeholder': 'Выберите вариант'
+        }),
         empty_label="Выберите вариант",
         label='Поставщик'
     )
     article_mirror = forms.CharField(
         error_messages={'required': 'Введите артикул'},
-        widget=forms.TextInput(attrs={'class':'check_article','placeholder': 'Артикул'}),
+        widget=forms.TextInput(attrs={
+        'class':'check_article button button--white',
+        'placeholder': 'Артикул'
+        }),
         label='Артикул'
     )
     name = forms.CharField(
-        widget=forms.TextInput(attrs={'class':'views_title','placeholder': 'Автоматическая подстановка наименования'}),
+        widget=forms.TextInput(attrs={
+        'class':'views_title input_wrapper',
+        'placeholder': 'Автоматическая подстановка наименования'}),
         label=''
     )
     quantity = forms.FloatField(
         error_messages={'required': 'Введите количество'},
-        widget=forms.TextInput(attrs={'placeholder': 'Количество'}),
+        widget=forms.TextInput(attrs={
+        'class':'button button--white',    
+        'placeholder': 'Количество'}),
         label='Введите количество '
     )
     comment = forms.ModelChoiceField(
         queryset=Comment.objects.all(),
         error_messages={'required': 'Введите вариант'},
-        widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
-        empty_label="Выберите вариант",
-        label='Коментарий по товару'
     )
     description_problem = forms.CharField(
         widget=forms.Textarea(attrs={
             'placeholder': 'Опишите проблему',
-            'rows': 2,  # Начальное количество строк
-            'cols': 50,  # Начальное количество столбцов
-            'style': 'max-width: 100%; max-height: 200px; border: 1px solid #ccc;'  # Ограничение максимального размера и добавление границы
+            'class':'text_area_form'
         }),
         label='Описание проблемы',
         required=False  # Указываем, что поле не является обязательным
@@ -54,14 +65,18 @@ class InputDataForm(forms.Form):
     specialist = forms.ModelChoiceField(
         queryset=Specialist.objects.all(),
         error_messages={'required': 'Фамилия специалиста'},
-        widget=forms.Select(attrs={'placeholder': 'Специалист'}),
+        widget=forms.Select(attrs={
+        'class':'input_wrapper', 
+        'placeholder': 'Специалист'}),
         empty_label="Выберите вариант",
         label='Специалист на приемке'
     )
     leading = forms.ModelChoiceField(
         queryset=Leading.objects.all(),
         error_messages={'required': 'Ведущий'},
-        widget=forms.Select(attrs={'placeholder': 'Ведущий накладную'}),
+        widget=forms.Select(attrs={
+        'class':'input_wrapper',     
+        'placeholder': 'Ведущий накладную'}),
         empty_label="Ведущий накладную",
         label='Ведущий накладную'
     )

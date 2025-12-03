@@ -26,7 +26,6 @@ input::placeholder {
     font-size: 16px;
 }
 
-/* Из popups_style.css */
 .search-input {
     padding: 8px 15px;
     border: 1px solid #ddd;
@@ -52,4 +51,14 @@ input::placeholder {
     background-color: #f9fafb;
     cursor: pointer;
     transition: all 0.3s ease;
+}
+
+.text_area_form {
+    width: 375px;
+    height: 120px;
+    box-sizing: border-box;
+    border: 1px solid var(--color-blue-alt);
+    border-radius: 12px;
+    background: var(--text-color-white);
+
 }
