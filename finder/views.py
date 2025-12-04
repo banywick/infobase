@@ -137,7 +137,7 @@ class ProductSearchView(APIView):
         queryset = queryset.filter(q_search & q_projects)
 
         #Сортировка проектов для группировки
-        queryset = queryset.order_by('project')[:200]
+        queryset = queryset.order_by('project')[:500]
 
         if not queryset.exists():
             return Response({"detail": "Ничего не найдено"}, status=status.HTTP_200_OK)
