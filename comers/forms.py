@@ -3,74 +3,78 @@ from .models import *
 
 class InputDataForm(forms.Form):
     invoice_number = forms.CharField(
-        error_messages={'required': 'Не указан № накладной'},
         max_length=20,
-        widget=forms.TextInput(
-        ),
+        widget=forms.TextInput(attrs={
+        'class':'input_wrapper',
+        'placeholder': 'Введите номер документа'
+        }),
+        label='Выбор поставщика*'
     )
     date = forms.DateField(
-        error_messages={'required': 'Выберите дату'},
         widget=forms.DateInput(attrs={
         'type': 'date',
         'class':'input_wrapper'
         }),
+        label='Дата*'
     )
 
     supplier = forms.ModelChoiceField(
         queryset=Supler.objects.all(),
-        error_messages={'required': 'Не указан поставщик'},
         widget=forms.Select(attrs={
         'class':'input_wrapper',    
         }),
         empty_label="Выберите вариант",
+        label='Выбор поставщика*'
     )
 
     article_mirror = forms.CharField(
-        error_messages={'required': 'Введите артикул'},
         widget=forms.TextInput(attrs={
-        'class':'check_article button button--white',
-        'placeholder': 'Артикул'
+        'class':'check_article button_mod_width button button--white',
+        'placeholder': 'Артикул*'
         }),
         label='Артикул'
     )
     name = forms.CharField(
         widget=forms.TextInput(attrs={
         'class':'views_title input_wrapper',
-        'placeholder': 'Автоматическая подстановка наименования'}),
-        label=''
+        'placeholder': 'Автоматическая подстановка наименования'
+        }),
+        label='Наименование*'
     )
 
     quantity = forms.FloatField(
-        error_messages={'required': 'Введите количество'},
         widget=forms.TextInput(attrs={
-        'class':'button button--white',    
-        'placeholder': 'Количество'}),
+        'class':'button_mod_width button button--white',    
+        'placeholder': 'Количество*'
+        }),
         label='Введите количество '
     )
     comment = forms.ModelChoiceField(
         queryset=Comment.objects.all(),
-        error_messages={'required': 'Введите вариант'},
-        
-    )
-    description_problem = forms.CharField(
-        widget=forms.Textarea(attrs={
-            'placeholder': 'Опишите проблему',
-            'class':'text_area_form'
-        }),
-        label='Описание проблемы',
-        required=False  # Указываем, что поле не является обязательным
-    )
-    specialist = forms.ModelChoiceField(
-        queryset=Specialist.objects.all(),
-        error_messages={'required': 'Фамилия специалиста'},
         widget=forms.Select(attrs={
         'class':'input_wrapper', 
         }),
         empty_label="Выберите вариант",
+        label='Установите комментарий*'
+        
+    )
+    description_problem = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'placeholder': ' Опишите проблему',
+            'class':'text_area_form'
+        }),
+        label='Описание проблемы (не обязательно)',
+    )
+    specialist = forms.ModelChoiceField(
+        queryset=Specialist.objects.all(),
+        widget=forms.Select(attrs={
+        'class':'input_wrapper', 
+        }),
+        empty_label="Выберите вариант",
+        label='Принял товар*'
     )
     leading = forms.ModelChoiceField(
         queryset=Leading.objects.all(),
-        error_messages={'required': 'Ведущий'},
         widget=forms.Select(attrs={
         'class':'input_wrapper',     
         }),
@@ -159,7 +163,15 @@ class FilterForm(forms.Form):
 class AddSupplerForm(forms.ModelForm):
     class Meta:
         model = Supler
-        fields = ['name']
+        fields = '__all__'  # или перечисли нужные поля, например: fields = ['name', 'other_field']
         labels = {
-            'name': 'Название',
+            'name': 'Название поставщика',
+            # Добавь другие лейблы, если нужно
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'input_wrapper',
+                'placeholder': 'Введите название поставщика'
+            }),
+            # Добавь другие виджеты, если нужно
         }

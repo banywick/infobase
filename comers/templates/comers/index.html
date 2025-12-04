@@ -95,9 +95,10 @@
                         <span class="close-btn">&times;</span>
                     </div>
                     <div class="content-area">
-                        <form>
-                            <input class= "input_wrapper" type="text" placeholder="Название поставщика">
-                            <button class="button button--green button_supplier ">Отправить</button>
+                        <form id="add_suppler_form" method="post">
+                            {% csrf_token %}
+                            {{add_suppler_form}}
+                            <button type="button" class="button button--green button_supplier ">Отправить</button>
                         </form>
                     </div>
                 </div>
@@ -120,81 +121,46 @@
                                 <div class="form-column">
                                     <!-- Накладная -->
                                     <div class="form-group">
-                                        <label for="{{ input_data_form.invoice_number.id_for_label }}">Документ*</label>
-                                        <input
-                                            type="text"
-                                            id="{{ input_data_form.invoice_number.id_for_label }}"
-                                            name="{{ input_data_form.invoice_number.html_name }}"
-                                            placeholder="Введите номер документа"
-                                            class="input_wrapper"
-                                            required
-                                        >
+                                        <div class="form-group">
+                                            {{ input_data_form.invoice_number.label }}  <!-- Автоматический лейбл -->
+                                            {{ input_data_form.invoice_number }}  <!-- Django сам подставит класс и required -->
+                                        </div>
                                     </div>
                     
                                     <!-- Дата -->
                                     <div class="form-group">
-                                        <label for="{{ input_data_form.date.id_for_label }}">Дата документа*</label>
-                                        <input
-                                            type="date"
-                                            id="{{ input_data_form.date.id_for_label }}"
-                                            name="{{ input_data_form.date.html_name }}"
-                                            class="input_wrapper"
-                                            required
-                                        >
+                                        <div class="form-group">
+                                            {{ input_data_form.date.label }}  <!-- Автоматический лейбл -->
+                                            {{ input_data_form.date }}  <!-- Django сам подставит класс и required -->
+                                        </div>
                                     </div>
                     
                                     <!-- Поставщик -->
                                     <div class="form-group">
-                                        <label for="{{ input_data_form.supplier.id_for_label }}">Выбор поставщика*</label>
-                                        <select
-                                            id="{{ input_data_form.supplier.id_for_label }}"
-                                            name="{{ input_data_form.supplier.html_name }}"
-                                            class="input_wrapper"
-                                            required
-                                        >
-                                            {%for supplier in input_data_form.supplier%}
-                                                {{supplier}}
-                                            {%endfor%}
-                                        </select>
+                                        <div class="form-group">
+                                            {{ input_data_form.supplier.label }}  <!-- Автоматический лейбл -->
+                                            {{ input_data_form.supplier }}  <!-- Django сам подставит класс и required -->
+                                        </div>
                                     </div>
                     
-                                    <!-- Артикул и Количество -->
+                                    <!-- Артикул -->
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label for="{{ input_data_form.article_mirror.id_for_label }}">Артикул*</label>
-                                            <input
-                                                type="text"
-                                                id="{{ input_data_form.article_mirror.id_for_label }}"
-                                                name="{{ input_data_form.article_mirror.html_name }}"
-                                                placeholder="Артикул"
-                                                class="check_article button_mod_width button button--white"
-                                                required
-                                            >
+                                            {{ input_data_form.article_mirror.label }}  <!-- Автоматический лейбл -->
+                                            {{ input_data_form.article_mirror }}  <!-- Django сам подставит класс и required -->
                                         </div>
+
+                                        <!-- Количество -->
                                         <div class="form-group">
-                                            <label for="{{ input_data_form.quantity.id_for_label }}">Количество*</label>
-                                            <input
-                                                type="number"
-                                                id="{{ input_data_form.quantity.id_for_label }}"
-                                                name="{{ input_data_form.quantity.html_name }}"
-                                                placeholder="Количество"
-                                                class="button_mod_width button button--white"
-                                                required
-                                            >
+                                            {{ input_data_form.quantity.label }}  <!-- Автоматический лейбл -->
+                                            {{ input_data_form.quantity }}  <!-- Django сам подставит класс и required -->
                                         </div>
                                     </div>
-                    
-                                    <!-- Наименование -->
+
+                                    <!-- Наименование Автоматическая подстановка -->
                                     <div class="form-group">
-                                        <label for="{{  input_data_form.name.id_for_label }}">Наименование*</label>
-                                        <input
-                                            type="text"
-                                            id="{{ input_data_form.name.id_for_label }}"
-                                            name="{{ input_data_form.name.html_name }}"
-                                            placeholder="Подставляется автоматически"
-                                            class="views_title input_wrapper"
-                                            readonly
-                                        >
+                                        {{ input_data_form.name.label }}  <!-- Автоматический лейбл -->
+                                        {{ input_data_form.name }}  <!-- Django сам подставит класс и required -->
                                     </div>
                                 </div>
                     
@@ -202,53 +168,26 @@
                                 <div class="form-column">
                                     <!-- Комментарий по товару -->
                                     <div class="form-group">
-                                        <label for="{{ input_data_form.comment.id_for_label }}">Установите комментарий*</label>
-                                        <select
-                                            id="{{ input_data_form.comment.id_for_label }}"
-                                            name="{{ input_data_form.comment.html_name }}"
-                                            class="input_wrapper"
-                                            required
-                                        >
-                                            {% for comment in input_data_form.comment %}
-                                                        {{ comment }}
-                                            {% endfor %}
-                                        </select>
+                                        {{ input_data_form.comment.label }}  <!-- Автоматический лейбл -->
+                                        {{ input_data_form.comment }}  <!-- Django сам подставит класс и required -->
                                     </div>
                     
                                     <!-- Описание проблемы -->
                                     <div class="form-group">
-                                        <label for="{{ input_data_form.description_problem.id_for_label }}">
-                                            Описание проблемы (не обязательно)
-                                        </label>
-                                        <textarea
-                                            id="{{ input_data_form.description_problem.id_for_label }}"
-                                            name="{{ input_data_form.description_problem.html_name }}"
-                                            placeholder="Опишите проблему"
-                                            class="text_area_form"
-                                        ></textarea>
+                                        {{ input_data_form.description_problem.label }}  <!-- Автоматический лейбл -->
+                                        {{ input_data_form.description_problem }}  <!-- Django сам подставит класс и required -->
                                     </div>
                     
                                     <!-- Специалист -->
                                     <div class="form-group">
-                                        <label for="{{ input_data_form.specialist.id_for_label }}">Принял товар*</label>
-                                        <select
-                                            id="{{ input_data_form.specialist.id_for_label }}"
-                                            name="{{ input_data_form.specialist.html_name }}"
-                                            class="input_wrapper"
-                                            required
-                                        >
-                                            <option value="">Выберите вариант</option>
-                                            {% for specialist in input_data_form.specialist %}
-                                                        {{specialist}}
-                                            {% endfor %}
-                                        </select>
+                                        {{ input_data_form.specialist.label }}  <!-- Автоматический лейбл -->
+                                        {{ input_data_form.specialist }}  <!-- Django сам подставит класс и required -->
                                     </div>
                     
                                     <!-- Ведущий накладную -->
                                     <div class="form-group">
-                                        {{ input_data_form.leading.label_tag }}  <!-- Автоматический лейбл -->
+                                        {{ input_data_form.leading.label }}  <!-- Автоматический лейбл -->
                                         {{ input_data_form.leading }}  <!-- Django сам подставит класс и required -->
-                                        {{ input_data_form.leading.errors }}  <!-- Ошибки будут показаны здесь -->
                                     </div>
                                 </div>
                             </div>
@@ -319,6 +258,7 @@
 
     
     <script src='{% static 'shared\js\components\popup_manager.js' %}'></script>
+    <script src='{% static 'comers\js\create_supplier.js' %}'></script>
     <script src='{% static 'comers\js\auto_fields.js' %}'></script>
     <script src='{% static 'comers\js\filters.js' %}'></script>
     <script src='{% static 'comers\js\get_all_data_load_page.js' %}'></script>
