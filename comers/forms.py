@@ -64,6 +64,7 @@ class InputDataForm(forms.Form):
             'class':'text_area_form'
         }),
         label='Описание проблемы (не обязательно)',
+        required=False,  # Явно указываем, что поле не обязательное
     )
     specialist = forms.ModelChoiceField(
         queryset=Specialist.objects.all(),

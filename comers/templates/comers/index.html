@@ -22,7 +22,7 @@
                             </div>
                             
                         </div>     
-            </div>
+                </div>
                 <div class="info_sting_report ">
                         <p class="set_filters">Установка фильтров</p>
                         <div class="button button--white ">
@@ -57,13 +57,13 @@
                     <div class="open-btn" data-popup="popup1">
                         <div class="button button--dark-blue ">
                             <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
-                            <div>Внести данные</div>
+                            <div class="open-btn" data-popup="popup1" >Ввести данные</div>
                         </div>
                     </div>
                 </div>
             </div>
         
-            <!-- Окно 1: с формой -->
+            <!-- Окно 1: ДВЕ КНОПКИ -->
             <div id="popup1" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
@@ -199,8 +199,7 @@
                     
                             <!-- Кнопки -->
                             <div class="form-buttons">
-                                <button type="button" class="button button--red ">Отменить</button>
-                                <button type="button" class="send_data_form_button button button--green">Внести данные</button>
+                                <button type="submit" class="send_data_form_button button button--green">Внести данные</button>
                             </div>
                         </form>
                     </div>
@@ -209,7 +208,7 @@
                     
                 </div>
             </div>
-            <!-- Окно 3: Меню с отчетом -->
+            <!-- Окно 4: Меню с отчетом -->
             <div id="popup4" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
@@ -218,18 +217,51 @@
                         <span class="close-btn">&times;</span>
                     </div>
                     <div class="content-area">
-                        форма с джанго
-                        <form action="">
-                            {% csrf_token %}
-                            {{input_data_form}}
-                        </form>
-                        
+                        Скачать отчет
                     </div>
                 </div>
             </div>
-            {% for supplier in input_data_form.supplier %}
-            {{supplier.id}}{{supplier}}
-             {% endfor %}
+            <!-- Окно 5: Редактировать позицию в таблице -->
+            <div id="popup5" class="my-popup">
+                <div class="popup-content">
+                    <div class="popup-header">
+                        <span class="drag-handle">☰</span>
+                        <h2>Редактировать позицию </h2>
+                        <span class="close-btn">&times;</span>
+                    </div>
+                    <div class="content-area">
+                        Редактировать позицию
+                    </div>
+                </div>
+            </div>
+            <!-- Окно 6: Установить статус -->
+            <div id="popup6" class="my-popup">
+                <div class="popup-content">
+                    <div class="popup-header">
+                        <span class="drag-handle">☰</span>
+                        <h2>Установить статус </h2>
+                        <span class="close-btn">&times;</span>
+                    </div>
+                    <div class="content-area">
+                        Установить статус
+                    </div>
+                </div>
+            </div>
+            <!-- Окно 7: Удалить -->
+            <div id="popup7" class="my-popup">
+                <div class="popup-content">
+                    <div class="popup-header">
+                        <span class="drag-handle">☰</span>
+                        <h2>Удаление позиции </h2>
+                        <span class="close-btn">&times;</span>
+                    </div>
+                    <div class="content-area">
+                        Удаление позиции
+                    </div>
+                </div>
+            </div>
+
+
             <table>
                 <thead>
                     <tr>
@@ -252,13 +284,19 @@
                 <tbody id="invoiceTableBody">
                     <!-- Data will be loaded here -->
             </tbody>
-             </table>
+            </table>
 
  
 
-    
+    <script>
+        // Пути к иконкам
+        const ICON_EDIT = "{% static '/comers/icons/icon_edit.png' %}";
+        const ICON_STATUS = "{% static '/comers/icons/icon_status.png' %}";
+        const ICON_DELETE = "{% static '/comers/icons/icon_delete.png' %}";
+    </script>
     <script src='{% static 'shared\js\components\popup_manager.js' %}'></script>
     <script src='{% static 'comers\js\create_supplier.js' %}'></script>
+    <script src='{% static 'comers\js\create_invoice.js' %}'></script>
     <script src='{% static 'comers\js\auto_fields.js' %}'></script>
     <script src='{% static 'comers\js\filters.js' %}'></script>
     <script src='{% static 'comers\js\get_all_data_load_page.js' %}'></script>
