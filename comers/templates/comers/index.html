@@ -31,29 +31,17 @@
                         </div>
                 </div>
             <div class="filter_choises">
-                <div>   
-                        <label class="filter-label">Выбор поставщика</label>
-                        <select id="supplierFilter" class="input_wrapper">
-                            <option>ЗАО профессиональные профессионалы</option>
-                        </select>
-                </div> 
-                <div>
-                        <label>Выбор ведущего накладную</label>
-                        <select id="leadingFilter" class="input_wrapper">
-                            <option>Иванов Иван Иванович</option>
-                        </select>
-                </div>
-                <div>
-                        <label>Выбор статуса</label>
-                        <select id="statusFilter" class="input_wrapper">
-                            <option>Все</option>
-                        </select>
-                </div>
+                <div class="choice_form_container">
+                    <form id="choice_form_container" method="post">
+                        {% csrf_token %}
+                        {{filter_form}}
+                    </form>
+                </div>    
                 <div class="buttons_navigate_choice">
                     <button class="button button--red">Сбросить</button>
                     <button class="button button--green">Применить</button>
 
-                    <!-- В кнопке два окна Popup-->
+                    <!-- Кнопка в которой два окна Popup-->
                     <div class="open-btn" data-popup="popup1">
                         <div class="button button--dark-blue ">
                             <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
@@ -67,7 +55,7 @@
             <div id="popup1" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">☰</span>
+                        <span class="drag-handle">1☰</span>
                         <h2>Внести данные</h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -90,7 +78,7 @@
             <div id="popup2" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">☰</span>
+                        <span class="drag-handle">2☰</span>
                         <h2>Добавить поставщика</h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -108,7 +96,7 @@
             <div id="popup3" class="my-popup">
                 <div class="add_data_mode popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">☰</span>
+                        <span class="drag-handle">3☰</span>
                         <h2>Форма внесения данных</h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -212,7 +200,7 @@
             <div id="popup4" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">☰</span>
+                        <span class="drag-handle">4☰</span>
                         <h2>Ваше окно</h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -225,7 +213,7 @@
             <div id="popup5" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">☰</span>
+                        <span class="drag-handle">5☰</span>
                         <h2>Редактировать позицию </h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -238,7 +226,7 @@
             <div id="popup6" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">☰</span>
+                        <span class="drag-handle">6☰</span>
                         <h2>Установить статус </h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -251,7 +239,7 @@
             <div id="popup7" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">☰</span>
+                        <span class="drag-handle">7☰</span>
                         <h2>Удаление позиции </h2>
                         <span class="close-btn">&times;</span>
                     </div>

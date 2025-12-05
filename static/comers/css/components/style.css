@@ -160,3 +160,8 @@ tr:nth-child(even) {
     z-index: 1;
 }
 
+.mod_width_input {
+    width: 365px;
+    height: 40px;
+}
+

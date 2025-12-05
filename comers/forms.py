@@ -137,28 +137,47 @@ class InvoiceEditFormStatus(forms.ModelForm):
         fields = ['status', 'description']
         labels = {
             'status': 'Статус',
-            'description': 'Примечание',
         }
 
 class FilterForm(forms.Form):
     supplier = forms.ModelChoiceField(
         queryset=Supler.objects.all(),
         required=False,
-        # widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
-        # empty_label="Выберите вариант",
-        label='Поставщик')
+        label='Поставщик',
+        widget=forms.Select(
+            attrs={
+                'class':'input_wrapper mod_width_input', 
+                'placeholder': 'Выберите вариант',
+            }
+        ),
+            empty_label="Выберите вариант",
+    )
+
     leading = forms.ModelChoiceField(
         queryset=Leading.objects.all(),
         required=False,
-        # widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
-        # empty_label="Ведущий накладную",
-        label='Ведущий накладную')
+        label='Ведущий накладную',
+        widget=forms.Select(
+            attrs={
+                'class':'input_wrapper mod_width_input',
+                'placeholder': 'Выберите вариант',
+            }
+        ),
+            empty_label="Выберите вариант",
+    )
+
     status = forms.ModelChoiceField(
         queryset=Status.objects.all(),
         required=False,
-        # widget=forms.Select(attrs={'placeholder': 'Выберите вариант'}),
-        # empty_label="Статус позиции",
-        label='Статус')
+        label='Статус',
+        widget=forms.Select(
+            attrs={
+                'class':'input_wrapper mod_width_input', 
+                'placeholder': 'Выберите вариант',
+            }
+        ),
+            empty_label="Выберите вариант",
+    )
     
 
 class AddSupplerForm(forms.ModelForm):

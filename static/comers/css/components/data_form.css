@@ -47,3 +47,8 @@
 .input_wrapper label {
     margin-bottom: 10px;
 }
+
+#choice_form_container {
+    display: flex;
+    gap: 20px;
+}
