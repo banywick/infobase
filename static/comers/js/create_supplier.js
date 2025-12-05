@@ -1,14 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const submitButton = document.querySelector('.button_supplier');
     const form = document.getElementById('add_suppler_form');
 
     // Функция для отображения ошибок под полями
     function displayErrors(errors) {
-        // Удаляем предыдущие ошибки
         const existingErrors = form.querySelectorAll('.error-message');
         existingErrors.forEach(error => error.remove());
 
-        // Отображаем новые ошибки
         for (const field in errors) {
             const input = form.querySelector(`[name="${field}"]`);
             if (input) {
@@ -23,7 +20,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    submitButton.addEventListener('click', function() {
+    // Обработчик отправки формы (и для кнопки, и для Enter)
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Отменяем стандартное поведение формы
+
         const formData = new FormData(form);
 
         fetch('/comers/add_supplier/', {
@@ -35,18 +35,15 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (response.ok) {
-                // Если ответ успешный (201 Created или 200 OK без ошибок)
-                window.location.reload(); // Перезагружаем страницу
+                window.location.reload();
             } else {
-                // Если ответ с ошибками (400 Bad Request)
                 return response.json().then(errors => {
-                    throw errors; // Передаём ошибки в catch
+                    throw errors;
                 });
             }
         })
         .catch(errors => {
             console.error('Ошибки:', errors);
-            // Отображаем ошибки под полями
             if (errors && typeof errors === 'object') {
                 displayErrors(errors);
             } else {
