@@ -16,6 +16,12 @@ class SuplerSerializer(serializers.ModelSerializer):
         model = Supler
         fields = '__all__'
 
+    def validate_name(self, value):
+        # Проверяем, существует ли поставщик с таким именем
+        if Supler.objects.filter(name=value).exists():
+            raise serializers.ValidationError("Поставщик с таким названием уже существует.")
+        return value
+
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status

@@ -34,23 +34,24 @@ document.addEventListener('DOMContentLoaded', function() {
             },
         })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw err;
+            if (response.ok) {
+                // Если ответ успешный (201 Created или 200 OK без ошибок)
+                window.location.reload(); // Перезагружаем страницу
+            } else {
+                // Если ответ с ошибками (400 Bad Request)
+                return response.json().then(errors => {
+                    throw errors; // Передаём ошибки в catch
                 });
             }
-            return response.json();
         })
-        .then(data => {
-            if (data.success) {
-                // Перезагружаем страницу при успешном добавлении
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
+        .catch(errors => {
+            console.error('Ошибки:', errors);
             // Отображаем ошибки под полями
-            displayErrors(error);
+            if (errors && typeof errors === 'object') {
+                displayErrors(errors);
+            } else {
+                alert('Произошла неизвестная ошибка. Проверьте консоль.');
+            }
         });
     });
 });
