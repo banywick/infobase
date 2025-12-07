@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             const tableBody = document.getElementById('invoiceTableBody');
+            console.log(data)
             tableBody.innerHTML = ''; // Очищаем таблицу
 
             data.forEach(item => {
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const supplierName = item.supplier ? item.supplier.name : '';
 
                 row.innerHTML = `
+                <td hidden class="id-cell">${item.id || ''}</td>
                 <td class="invoice-number">${item.invoice_number || ''}</td>
                 <td class="date-cell">${item.date || ''}</td>
                 <td class="supplier-cell">${supplierName}</td>
@@ -28,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${specialistName}</td>
                 <td>${leadingName}</td>
                 <td class="status-cell">${statusName}</td>
-                <td>${item.note || ''}</td>
                 <td>
                     <div class="action_cell_table">
                         <div class="edit_invoice_button">
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <img src="${ICON_STATUS}" alt="Статус">
                             <div class="open-btn" data-popup="popup6">Статус</div>
                         </div>
-                        <div class="edit_invoice_button">
+                        <div class="edit_invoice_button" data-id="${item.id}">
                             <img src="${ICON_DELETE}" alt="Удалить">
                             <div class="open-btn" data-popup="popup7">Удалить</div>
                         </div>

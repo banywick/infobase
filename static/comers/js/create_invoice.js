@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log(data);
             if (data.success) {
-                window.location.reload(); // Перезагружаем страницу при успехе
+                // window.location.reload(); // Перезагружаем страницу при успехе
             }
         })
         .catch(errors => {
