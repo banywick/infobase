@@ -72,7 +72,7 @@ class InvoiceCreateSerializer(serializers.ModelSerializer):
         fields = [
             'invoice_number', 'date', 'supplier', 'article', 'quantity',
             'name', 'comment', 'description_problem', 'specialist',
-            'leading', 'unit', 'project', 'status'
+            'leading', 'unit', 'project', 'status','description'
         ]
 
 class InvoiceSerializerSpecialist(serializers.ModelSerializer):

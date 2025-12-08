@@ -192,16 +192,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Обработчик для кнопки "Отменить" в попапе
-    const cancelBtn = document.querySelector('.popup-content .button--green');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', function() {
-            const activePopup = document.querySelector('.my-popup.active');
-            if (activePopup) {
-                activePopup.classList.remove('active');
-                currentDeleteId = null;
-            }
-        });
-    }
+    // const cancelBtn = document.querySelector('.popup-content .button--green');
+    // if (cancelBtn) {
+    //     cancelBtn.addEventListener('click', function() {
+    //         const activePopup = document.querySelector('.my-popup.active');
+    //         if (activePopup) {
+    //             activePopup.classList.remove('active');
+    //             currentDeleteId = null;
+    //         }
+    //     });
+    // }
     
     // Добавляем вспомогательную функцию для поиска по тексту (если нужно)
     if (!Element.prototype.matches) {

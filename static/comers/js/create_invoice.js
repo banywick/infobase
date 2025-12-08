@@ -169,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td>${specialistName}</td>
             <td>${leadingName}</td>
             <td class="status-cell">${statusName}</td>
+            <td class="status-cell">${item.description || ''}</td>
             <td>
                 <div class="action_cell_table">
                     <div class="edit_invoice_button">
