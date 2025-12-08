@@ -153,26 +153,27 @@ class AddInvoiceData(generics.CreateAPIView):
         create(request, *args, **kwargs): Обрабатывает POST-запрос для создания новой записи Invoice.
     """
     queryset = Invoice.objects.all()
-    serializer_class = InvoiceSerializerSpecialist
+    serializer_class = InvoiceCreateSerializer
 
 
     def create(self, request, *args, **kwargs):
-        """
-        Обрабатывает POST-запрос для создания новой записи Invoice.
-
-        Args:
-            request (HttpRequest): Объект запроса.
-            *args: Дополнительные аргументы.
-            **kwargs: Дополнительные именованные аргументы.
-
-        Returns:
-            Response: Объект ответа с результатом выполнения операции.
-        """
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
-            return Response({"success": True}, status=status.HTTP_200_OK)
-        return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            # Возвращаем данные через InvoiceSerializer
+            instance = serializer.instance
+            response_serializer = InvoiceSerializer(instance)
+            return Response(
+                {
+                    "success": True,
+                    "data": response_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {"errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
 
 class AddFilterInvoiceData(APIView):

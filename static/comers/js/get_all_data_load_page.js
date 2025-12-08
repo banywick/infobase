@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const supplierName = item.supplier ? item.supplier.name : '';
 
                 row.innerHTML = `
-                <td hidden class="id-cell">${item.id || ''}</td>
                 <td class="invoice-number">${item.invoice_number || ''}</td>
                 <td class="date-cell">${item.date || ''}</td>
                 <td class="supplier-cell">${supplierName}</td>

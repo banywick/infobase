@@ -33,16 +33,47 @@ class SpecialistSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    supplier = SuplerSerializer()
-    comment = CommentSerializer()
-    specialist = SpecialistSerializer()
-    leading = LeadingSerializer()
-    status = StatusSerializer()
+    supplier = SuplerSerializer(read_only=True)
+    comment = CommentSerializer(read_only=True)
+    specialist = SpecialistSerializer(read_only=True)
+    leading = LeadingSerializer(read_only=True)
+    status = StatusSerializer(read_only=True)
 
     class Meta:
         model = Invoice
         fields = '__all__'
 
+class InvoiceCreateSerializer(serializers.ModelSerializer):
+    supplier = serializers.PrimaryKeyRelatedField(
+        queryset=Supler.objects.all(),
+        write_only=True
+    )
+    comment = serializers.PrimaryKeyRelatedField(
+        queryset=Comment.objects.all(),
+        write_only=True
+    )
+    specialist = serializers.PrimaryKeyRelatedField(
+        queryset=Specialist.objects.all(),
+        write_only=True
+    )
+    leading = serializers.PrimaryKeyRelatedField(
+        queryset=Leading.objects.all(),
+        write_only=True
+    )
+    # Поле status не обязательно, так как в модели есть default=1
+    status = serializers.PrimaryKeyRelatedField(
+        queryset=Status.objects.all(),
+        required=False,  # Не обязательное поле
+        write_only=True
+    )
+
+    class Meta:
+        model = Invoice
+        fields = [
+            'invoice_number', 'date', 'supplier', 'article', 'quantity',
+            'name', 'comment', 'description_problem', 'specialist',
+            'leading', 'unit', 'project', 'status'
+        ]
 
 class InvoiceSerializerSpecialist(serializers.ModelSerializer):
     class Meta:

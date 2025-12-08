@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (deleteBtn && deleteBtn.querySelector('.open-btn[data-popup="popup7"]')) {
             currentDeleteId = deleteBtn.getAttribute('data-id');
             console.log('ID для удаления сохранен:', currentDeleteId);
+            
+            // Также можно сохранить порядковый номер для обновления
+            const row = deleteBtn.closest('tr');
+            const sequentialId = row.querySelector('.id-cell')?.textContent;
+            console.log('Порядковый номер:', sequentialId);
         }
     });
     
@@ -42,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Позиция удалена:', data);
             
-            // Находим и удаляем строку из таблицы
+            // НАХОДИМ СТРОКУ ПО data-id КНОПКИ УДАЛЕНИЯ - ЭТО ПРАВИЛЬНЫЙ ПУТЬ
             const rowToDelete = document.querySelector(`tr .edit_invoice_button[data-id="${currentDeleteId}"]`)?.closest('tr');
             
             if (rowToDelete) {
@@ -55,18 +60,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     rowToDelete.remove();
                     console.log('Строка удалена из DOM');
                     
-                    // Обновляем нумерацию или другие данные если нужно
-                    updateTableAfterDeletion();
+                    // Обновляем порядковые номера ВСЕХ строк
+                    updateSequentialNumbers();
                 }, 300);
             } else {
                 console.warn('Строка для удаления не найдена в DOM');
+                // Попробуем альтернативный поиск
+                const altRowToDelete = document.querySelector(`tr .id-cell:contains("${currentDeleteId}")`)?.closest('tr');
+                if (altRowToDelete) {
+                    altRowToDelete.remove();
+                    updateSequentialNumbers();
+                }
             }
             
-            // Закрываем попап используя функцию из попап-менеджера
+            // Закрываем попап
             const activePopup = document.querySelector('.my-popup.active');
             if (activePopup) {
-                // Вызываем функцию closePopup из глобальной области видимости
-                // или создаем событие для закрытия
                 activePopup.classList.remove('active');
                 
                 // Альтернативный вариант: имитируем клик на крестик
@@ -118,17 +127,23 @@ document.addEventListener('DOMContentLoaded', function() {
         return cookieValue || '';
     }
     
-    // Функция для обновления таблицы после удаления (если нужно)
-    function updateTableAfterDeletion() {
-        // Здесь можно обновить счетчики, пересчитать суммы и т.д.
-        // Например, обновить нумерацию строк:
-        const rows = document.querySelectorAll('tbody tr');
+    // Функция для обновления порядковых номеров после удаления
+    function updateSequentialNumbers() {
+        const tableBody = document.getElementById('invoiceTableBody');
+        if (!tableBody) {
+            console.warn('Таблица invoiceTableBody не найдена');
+            return;
+        }
+        
+        const rows = tableBody.querySelectorAll('tr');
         rows.forEach((row, index) => {
             const idCell = row.querySelector('.id-cell');
             if (idCell) {
-                idCell.textContent = index + 1;
+                idCell.textContent = index + 1; // Обновляем порядковый номер
             }
         });
+        
+        console.log(`Порядковые номера обновлены. Всего строк: ${rows.length}`);
     }
     
     // Функция показа уведомлений
@@ -176,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Обработчик для кнопки "Отменить" в попапе (если она есть)
+    // Обработчик для кнопки "Отменить" в попапе
     const cancelBtn = document.querySelector('.popup-content .button--green');
     if (cancelBtn) {
         cancelBtn.addEventListener('click', function() {
@@ -186,5 +201,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentDeleteId = null;
             }
         });
+    }
+    
+    // Добавляем вспомогательную функцию для поиска по тексту (если нужно)
+    if (!Element.prototype.matches) {
+        Element.prototype.matches = Element.prototype.msMatchesSelector || 
+                                    Element.prototype.webkitMatchesSelector;
+    }
+    
+    if (!Element.prototype.closest) {
+        Element.prototype.closest = function(s) {
+            var el = this;
+            if (!document.documentElement.contains(el)) return null;
+            do {
+                if (el.matches(s)) return el;
+                el = el.parentElement || el.parentNode;
+            } while (el !== null && el.nodeType === 1); 
+            return null;
+        };
     }
 });
