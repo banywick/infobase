@@ -38,8 +38,7 @@
                     </form>
                 </div>    
                 <div class="buttons_navigate_choice">
-                    <button  class="button button--red">Сбросить</button>
-                    <button form="choice_form_container" type="button" class="button button--green">Применить</button>
+                    <button id="clear_filter" class="button button--red">Сбросить фильтр</button>
 
                     <!-- Кнопка в которой два окна Popup-->
                     <div class="open-btn" data-popup="popup1">
@@ -218,7 +217,94 @@
                         <span class="close-btn">&times;</span>
                     </div>
                     <div class="content-area">
-                        Редактировать позицию
+                        <form id="invoice_edit_form" method="post" class="data-entry-form">
+                            {% csrf_token %}
+                    
+                            <div class="form-columns">
+                                <!-- Левая колонка -->
+                                <div class="form-column">
+                                    <!-- Накладная -->
+                                    <div class="form-group">
+                                        <div class="form-group">
+                                            {{ invoice_edit_form.invoice_number.label }}  <!-- Автоматический лейбл -->
+                                            {{ invoice_edit_form.invoice_number }}  <!-- Django сам подставит класс и required -->
+                                        </div>
+                                    </div>
+                    
+                                    <!-- Дата -->
+                                    <div class="form-group">
+                                        <div class="form-group">
+                                            {{ invoice_edit_form.date.label }}  <!-- Автоматический лейбл -->
+                                            {{ invoice_edit_form.date }}  <!-- Django сам подставит класс и required -->
+                                        </div>
+                                    </div>
+                    
+                                    <!-- Поставщик -->
+                                    <div class="form-group">
+                                        <div class="form-group">
+                                            {{ invoice_edit_form.supplier.label }}  <!-- Автоматический лейбл -->
+                                            {{ invoice_edit_form.supplier }}  <!-- Django сам подставит класс и required -->
+                                        </div>
+                                    </div>
+                    
+                                    <!-- Артикул -->
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            {{ invoice_edit_form.article_mirror.label }}  <!-- Автоматический лейбл -->
+                                            {{ invoice_edit_form.article_mirror }}  <!-- Django сам подставит класс и required -->
+                                        </div>
+
+                                        <!-- Количество -->
+                                        <div class="form-group">
+                                            {{ invoice_edit_form.quantity.label }}  <!-- Автоматический лейбл -->
+                                            {{ invoice_edit_form.quantity }}  <!-- Django сам подставит класс и required -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Наименование Автоматическая подстановка -->
+                                    <div class="form-group">
+                                        {{ invoice_edit_form.name.label }}  <!-- Автоматический лейбл -->
+                                        {{ invoice_edit_form.name }}  <!-- Django сам подставит класс и required -->
+                                    </div>
+                                </div>
+                    
+                                <!-- Правая колонка -->
+                                <div class="form-column">
+                                    <!-- Комментарий по товару -->
+                                    <div class="form-group">
+                                        {{ invoice_edit_form.comment.label }}  <!-- Автоматический лейбл -->
+                                        {{ invoice_edit_form.comment }}  <!-- Django сам подставит класс и required -->
+                                    </div>
+                    
+                                    <!-- Описание проблемы -->
+                                    <div class="form-group">
+                                        {{ invoice_edit_form.description_problem.label }}  <!-- Автоматический лейбл -->
+                                        {{ invoice_edit_form.description_problem }}  <!-- Django сам подставит класс и required -->
+                                    </div>
+                    
+                                    <!-- Специалист -->
+                                    <div class="form-group">
+                                        {{ invoice_edit_form.specialist.label }}  <!-- Автоматический лейбл -->
+                                        {{ invoice_edit_form.specialist }}  <!-- Django сам подставит класс и required -->
+                                    </div>
+                    
+                                    <!-- Ведущий накладную -->
+                                    <div class="form-group">
+                                        {{ invoice_edit_form.leading.label }}  <!-- Автоматический лейбл -->
+                                        {{ invoice_edit_form.leading }}  <!-- Django сам подставит класс и required -->
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <!-- Скрытые поля -->
+                            <input type="hidden" id="hidden_unit" name="{{ invoice_edit_form.unit.html_name }}">
+                            <input type="hidden" id="hidden_article" name="{{ invoice_edit_form.article.html_name }}">
+                            <input type="hidden" id="hidden_project" name="{{ invoice_edit_form.project.html_name }}">
+                            <!-- Кнопки -->
+                            <div class="form-buttons">
+                            <button type="submit" class="send_data_form_button button button--green">Применить</button>
+                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -278,9 +364,6 @@
                     <!-- Data will be loaded here -->
             </tbody>
             </table>
-
- 
-
     <script>
         // Пути к иконкам
         const ICON_EDIT = "{% static '/comers/icons/icon_edit.png' %}";
@@ -289,12 +372,11 @@
     </script>
     <script src='{% static 'shared\js\components\popup_manager.js' %}'></script>
     <script src='{% static 'comers\js\create_supplier.js' %}'></script>
+    <script src='{% static 'comers\js\edit_row.js' %}'></script>
+    <script src='{% static 'comers\js\localstorage.js' %}'></script>
     <script src='{% static 'comers\js\delete_row.js' %}'></script>
     <script src='{% static 'comers\js\create_invoice.js' %}'></script>
     <script src='{% static 'comers\js\auto_fields.js' %}'></script>
-    <script src='{% static 'comers\js\filters.js' %}'></script>
     <script src='{% static 'comers\js\get_all_data_load_page.js' %}'></script>
-    <script src='{% static 'comers\js\query.js' %}'></script>
-    <script src='{% static 'comers\js\validate_form.js' %}'></script>
 </body>
 </html>

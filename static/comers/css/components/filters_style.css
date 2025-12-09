@@ -1,0 +1,29 @@
+/* Стили для подсвеченных селектов */
+.filter-selected {
+    background-color: #ff81812b !important;
+    border-color: #4caf50 !important;
+    font-weight: 500;
+}
+
+/* Плавный переход для изменения стилей */
+.input_wrapper.mod_width_input {
+    transition: all 0.3s ease;
+}
+
+/* Стили для опций в подсвеченном селекте */
+.filter-selected option {
+    background-color: white;
+    /* color: #333; */
+}
+
+/* Стиль для выбранной опции в любом селекте */
+.input_wrapper.mod_width_input option:checked {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* Дополнительные стили для лучшего визуального эффекта */
+.filter-selected {
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+

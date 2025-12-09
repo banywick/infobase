@@ -10,6 +10,7 @@
 
 /* Comers specific components */
 @import url('components/style.css');
+@import url('components/filters_style.css');
 @import url('components/comers-table.css');
 @import url('components/data_form.css');
 @import url('components/form_animation.css');

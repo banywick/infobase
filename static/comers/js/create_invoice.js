@@ -171,16 +171,16 @@ document.addEventListener('DOMContentLoaded', function() {
             <td class="status-cell">${statusName}</td>
             <td class="status-cell">${item.description || ''}</td>
             <td>
-                <div class="action_cell_table">
-                    <div class="edit_invoice_button">
+                <div  class="action_cell_table">
+                    <div class="edit_invoice_button edit_button">
                         <img src="${ICON_EDIT}" alt="Редактировать">
                         <div class="open-btn" data-popup="popup5">Редактировать</div>
                     </div>
-                    <div class="edit_invoice_button">
+                    <div class="edit_invoice_button edit_status_button">
                         <img src="${ICON_STATUS}" alt="Статус">
                         <div class="open-btn" data-popup="popup6">Статус</div>
                     </div>
-                    <div class="edit_invoice_button" data-id="${item.id}">
+                    <div class="edit_invoice_button delete_button" data-id="${item.id}">
                         <img src="${ICON_DELETE}" alt="Удалить">
                         <div class="open-btn" data-popup="popup7">Удалить</div>
                     </div>
