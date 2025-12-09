@@ -8,7 +8,7 @@ class InputDataForm(forms.Form):
         'class':'input_wrapper',
         'placeholder': 'Введите номер документа'
         }),
-        label='Выбор поставщика*'
+        label='Введите номер документа*'
     )
     date = forms.DateField(
         widget=forms.DateInput(attrs={
@@ -30,9 +30,9 @@ class InputDataForm(forms.Form):
     article_mirror = forms.CharField(
         widget=forms.TextInput(attrs={
         'class':'check_article button_mod_width button button--white',
-        'placeholder': 'Артикул*'
+        'placeholder': 'Артикул'
         }),
-        label='Артикул'
+        label='Артикул*'
     )
     name = forms.CharField(
         widget=forms.TextInput(attrs={
@@ -45,9 +45,9 @@ class InputDataForm(forms.Form):
     quantity = forms.FloatField(
         widget=forms.TextInput(attrs={
         'class':'button_mod_width button button--white',    
-        'placeholder': 'Количество*'
+        'placeholder': 'Количество'
         }),
-        label='Введите количество '
+        label='Введите количество* '
     )
     comment = forms.ModelChoiceField(
         queryset=Comment.objects.all(),

@@ -31,21 +31,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="status-cell">${statusName}</td>
                 <td class="status-cell">${item.description || ''}</td>
                 <td>
-                    <div  class="action_cell_table">
-                        <div class="edit_invoice_button edit_button">
+                    <div class="action_cell_table">
+                        <!-- Кнопка "Редактировать" -->
+                        <div class="edit_invoice_button edit_button"
+                            data-id="${item.id}"
+                            data-action="edit">
                             <img src="${ICON_EDIT}" alt="Редактировать">
                             <div class="open-btn" data-popup="popup5">Редактировать</div>
                         </div>
-                        <div class="edit_invoice_button edit_status_button">
+                        <!-- Кнопка "Статус" -->
+                        <div class="edit_invoice_button edit_status_button"
+                            data-id="${item.id}"
+                            data-action="status">
                             <img src="${ICON_STATUS}" alt="Статус">
                             <div class="open-btn" data-popup="popup6">Статус</div>
                         </div>
-                        <div class="edit_invoice_button delete_button" data-id="${item.id}">
+                        <!-- Кнопка "Удалить" -->
+                        <div class="edit_invoice_button delete_button"
+                            data-id="${item.id}"
+                            data-action="delete">
                             <img src="${ICON_DELETE}" alt="Удалить">
                             <div class="open-btn" data-popup="popup7">Удалить</div>
                         </div>
                     </div>
-                </td>
+    </td>
             `;
             
                 tableBody.appendChild(row);
