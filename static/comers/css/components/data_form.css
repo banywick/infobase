@@ -37,13 +37,21 @@
     width: 178px;
 }
 
-#add_suppler_form {
+#add_suppler_form{
     display: flex;
     flex-direction: column; /* элементы располагаются в колонку */
     align-items: center;     /* центрирование по вертикали */
     gap: 10px;               /* отступ между элементами */
     padding: 20px;           /* внутренние отступы */
 }
+
+#editInvoiceFormStatus {
+    display: flex;
+    flex-direction: column; 
+    gap: 10px;               
+    padding: 20px;           
+}
+
 .input_wrapper label {
     margin-bottom: 10px;
 }

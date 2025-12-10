@@ -90,7 +90,6 @@
                     </div>
                 </div>
             </div>
-            
             <!-- Окно 3: Форма с заявкой -->
             <div id="popup3" class="my-popup">
                 <div class="add_data_mode popup-content">
@@ -300,7 +299,7 @@
                             <!-- Кнопки -->
                             <div class="form-buttons">
                             <button type="button" class="send_data_form_edit_button button button--green">Применить</button>
-                        </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -314,7 +313,21 @@
                         <span class="close-btn">&times;</span>
                     </div>
                     <div class="content-area">
-                        Установить статус
+                        <div class="form-group">
+                            <div class="form-group">
+                            
+                                <form id="editInvoiceFormStatus" method="post">
+                                    {% csrf_token %}
+                                    {{invoice_edit_form_status.status.label}}
+                                    {{invoice_edit_form_status.status}}
+                                    {{invoice_edit_form_status.description.label}}
+                                    {{invoice_edit_form_status.description}}
+                                    <div class="form-buttons">
+                                        <button type="button" class="send_data_form_edit_status_button button button--green">Применить</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>    
                     </div>
                 </div>
             </div>
@@ -371,6 +384,7 @@
     <script src='{% static 'shared\js\components\popup_manager.js' %}'></script>
     <script src='{% static 'comers\js\create_supplier.js' %}'></script>
     <script src='{% static 'comers\js\send_edit_row.js' %}'></script>
+    <script src='{% static 'comers\js\send_edit_status.js' %}'></script>
     <script src='{% static 'comers\js\edit_row.js' %}'></script>
     <script src='{% static 'comers\js\localstorage.js' %}'></script>
     <script src='{% static 'comers\js\delete_row.js' %}'></script>

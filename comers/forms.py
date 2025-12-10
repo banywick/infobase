@@ -202,6 +202,24 @@ class InvoiceEditForm(forms.ModelForm):
                 'specialist', 'leading', 'project']
 
 class InvoiceEditFormStatus(forms.ModelForm):
+    status = forms.ModelChoiceField(
+        queryset=Status.objects.all(),
+        widget=forms.Select(attrs={
+            'class': 'input_wrapper',
+        }),
+        label='Выберите статус',
+        empty_label="Выберите статус"
+    )
+    
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'text_area_form',
+            'placeholder': 'Введите описание...'
+        }),
+        label='Описание',
+        required=False
+    )
+    
     class Meta:
         model = Invoice
         fields = ['status', 'description']
