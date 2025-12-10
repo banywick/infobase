@@ -177,34 +177,31 @@ class AddInvoiceData(generics.CreateAPIView):
     
 
 class RetrieveUpdateInvoiceData(generics.RetrieveUpdateAPIView):
-    """
-    Представление для получения и обновления экземпляра Invoice.
-    """
     queryset = Invoice.objects.all()
-    serializer_class = InvoiceCreateSerializer
+    serializer_class = InvoiceCreateSerializer  # Дефолтный сериализатор
     
     def get_serializer_class(self):
-        # Можете использовать разные сериализаторы для разных методов
+        # Для GET-запросов используем InvoiceSerializer (только чтение)
+        # Для PUT/PATCH - InvoiceCreateSerializer (создание/обновление)
         if self.request.method == 'GET':
             return InvoiceSerializer
         return InvoiceCreateSerializer
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        # partial=True позволяет частичное обновление (PATCH)
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         
         if serializer.is_valid():
             self.perform_update(serializer)
-            return Response(
-                {
-                    "success": True,
-                    "data": InvoiceSerializer(instance).data
-                },
-                status=status.HTTP_200_OK
-            )
+            # После успешного обновления возвращаем данные через InvoiceSerializer
+            return Response({
+                "success": True,
+                "data": InvoiceSerializer(instance).data
+            }, status=status.HTTP_200_OK)
         
         return Response(
             {"errors": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST
-        )    
+        )  
 

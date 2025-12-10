@@ -52,12 +52,12 @@ async function loadInvoiceAndPopulateForm(invoiceId) {
     try {
         const response = await fetch(`/comers/edit_invoices/${invoiceId}/`);
         const data = await response.json();
+        console.log(data)
         
         // Заполняем форму простым способом
         fillFormSimple(data);
         
         // Показываем popup5
-        document.getElementById('popup5').style.display = 'block';
         
     } catch (error) {
         console.error('Ошибка:', error);
@@ -67,7 +67,7 @@ async function loadInvoiceAndPopulateForm(invoiceId) {
 
 // Простое заполнение формы
 function fillFormSimple(data) {
-    const form = document.getElementById('invoice_edit_form');
+    const form = document.getElementById('editInvoiceForm');
     if (!form) return;
     
     // Извлекаем ID
@@ -88,6 +88,8 @@ function fillFormSimple(data) {
         { name: 'description_problem', value: data.description_problem },
         { name: 'specialist', value: getValue(data.specialist) },
         { name: 'leading', value: getValue(data.leading) },
+        { name: 'article', value: getValue(data.article) },
+        { name: 'unit', value: getValue(data.unit) },
     ];
     
     fields.forEach(field => {
