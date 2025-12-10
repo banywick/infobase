@@ -1,223 +1,87 @@
+// static/comers/js/delete_row.js
 document.addEventListener('DOMContentLoaded', function() {
-    let currentDeleteId = null;
+    // Проверяем, что ComersApp загружен
+    if (typeof ComersApp === 'undefined') {
+        console.error('ComersApp не загружен');
+        return;
+    }
     
-    // Сохраняем ID при клике на кнопку удаления
-    document.addEventListener('click', function(e) {
-        // Находим кнопку удаления, на которую кликнули
-        const deleteBtn = e.target.closest('.edit_invoice_button[data-id]');
-        if (deleteBtn && deleteBtn.querySelector('.open-btn[data-popup="popup7"]')) {
-            currentDeleteId = deleteBtn.getAttribute('data-id');
-            console.log('ID для удаления сохранен:', currentDeleteId);
-            
-            // Также можно сохранить порядковый номер для обновления
-            const row = deleteBtn.closest('tr');
-            const sequentialId = row.querySelector('.id-cell')?.textContent;
-            console.log('Порядковый номер:', sequentialId);
-        }
-    });
+    const deleteButton = document.getElementById('del_row_comers_table');
+    if (!deleteButton) return;
     
-    // Обработчик для кнопки удаления в попапе
-    document.getElementById('del_row_comers_table').addEventListener('click', function() {
+    deleteButton.addEventListener('click', async function() {
+        const currentDeleteId = ComersApp.getCurrentDeleteId();
+        console.log('Попытка удаления ID:', currentDeleteId);
+        
         if (!currentDeleteId) {
-            console.error('ID для удаления не найден');
+            ComersApp.showNotification('ID для удаления не найден', 'error');
             return;
         }
         
-        const deleteButton = this;
-        const originalText = deleteButton.textContent;
-        
         // Показываем индикатор загрузки
+        const originalText = deleteButton.textContent;
         deleteButton.textContent = 'Удаление...';
         deleteButton.disabled = true;
         
-        // Отправляем запрос на удаление
-        fetch(`/comers/remove_position/${currentDeleteId}/`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRFToken': getCsrfToken(),
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Ошибка сервера: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Позиция удалена:', data);
+        try {
+            const response = await fetch(`/comers/remove_position/${currentDeleteId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': ComersApp.getCsrfToken(),
+                    'Content-Type': 'application/json',
+                },
+            });
             
-            // НАХОДИМ СТРОКУ ПО data-id КНОПКИ УДАЛЕНИЯ - ЭТО ПРАВИЛЬНЫЙ ПУТЬ
-            const rowToDelete = document.querySelector(`tr .edit_invoice_button[data-id="${currentDeleteId}"]`)?.closest('tr');
+            const data = await response.json();
             
-            if (rowToDelete) {
-                // Добавляем анимацию удаления
-                rowToDelete.style.transition = 'all 0.3s ease';
-                rowToDelete.style.opacity = '0';
-                rowToDelete.style.transform = 'translateX(-100%)';
+            if (response.ok) {
+                // Удаляем строку из таблицы с анимацией
+                const removed = ComersApp.removeRowFromTable(currentDeleteId);
                 
-                setTimeout(() => {
-                    rowToDelete.remove();
+                if (removed) {
                     console.log('Строка удалена из DOM');
                     
-                    // Обновляем порядковые номера ВСЕХ строк
-                    updateSequentialNumbers();
-                }, 300);
-            } else {
-                console.warn('Строка для удаления не найдена в DOM');
-                // Попробуем альтернативный поиск
-                const altRowToDelete = document.querySelector(`tr .id-cell:contains("${currentDeleteId}")`)?.closest('tr');
-                if (altRowToDelete) {
-                    altRowToDelete.remove();
-                    updateSequentialNumbers();
+                    // Закрываем попап
+                    ComersApp.closeActivePopup();
+                    
+                    ComersApp.showNotification('Позиция успешно удалена', 'success');
+                    
+                    // Обновляем данные
+                    const allData = ComersApp.getAllData();
+                    const filteredData = allData.filter(item => item.id != currentDeleteId);
+                    ComersApp.setAllData(filteredData);
+                    ComersApp.setFilteredData([...filteredData]);
+                    
+                } else {
+                    ComersApp.showNotification('Строка не найдена в таблице', 'warning');
                 }
-            }
-            
-            // Закрываем попап
-            const activePopup = document.querySelector('.my-popup.active');
-            if (activePopup) {
-                activePopup.classList.remove('active');
                 
-                // Альтернативный вариант: имитируем клик на крестик
-                const closeBtn = activePopup.querySelector('.close-btn');
-                if (closeBtn) {
-                    closeBtn.click();
-                }
+            } else {
+                throw new Error(data.error || 'Ошибка при удалении');
             }
             
-            // Показываем уведомление об успехе
-            showNotification('Позиция успешно удалена', 'success');
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Ошибка при удалении:', error);
-            showNotification('Ошибка при удалении: ' + error.message, 'error');
-        })
-        .finally(() => {
+            ComersApp.showNotification('Ошибка при удалении: ' + error.message, 'error');
+            
+        } finally {
             // Восстанавливаем кнопку
             deleteButton.textContent = originalText;
             deleteButton.disabled = false;
-            currentDeleteId = null;
-        });
+            ComersApp.setCurrentDeleteId(null);
+        }
     });
     
-    // Функция для получения CSRF токена
-    function getCsrfToken() {
-        // Вариант 1: из cookie (Django по умолчанию)
-        const cookieValue = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrftoken='))
-            ?.split('=')[1];
+    // Дополнительно: обработчик для кнопки удаления в таблице (делегирование)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete_button')) {
+            const deleteBtn = e.target.closest('.delete_button');
+            const invoiceId = deleteBtn.dataset.id;
             
-        // Вариант 2: из meta-тега
-        if (!cookieValue) {
-            const metaToken = document.querySelector('meta[name="csrf-token"]');
-            if (metaToken) {
-                return metaToken.getAttribute('content');
+            if (invoiceId) {
+                ComersApp.setCurrentDeleteId(invoiceId);
+                console.log('ID для удаления установлен из таблицы:', invoiceId);
             }
         }
-        
-        // Вариант 3: из скрытого input
-        if (!cookieValue) {
-            const inputToken = document.querySelector('input[name="csrfmiddlewaretoken"]');
-            if (inputToken) {
-                return inputToken.value;
-            }
-        }
-        
-        return cookieValue || '';
-    }
-    
-    // Функция для обновления порядковых номеров после удаления
-    function updateSequentialNumbers() {
-        const tableBody = document.getElementById('invoiceTableBody');
-        if (!tableBody) {
-            console.warn('Таблица invoiceTableBody не найдена');
-            return;
-        }
-        
-        const rows = tableBody.querySelectorAll('tr');
-        rows.forEach((row, index) => {
-            const idCell = row.querySelector('.id-cell');
-            if (idCell) {
-                idCell.textContent = index + 1; // Обновляем порядковый номер
-            }
-        });
-        
-        console.log(`Порядковые номера обновлены. Всего строк: ${rows.length}`);
-    }
-    
-    // Функция показа уведомлений
-    function showNotification(message, type) {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: ${type === 'success' ? '#4CAF50' : '#f44336'};
-            color: white;
-            border-radius: 5px;
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            font-family: Arial, sans-serif;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Удаляем уведомление через 3 секунды
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-        
-        // Добавляем CSS анимации если их нет
-        if (!document.querySelector('#notification-styles')) {
-            const style = document.createElement('style');
-            style.id = 'notification-styles';
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes slideOut {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-    
-    // Обработчик для кнопки "Отменить" в попапе
-    // const cancelBtn = document.querySelector('.popup-content .button--green');
-    // if (cancelBtn) {
-    //     cancelBtn.addEventListener('click', function() {
-    //         const activePopup = document.querySelector('.my-popup.active');
-    //         if (activePopup) {
-    //             activePopup.classList.remove('active');
-    //             currentDeleteId = null;
-    //         }
-    //     });
-    // }
-    
-    // Добавляем вспомогательную функцию для поиска по тексту (если нужно)
-    if (!Element.prototype.matches) {
-        Element.prototype.matches = Element.prototype.msMatchesSelector || 
-                                    Element.prototype.webkitMatchesSelector;
-    }
-    
-    if (!Element.prototype.closest) {
-        Element.prototype.closest = function(s) {
-            var el = this;
-            if (!document.documentElement.contains(el)) return null;
-            do {
-                if (el.matches(s)) return el;
-                el = el.parentElement || el.parentNode;
-            } while (el !== null && el.nodeType === 1); 
-            return null;
-        };
-    }
+    });
 });

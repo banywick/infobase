@@ -1,114 +1,126 @@
-// Более надежный вариант с делегированием событий
-function setupEditHandlers() {
-    // Обработчик для всей страницы
-    document.addEventListener('click', function(e) {
-        // Проверяем разные возможные места клика:
-        
-        // 1. Клик по самому контейнеру
-        if (e.target.classList.contains('edit_invoice_button') || 
-            e.target.classList.contains('edit_button')) {
-            handleEditClick(e.target);
-            return;
-        }
-        
-        // 2. Клик по картинке внутри
-        if (e.target.tagName === 'IMG' && 
-            e.target.closest('.edit_invoice_button, .edit_button')) {
-            const container = e.target.closest('.edit_invoice_button, .edit_button');
-            handleEditClick(container);
-            return;
-        }
-        
-        // 3. Клик по тексту "Редактировать" внутри
-        if (e.target.classList.contains('open-btn') && 
-            e.target.textContent.includes('Редактировать')) {
-            const container = e.target.closest('.edit_invoice_button, .edit_button');
-            if (container) {
-                handleEditClick(container);
-            }
-            return;
-        }
-    });
-    
-    console.log('Обработчики редактирования настроены');
-}
-
-function handleEditClick(container) {
-    const invoiceId = container.getAttribute('data-id');
-    
-    if (!invoiceId) {
-        console.error('Нет data-id у элемента:', container);
+// static/comers/js/edit_row.js
+document.addEventListener('DOMContentLoaded', function() {
+    // Проверяем, что ComersApp загружен
+    if (typeof ComersApp === 'undefined') {
+        console.error('ComersApp не загружен');
         return;
     }
     
-    console.log(`Редактирование накладной ID: ${invoiceId}`);
-    
-    // Загружаем и заполняем форму
-    loadInvoiceAndPopulateForm(invoiceId);
-}
-
-// Упрощенная функция загрузки
-async function loadInvoiceAndPopulateForm(invoiceId) {
-    try {
-        const response = await fetch(`/comers/edit_invoices/${invoiceId}/`);
-        const data = await response.json();
-        console.log(data)
+    // Делегирование событий для загрузки данных при открытии попапа редактирования
+    document.addEventListener('click', async function(e) {
+        // Клик по кнопке "Редактировать" в таблице
+        if (e.target.closest('.open-btn[data-popup="popup5"]') || 
+            e.target.closest('.edit_button')) {
+            
+            // Находим кнопку и ID
+            const button = e.target.closest('.edit_button') || 
+                          e.target.closest('.open-btn[data-popup="popup5"]').closest('.edit_button');
+            
+            if (button && button.dataset.id) {
+                const invoiceId = button.dataset.id;
+                console.log('Загрузка данных для редактирования ID:', invoiceId);
+                
+                ComersApp.setCurrentEditId(invoiceId);
+                
+                try {
+                    // Загружаем данные с сервера через правильный эндпоинт
+                    const data = await ComersApp.fetchData(`/comers/edit_invoices/${invoiceId}/`);
+                    console.log('Получены данные для редактирования:', data);
+                    
+                    // Заполняем форму редактирования
+                    const form = document.getElementById('editInvoiceForm');
+                    if (form) {
+                        // Заполняем основные поля
+                        const fieldsToFill = [
+                            'invoice_number',
+                            'date',
+                            'name',
+                            'quantity',
+                            'description_problem',
+                            'article',
+                            'unit',
+                            'description'
+                        ];
+                        
+                        fieldsToFill.forEach(fieldName => {
+                            const input = form.querySelector(`[name="${fieldName}"]`);
+                            if (input && data[fieldName] !== undefined) {
+                                input.value = data[fieldName] || '';
+                            }
+                        });
+                        
+                        // Заполняем поля с ForeignKey
+                        const fkFields = [
+                            { field: 'supplier', data: data.supplier },
+                            { field: 'comment', data: data.comment },
+                            { field: 'specialist', data: data.specialist },
+                            { field: 'leading', data: data.leading },
+                            { field: 'status', data: data.status },
+                            { field: 'project', data: data.project }
+                        ];
+                        
+                        fkFields.forEach(({ field, data: fieldData }) => {
+                            const select = form.querySelector(`[name="${field}"]`);
+                            if (select && fieldData) {
+                                select.value = typeof fieldData === 'object' ? fieldData.id : fieldData;
+                            }
+                        });
+                        
+                        // Скрытые поля
+                        const hiddenFields = ['article', 'unit', 'project'];
+                        hiddenFields.forEach(fieldName => {
+                            const hiddenInput = form.querySelector(`input[name="${fieldName}"]`);
+                            if (hiddenInput && data[fieldName]) {
+                                hiddenInput.value = data[fieldName];
+                            }
+                        });
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка загрузки данных:', error);
+                    ComersApp.showNotification('Ошибка загрузки данных для редактирования', 'error');
+                }
+            }
+        }
         
-        // Заполняем форму простым способом
-        fillFormSimple(data);
-        
-        // Показываем popup5
-        
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Не удалось загрузить данные');
-    }
-}
-
-// Простое заполнение формы
-function fillFormSimple(data) {
-    const form = document.getElementById('editInvoiceForm');
-    if (!form) return;
-    
-    // Извлекаем ID
-    const getValue = (field) => {
-        if (!field) return '';
-        if (typeof field === 'object' && field.id) return field.id;
-        return field;
-    };
-    
-    // Заполняем основные поля
-    const fields = [
-        { name: 'invoice_number', value: data.invoice_number },
-        { name: 'date', value: data.date?.split('T')[0] },
-        { name: 'supplier', value: getValue(data.supplier) },
-        { name: 'name', value: data.name },
-        { name: 'quantity', value: data.quantity },
-        { name: 'comment', value: getValue(data.comment) },
-        { name: 'description_problem', value: data.description_problem },
-        { name: 'specialist', value: getValue(data.specialist) },
-        { name: 'leading', value: getValue(data.leading) },
-        { name: 'article', value: getValue(data.article) },
-        { name: 'unit', value: getValue(data.unit) },
-    ];
-    
-    fields.forEach(field => {
-        const input = form.querySelector(`[name="${field.name}"]`);
-        if (input && field.value !== undefined) {
-            input.value = field.value || '';
+        // Клик по кнопке "Статус" в таблице
+        if (e.target.closest('.open-btn[data-popup="popup6"]') || 
+            e.target.closest('.edit_status_button')) {
+            
+            const button = e.target.closest('.edit_status_button') || 
+                          e.target.closest('.open-btn[data-popup="popup6"]').closest('.edit_status_button');
+            
+            if (button && button.dataset.id) {
+                const invoiceId = button.dataset.id;
+                console.log('Загрузка данных для статуса ID:', invoiceId);
+                
+                ComersApp.setCurrentEditId(invoiceId);
+                
+                try {
+                    // Загружаем данные с сервера через правильный эндпоинт
+                    const data = await ComersApp.fetchData(`/comers/edit_invoices/${invoiceId}/`);
+                    
+                    // Заполняем форму статуса
+                    const form = document.getElementById('editInvoiceFormStatus');
+                    if (form) {
+                        // Поле статуса
+                        const statusSelect = form.querySelector('select[name="status"]');
+                        if (statusSelect && data.status) {
+                            statusSelect.value = typeof data.status === 'object' ? data.status.id : data.status;
+                        }
+                        
+                        // Поле описания
+                        const descriptionInput = form.querySelector('textarea[name="description"], input[name="description"]');
+                        if (descriptionInput) {
+                            descriptionInput.value = data.description || '';
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка загрузки данных для статуса:', error);
+                    ComersApp.showNotification('Ошибка загрузки данных для статуса', 'error');
+                }
+            }
         }
     });
-    
-    // ID накладной
-    let idField = form.querySelector('#invoice_id');
-    if (!idField) {
-        idField = document.createElement('input');
-        idField.type = 'hidden';
-        idField.name = 'invoice_id';
-        form.appendChild(idField);
-    }
-    idField.value = data.id;
-}
-
-// Инициализация
-document.addEventListener('DOMContentLoaded', setupEditHandlers);
+});

@@ -1,69 +1,99 @@
+// static/comers/js/send_edit_row.js
 document.addEventListener('DOMContentLoaded', function() {
-    const sendButton = document.querySelector('.send_data_form_edit_button');
-    const form = document.getElementById('editInvoiceForm');
+    // Проверяем, что ComersApp загружен
+    if (typeof ComersApp === 'undefined') {
+        console.error('ComersApp не загружен');
+        return;
+    }
     
-    if (sendButton && form) {
+    const sendButton = document.querySelector('.send_data_form_edit_button');
+    
+    if (sendButton) {
         sendButton.addEventListener('click', async function(event) {
             event.preventDefault();
+            
+            const form = document.getElementById('editInvoiceForm');
+            if (!form) {
+                console.error('Форма редактирования не найдена');
+                return;
+            }
+            
+            const currentEditId = ComersApp.getCurrentEditId();
+            if (!currentEditId) {
+                ComersApp.showNotification('ID для редактирования не найден', 'error');
+                return;
+            }
+            
+            // Показываем индикатор загрузки
+            const originalText = sendButton.textContent;
+            sendButton.textContent = 'Сохранение...';
+            sendButton.disabled = true;
             
             try {
                 // Собираем данные формы
                 const formData = new FormData(form);
                 const data = {};
                 
-                // Преобразуем FormData в обычный объект
                 formData.forEach((value, key) => {
-                    // Пропускаем csrfmiddlewaretoken - он в заголовках
                     if (key !== 'csrfmiddlewaretoken') {
-                        // Обрабатываем множественные поля
-                        if (data[key]) {
-                            if (Array.isArray(data[key])) {
-                                data[key].push(value);
-                            } else {
-                                data[key] = [data[key], value];
-                            }
-                        } else {
-                            data[key] = value;
-                        }
+                        data[key] = value;
                     }
                 });
                 
-                // Получаем ID инвойса (предполагаем, что он в скрытом поле)
-                const invoiceId = data.invoice_id;
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                console.log('Отправка данных для редактирования:', data);
                 
-                // URL для обновления конкретного инвойса
-                // Если endpoint для обновления: /comers/edit_invoices/<id>/
-                const url = `/comers/edit_invoices/${invoiceId}/`;
-                
-                const response = await fetch(url, {
-                    method: 'PATCH', // Используем PATCH для частичного обновления
+                // Отправляем запрос на обновление через правильный эндпоинт
+                const response = await fetch(`/comers/edit_invoices/${currentEditId}/`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
+                        'X-CSRFToken': ComersApp.getCsrfToken(),
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(data),
                 });
                 
                 const result = await response.json();
+                console.log('Ответ сервера:', result);
                 
-                if (result.success) {
-                    alert('✅ Данные успешно обновлены!');
-                    // Можно добавить редирект или обновление интерфейса
-                    // window.location.href = '/comers/invoices/'; // например
+                if (response.ok && result.success) {
+                    ComersApp.showNotification('✅ Данные успешно обновлены!', 'success');
+                    
+                    // Обновляем строку в таблице
+                    if (result.data) {
+                        ComersApp.updateRowInTable(result.data);
+                    } else {
+                        // Если сервер не вернул данные, перезагружаем все данные
+                        await ComersApp.loadAllData();
+                    }
+                    
+                    // Закрываем попап
+                    ComersApp.closeActivePopup();
+                    
                 } else {
                     // Показываем ошибки валидации
-                    let errorMessage = 'Ошибки при обновлении:\n';
-                    for (const field in result.errors) {
-                        errorMessage += `${field}: ${result.errors[field].join(', ')}\n`;
-                    }
-                    alert(errorMessage);
+                    const errors = result.errors || { __all__: ['Ошибка обновления'] };
+                    ComersApp.displayFormErrors('editInvoiceForm', errors);
+                    ComersApp.showNotification('Ошибка при обновлении данных', 'error');
                 }
                 
             } catch (error) {
                 console.error('Ошибка:', error);
-                alert('Произошла ошибка при отправке данных');
+                ComersApp.showNotification('Произошла ошибка при отправке данных', 'error');
+                
+            } finally {
+                // Восстанавливаем кнопку
+                sendButton.textContent = originalText;
+                sendButton.disabled = false;
             }
+        });
+    }
+    
+    // Также обрабатываем отправку формы по Enter
+    const form = document.getElementById('editInvoiceForm');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            if (sendButton) sendButton.click();
         });
     }
 });

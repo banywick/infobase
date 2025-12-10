@@ -1,66 +1,70 @@
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/comers/get_all_positions/')
-        .then(response => response.json())
-        .then(data => {
-            const tableBody = document.getElementById('invoiceTableBody');
-            console.log(data)
-            tableBody.innerHTML = ''; // Очищаем таблицу
-
-            data.forEach(item => {
-                const row = document.createElement('tr');
-
-                // Извлекаем текстовые значения из вложенных объектов
-                const commentText = item.comment ? item.comment.text : '';
-                const leadingName = item.leading ? item.leading.name : '';
-                const specialistName = item.specialist ? item.specialist.name : '';
-                const statusName = item.status ? item.status.name : '';
-                const supplierName = item.supplier ? item.supplier.name : '';
-
-                row.innerHTML = `
-                <td class="invoice-number">${item.invoice_number || ''}</td>
-                <td class="date-cell">${item.date || ''}</td>
-                <td class="supplier-cell">${supplierName}</td>
-                <td class="article-cell">${item.article || ''}</td>
-                <td>${item.name || ''}</td>
-                <td>${item.unit || ''}</td>
-                <td class="quantity-cell">${item.quantity || ''}</td>
-                <td class="comment-cell">${commentText}</td>
-                <td>${item.description_problem || ''}</td>
-                <td>${specialistName}</td>
-                <td>${leadingName}</td>
-                <td class="status-cell">${statusName}</td>
-                <td class="status-cell">${item.description || ''}</td>
-                <td>
-                    <div class="action_cell_table">
-                        <!-- Кнопка "Редактировать" -->
-                        <div class="edit_invoice_button edit_button"
-                            data-id="${item.id}"
-                            data-action="edit">
-                            <img src="${ICON_EDIT}" alt="Редактировать">
-                            <div class="open-btn" data-popup="popup5">Редактировать</div>
-                        </div>
-                        <!-- Кнопка "Статус" -->
-                        <div class="edit_invoice_button edit_status_button"
-                            data-id="${item.id}"
-                            data-action="status">
-                            <img src="${ICON_STATUS}" alt="Статус">
-                            <div class="open-btn" data-popup="popup6">Статус</div>
-                        </div>
-                        <!-- Кнопка "Удалить" -->
-                        <div class="edit_invoice_button delete_button"
-                            data-id="${item.id}"
-                            data-action="delete">
-                            <img src="${ICON_DELETE}" alt="Удалить">
-                            <div class="open-btn" data-popup="popup7">Удалить</div>
-                        </div>
-                    </div>
-    </td>
-            `;
-            
-                tableBody.appendChild(row);
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching positions:', error);
-        });
+// static/comers/js/get_all_data_load_page.js
+document.addEventListener('DOMContentLoaded', async function() {
+    // Проверяем, что ComersApp загружен
+    if (typeof ComersApp === 'undefined') {
+        console.error('ComersApp не загружен');
+        // Создаем временный fallback
+        window.ComersApp = {
+            showNotification: function(msg, type) {
+                console.log(`${type}: ${msg}`);
+            },
+            loadAllData: async function() {
+                try {
+                    const response = await fetch('/comers/get_all_positions/');
+                    const data = await response.json();
+                    
+                    // Простая отрисовка таблицы если ComersApp не работает
+                    const tableBody = document.getElementById('invoiceTableBody');
+                    if (tableBody) {
+                        tableBody.innerHTML = '';
+                        data.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${item.invoice_number || ''}</td>
+                                <td>${item.date || ''}</td>
+                                <td>${item.supplier?.name || ''}</td>
+                                <td>${item.article || ''}</td>
+                                <td>${item.name || ''}</td>
+                                <td>${item.unit || ''}</td>
+                                <td>${item.quantity || ''}</td>
+                                <td>${item.comment?.text || ''}</td>
+                                <td>${item.description_problem || ''}</td>
+                                <td>${item.specialist?.name || ''}</td>
+                                <td>${item.leading?.name || ''}</td>
+                                <td>${item.status?.name || ''}</td>
+                                <td>${item.description || ''}</td>
+                                <td>
+                                    <div class="action_cell_table">
+                                        <div class="edit_invoice_button edit_button" data-id="${item.id}">
+                                            <img src="/static/comers/icons/icon_edit.png" alt="Редактировать">
+                                            <div class="open-btn" data-popup="popup5">Редактировать</div>
+                                        </div>
+                                        <div class="edit_invoice_button edit_status_button" data-id="${item.id}">
+                                            <img src="/static/comers/icons/icon_status.png" alt="Статус">
+                                            <div class="open-btn" data-popup="popup6">Статус</div>
+                                        </div>
+                                        <div class="edit_invoice_button delete_button" data-id="${item.id}">
+                                            <img src="/static/comers/icons/icon_delete.png" alt="Удалить">
+                                            <div class="open-btn" data-popup="popup7">Удалить</div>
+                                        </div>
+                                    </div>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки данных:', error);
+                }
+            }
+        };
+    }
+    
+    // Загружаем все данные при старте
+    try {
+        await ComersApp.loadAllData();
+        console.log('Данные загружены успешно');
+    } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+    }
 });
