@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Кнопки закрытия
     const closeIcons = document.querySelectorAll('.close');
     const closeUpdate = document.getElementById('close_update');
-    const closeButtons = document.querySelectorAll('.button_wrapper_close');
+    const closeButtons = document.querySelectorAll('.button--red');
 
     // Общие функции для управления попапами
     function openPopup(popupElement) {

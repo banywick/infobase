@@ -3,6 +3,17 @@
     display: flex;
     align-items: center;
 }
+
+.arrow_back_page img {
+    width: 30px;
+}
+
+
+.download_report {
+    color: var(--color-orange);
+}
+
+
 .add_data_user {
     display: grid;
     gap: 10px;
@@ -12,30 +23,48 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    padding: 20px 20px 20px;
+    align-items: center;
+    font-weight: var(--body-text-weight);
+    color: var(--body-text-color);
 }
 
 .info_sting_report {
     display: flex;
     justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-weight: var(--body-text-weight);
+    font-size: 18px;
+    color: var(--body-text-color);
+    align-items: center;
 }
 
 .filter_choises {
     display: flex;
     justify-content: space-between;
-    background: aqua;
     height: 100px;
     align-items: center;
+    color: var(--body-text-color);
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
-.filter_choises div {
-    margin-bottom: 10px;
-}
 
 .filter_choises label {
     display: block;
     margin-bottom: 3px;
 }
+
+.buttons_navigate_choice {
+    display: flex;
+    margin-top: 18px;
+    gap: 17px;
+}
+
+.container_header {
+    border: 1px solid black;
+} 
 
 .filter-section {
     height: 179px;
@@ -45,28 +74,9 @@
     align-items: center;
 }
 
-#supplierFilter, #leadingFilter, #statusFilter {
-    width: 396px;
-    height: 40px;
-    box-sizing: border-box;
-    border: 1px solid var(rgba(165, 176, 187, 1));
-    border-radius: 40px;
-    background: var(rgba(255, 255, 255, 1));
-}
 
-.clear, .apply {
-    width: 171px;
-    height: 40px;
-    border-radius: 40px;
-}
 
-.clear {
-    background-color: rgba(246, 78, 17, 1);
-}
 
-.apply {
-    background-color:rgba(12, 207, 19, 1) ;
-}
 
 table {
     width: 100%;
@@ -149,3 +159,9 @@ tr:nth-child(even) {
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1;
 }
+
+.mod_width_input {
+    width: 365px;
+    height: 40px;
+}
+

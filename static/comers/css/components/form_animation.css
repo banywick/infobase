@@ -1,0 +1,64 @@
+/* Дополнительные стили для улучшения UX */
+
+/* Стили для формы */
+#inputDataForm input,
+#inputDataForm select,
+#inputDataForm textarea {
+    transition: all 0.3s ease;
+    border: 2px solid #e0e0e0;
+}
+
+#inputDataForm input:focus,
+#inputDataForm select:focus,
+#inputDataForm textarea:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    outline: none;
+}
+
+/* Стили для кнопок формы */
+#inputDataForm button[type="submit"] {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#inputDataForm button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+#inputDataForm button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* Анимация загрузки для кнопки */
+@keyframes buttonLoading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+#inputDataForm button[type="submit"]:disabled {
+    background: linear-gradient(90deg, #4CAF50, #67c06a, #4CAF50);
+    background-size: 200% 100%;
+    animation: buttonLoading 1.5s infinite linear;
+}
+
+/* Стили для попапа */
+.my-popup.active .popup-content {
+    animation: popupOpen 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popupOpen {
+    0% { 
+        opacity: 0; 
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    70% { 
+        transform: translate(-50%, -50%) scale(1.05); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translate(-50%, -50%) scale(1);
+    }
+}

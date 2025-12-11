@@ -33,12 +33,11 @@
 
 
 .filter_project_container {
-    margin-left: 254px;
-    min-height: 72px;
-    background: var(--text-color);
+    margin-left: 291px;
+    min-height: 73px;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
     gap: 10px;
-    padding: 10px;
+    padding: 11px;
+    margin-top: 11px;
+    align-items: center;
 }

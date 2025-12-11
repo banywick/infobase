@@ -87,7 +87,7 @@
 }
 
 .info_title {
-    color: var(--text-color);
+    color: var(--text-color-white);
     font-size: 18px;
     font-weight: 500;
     line-height: 22px;
@@ -95,7 +95,7 @@
 }
 
 .position_title {
-    color: var(--text-color);
+    color: var(--text-color-white);
     font-size: 16px;
     font-weight: 500;
     line-height: 19px;
@@ -156,4 +156,9 @@
     margin-left: 30px;
     margin-bottom: 20px;
     margin-top: 10px;
+}
+
+
+.animate_process svg {
+    align-content: center;
 }

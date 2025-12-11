@@ -60,7 +60,7 @@ th, td {
 }
 
 .table-header {
-    background-color: var(--headr_table);
+    background-color: var(--table-header-bg);
 }
 
 /* #keep_icon {

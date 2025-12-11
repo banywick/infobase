@@ -1,11 +1,5 @@
-/* Копируем ВСЕ ваши старые стили кнопок из style_finder2.css */
-
-.button_wrapper,
-.button_wrapper_clear,
-.button_wrapper_update,
-.button_wrapper_close,
-.button_wrapper_filter_view_all,
-.button_wrapper_filter_submit {
+/* Базовый стиль для всех кнопок */
+.button {
     height: 40px;
     display: flex;
     align-items: center;
@@ -15,63 +9,70 @@
     font-size: 16px;
     cursor: pointer;
     width: 224px;
-}
-
-.button_wrapper {
-    background: var(--sidebar);
-    margin-left: 45px;
-}
-
-.button_wrapper_clear {
-    background: var(--button_clear);
-    margin-right: 40px;
-}
-
-.button_wrapper_update {
-    background: var(--button_update_access);
-    margin-bottom: 5px;
-    gap: 10px;
-}
-
-.button_wrapper_close {
-    background: var(--button_close);
-}
-
-.button_wrapper_filter_view_all {
-    background: #0CCF13;
-}
-
-.button_wrapper_filter_clear {
-    background: #F64E11;
-}
-
-.button_wrapper_filter_submit {
-    background: #1F3A55;
-}
-
-/* Стили кнопок из popups_style.css */
-.upload-button {
-    height: 48px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    border-radius: 24px;
-    background-color: #4f46e5;
-    color: white;
-    font-size: 16px;
-    font-weight: 500;
-    font-family: var(--font-family);
-    cursor: pointer;
-    width: 100%;
-    max-width: 224px;
     border: none;
-    padding: 0 32px;
-    transition: all 0.3s ease;
+    font-family: var(--font-family);
 }
 
-.button_wrapper,
-.button_wrapper_clear {
-    flex-shrink: 0;
-    white-space: nowrap;
+/* Зеленая яркая */
+.button--green {
+    background: var(--color-green);
+    color: var(--text-color-white);
+    gap: 5px;
 }
+
+/* Зеленая туская */
+.button--green-dim {
+    background: var(--color-green);
+    color: var(--text-color-white);
+    opacity: var(--button-disabled-opacity);
+    cursor: not-allowed;
+}
+
+/* Красная яркая */
+.button--red {
+    background: var(--color-orange);
+    color: var( --text-color-white);
+}
+
+/* Красная тусклая */
+.button--red-dim {
+    background: var(--color-orange);
+    color: var( --text-color-white);
+    opacity: var(--button-disabled-opacity);
+    cursor: not-allowed;
+}
+
+
+
+/* Темно синяя яркая */
+.button--dark-blue {
+    background: var(--color-dark-blue);
+    color: var(--text-color-white);
+    
+}
+
+/* Темно синяя тусклая */
+.button--dark-blue-dim {
+    background: var(--color-dark-blue);
+    color: var(--text-color-white);
+    opacity: var(--button-disabled-opacity);
+    cursor: not-allowed;
+}
+
+/* Белая черный шрифт */
+.button--white {
+    background: var(--text-color-white);
+    color: var(--body-text-color);
+    border: 1px solid black;
+}
+
+/* Белая черный шрифт тусклая */
+.button--white-dim {
+    background: var(--text-color-white);
+    color: var(--body-text-color);
+    opacity: var(--button-disabled-opacity);
+    cursor: not-allowed;
+    border: 1px solid black;
+}
+
+

@@ -209,7 +209,6 @@ transition: transform 0.3s ease, opacity 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
 }
 
 
@@ -285,7 +284,7 @@ transition: transform 0.3s ease, opacity 0.3s ease;
     justify-content: center;
     gap: 12px;
     border-radius: 24px;
-    background-color: #4f46e5;
+    background-color: var(--color-green);
     color: white;
     font-size: 16px;
     font-weight: 500;
@@ -368,9 +367,11 @@ transition: transform 0.3s ease, opacity 0.3s ease;
 /* Анимация шестереренок */
 
 .gears-container {
-width: 134px;
-height: 106px;
-margin: 20px;
+    width: fit-content;
+    height: fit-content;
+    padding-left: 111px;
+    padding-right: 109px;
+
 }
 
 /* Анимация большой синей шестерни */

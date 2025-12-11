@@ -1,4 +1,5 @@
-const submit_button = document.querySelector('.button');
+const submit_button = document.querySelector('.upload-button');
+console.log(submit_button)
 submit_button.addEventListener('click', (event) => {
     // Проверяем, был ли клик реальным (не автоматическим)
     if (event.isTrusted) {

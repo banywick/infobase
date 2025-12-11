@@ -64,7 +64,7 @@ class Invoice(models.Model):
     description_problem = models.TextField(blank=True, null=True, verbose_name='Описание проблемы')
     specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, verbose_name='Специалист')
     leading = models.ForeignKey(Leading, on_delete=models.CASCADE, verbose_name='Руководитель')
-    status = models.ForeignKey(Status, on_delete=models.CASCADE, default=5, verbose_name='Статус')
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, default=1, verbose_name='Статус')
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
 
 
