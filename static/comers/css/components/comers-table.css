@@ -4,3 +4,26 @@
     gap: 10px;
     cursor: pointer;
 }
+
+/* Подсветка строки с проектом в таблице */
+tr.highlight-project {
+    animation: pulse-highlight 2s 
+ease-in-out;
+}
+
+tr.highlight-project {
+    border-left: 4px solid #ff00008a;
+    background-color: #fbaca017;
+}
+
+
+/* Стиль для всей шапки таблицы */
+thead {
+    background-color: #852727; /* Светло-серый фон */
+}
+
+/* Или более современный вариант с градиентом */
+thead {
+    background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+    border-bottom: 2px solid #dee2e6;
+}

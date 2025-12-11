@@ -1,0 +1,54 @@
+/* Общие стили для всех статусов */
+.status-cell {
+    font-weight: 600;
+    border-radius: 4px;
+    min-width: 120px;
+}
+
+/* Статус: Обработка (синий/инфо) */
+.status-processing {
+    background-color: #e3f2fd; /* светло-синий */
+    color: #1565c0; /* темно-синий */
+    border: 1px solid #90caf9;
+}
+
+/* Статус: Допоставка (оранжевый/предупреждение) */
+.status-delivery {
+    background-color: #aaf1c6;
+    color: #3e3e3e;
+}
+
+/* Статус: Списание (красный/ошибка) */
+.status-writeoff {
+    background-color: #ffebee; /* светло-красный */
+    color: #c62828; /* темно-красный */
+    border: 1px solid #ef9a9a;
+}
+
+/* Альтернативный дизайн с иконками */
+.status-processing::before {
+    content: "⏳ ";
+    font-size: 14px;
+}
+
+.status-delivery::before {
+    content: "🚚 ";
+    font-size: 14px;
+}
+
+.status-writeoff::before {
+    content: "❌ ";
+    font-size: 14px;
+}
+
+/* Стили для таблицы с полосами */
+tr:nth-child(even) .status-cell {
+    opacity: 0.9;
+}
+
+/* Эффект при наведении */
+.status-cell:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
