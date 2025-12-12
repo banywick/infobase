@@ -171,7 +171,9 @@ const ComersApp = (function() {
             row.innerHTML = `
                 <td hidden class="invoice-project">${item.project || ''}</td>
                 <td class="invoice-number">${item.invoice_number || ''}</td>
-                <td class="date-cell">${item.date ? item.date.split('T')[0] : ''}</td>
+                <td class="date-cell">
+                    ${item.date ? item.date.split('T')[0].split('-').reverse().join('.') : ''}
+                </td>
                 <td class="supplier-cell">${supplierName}</td>
                 <td class="article-cell">${item.article || ''}</td>
                 <td>${item.name || ''}</td>
