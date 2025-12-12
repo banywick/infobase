@@ -81,19 +81,16 @@
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
 }
 th, td {
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 3px;
     text-align: left;
 }
 th {
     background-color: var(--table-header-bg);
 }
-tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
+
 .status {
     padding: 4px 8px;
     border-radius: 4px;

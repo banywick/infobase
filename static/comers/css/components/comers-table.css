@@ -12,8 +12,8 @@ ease-in-out;
 }
 
 tr.highlight-project {
-    border-left: 4px solid #ff00008a;
-    background-color: #fbaca017;
+    border-left: 4px solid #ff8c00d9;
+    background-color: #f3f90961;
 }
 
 
@@ -26,4 +26,17 @@ thead {
 thead {
     background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
     border-bottom: 2px solid #dee2e6;
+    
+}
+
+.table-container {
+    max-height: 79vh; /* или любая другая фиксированная высота */
+    overflow-y: auto; /* вертикальный скролл */
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2; /* чтобы заголовок был поверх тела таблицы */
+  
 }

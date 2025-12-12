@@ -203,7 +203,7 @@ const ComersApp = (function() {
                 </td>
             `;
                // ПРОВЕРКА ПРОЕКТА И ДОБАВЛЕНИЕ КЛАССА - ПОСЛЕ СОЗДАНИЯ СТРОКИ для подсветки строки с проектом!
-            if (item.project === '4 дивиз - БУК-МБ 255 - приход' || item.project === 255) {
+            if (item.project === 'БУК-МБ2-6/ГОЗ' || item.project === 255) {
                 row.classList.add('highlight-project');
             }
             if (statusName === 'Допоставка') {

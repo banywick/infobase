@@ -2,7 +2,7 @@
 .status-cell {
     font-weight: 600;
     border-radius: 4px;
-    min-width: 120px;
+    min-width: 125px;
 }
 
 /* Статус: Обработка (синий/инфо) */

@@ -350,30 +350,31 @@
                 </div>
             </div>
 
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>номер накладной</th>
-                        <th>дата накладной</th>
-                        <th>поставщик</th>
-                        <th>артикул</th>
-                        <th>наименование</th>
-                        <th>единицы</th>
-                        <th>количество</th>
-                        <th>комментарий</th>
-                        <th>описание</th>
-                        <th>специалист</th>
-                        <th>ведущий</th>
-                        <th>статус</th>
-                        <th>примечание</th>
-                        <th>действия</th>
-                    </tr>
-                </thead>
-                <tbody id="invoiceTableBody">
-                    <!-- Data will be loaded here -->
-            </tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>номер накладной</th>
+                            <th>дата накладной</th>
+                            <th>поставщик</th>
+                            <th>артикул</th>
+                            <th>наименование</th>
+                            <th>единицы</th>
+                            <th>количество</th>
+                            <th>комментарий</th>
+                            <th>описание</th>
+                            <th>специалист</th>
+                            <th>ведущий</th>
+                            <th>статус</th>
+                            <th>примечание</th>
+                            <th>действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoiceTableBody">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
             <script>
                 // Глобальные константы для совместимости
                 const ICON_EDIT = "{% static '/comers/icons/icon_edit.png' %}";
