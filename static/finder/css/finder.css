@@ -6,9 +6,10 @@
 @import url('../../shared/css/base/typography.css');
 
 /* Фаза 2: Компоненты */
+@import url('../../shared/css/layout/layout.css');
 @import url('../../shared/css/components/buttons.css');
 @import url('../../shared/css/components/forms.css');
-@import url('../../shared/css/layout/layout.css');
+@import url('../../shared/css/components/popup_base.css');
 
 /* Фаза 3: Специфичные стили finder (позже перенесем сюда) */
 

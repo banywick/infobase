@@ -298,7 +298,7 @@
                 <div class="menu_row_down">
                     <img src="{% static 'finder/icon/login.svg' %}" alt="Иконка входа">
                     <div class="menu_link">
-                        <a href="#">Войти</a>
+                        <div class="open-btn" data-popup="popup_auth">Войти</div>
                     </div>
                 </div>
                 <div class="menu_row_down">
@@ -311,6 +311,35 @@
             </div> 
         </div>
     </div>
+        <!--Окно авторизации -->
+        <div id="popup_auth" class="my-popup">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h2>Авторизация</h2>
+                    <span class="close-btn">&times;</span>
+                    
+                </div>
+                <div class="content-area">
+                    <div class="logo">
+                        <img src="{% static 'finder/icon/logo_white.svg' %}" alt="Логотип">
+                    </div>
+                </div>
+                <form id="loginForm">
+                        <label for="username">Логин</label>
+                        <input class="input_wrapper" type="text" id="username" name="username" placeholder="Введите ваш логин" required>
+                        <div class="error-message" id="usernameError">Пожалуйста, введите логин</div>
+                    
+                        <label for="password">Пароль</label>
+                        <input class="input_wrapper" type="password" id="password" name="password" placeholder="Введите ваш пароль" required>
+                        <div class="error-message" id="passwordError">Пожалуйста, введите пароль</div>
+                    
+                        <button type="button" class="button button--green" id="loginButton" onclick="submitLogin()">
+                        Войти
+                    </button>
+                </form>
+            </div>
+        </div>
+   
     <script>
         // Определяем пути к статическим файлам
         const staticUrls = {
@@ -322,7 +351,9 @@
             closeIcon: "{% static 'finder/icon/clear.svg' %}"
         };
     </script>
+    <script src='{% static 'shared/js/components/popup_manager.js' %}'></script>
     <script src='{% static "finder/js/popups.js"%}'></script> 
+    <script src='{% static "finder/js/auth.js"%}'></script> 
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
     <script src='{% static "finder/js/add_pin_positions.js"%}'></script>
     <script src='{% static "finder/js/details.js"%}'></script> 

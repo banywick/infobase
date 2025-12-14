@@ -10,6 +10,11 @@
     font-size: 18px;
  
 }
+.menu_link div {
+    color: var(--text-color-white);
+    font-size: 18px;
+ 
+}
 
 .menu_row:hover  .menu_link a {
     color: var(--color-orange-alt)
