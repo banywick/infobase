@@ -13,14 +13,12 @@
         <div class="filter-section">
             <div class="navigate_back_page">
                 <div class="arrow_back_page">
-                    <img  src="{% static '/comers/icons/arrow_back.png' %}" alt="<">   
-                        <p>На главную</p>
+                    <img  src="{% static '/comers/icons/arrow_back.png' %}" alt="<">  
+                        <a href="/">На главную</a>
                 </div>
                         <div>   
-                            <div>
-                                <p>База обновлена 22.11.2025</p>
-                            </div>
-                            
+                            <div>Пользователь:</div>
+                            <div>{{user.username}}</div>    
                         </div>     
                 </div>
                 <div class="info_sting_report ">
@@ -195,12 +193,12 @@
             <div id="popup4" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">4☰</span>
-                        <h2>Ваше окно</h2>
+                        <span class="drag-handle">☰</span>
+                        <h2>Скачать отчет</h2>
                         <span class="close-btn">&times;</span>
                     </div>
                     <div class="content-area">
-                        Скачать отчет
+                        Функционал в разработке
                     </div>
                 </div>
             </div>

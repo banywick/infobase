@@ -162,3 +162,8 @@ th {
     height: 40px;
 }
 
+/*Блокировка курсора для неаутентифицированных 
+пользователей  */
+.menu_link.disabled  {
+    cursor: not-allowed;
+}
