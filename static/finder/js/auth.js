@@ -1,166 +1,206 @@
-// Элементы DOM
-const loginForm = document.getElementById('loginForm');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const usernameError = document.getElementById('usernameError');
-const passwordError = document.getElementById('passwordError');
-const serverError = document.getElementById('serverError');
-const successMessage = document.getElementById('successMessage');
-const loginButton = document.getElementById('loginButton');
-
-// Флаг валидности формы
-let isFormValid = false;
-
-// Валидация формы
-function validateForm() {
+document.getElementById('loginButton').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Получаем значения полей
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Сбрасываем предыдущие ошибки
+    document.getElementById('usernameError').textContent = '';
+    document.getElementById('passwordError').textContent = '';
+    
+    // Валидация полей
     let isValid = true;
     
-    // Сброс ошибок
-    usernameError.style.display = 'none';
-    passwordError.style.display = 'none';
-    usernameInput.classList.remove('error');
-    passwordInput.classList.remove('error');
-    
-    // Валидация логина
-    if (!usernameInput.value.trim()) {
-        usernameError.textContent = 'Пожалуйста, введите логин';
-        usernameError.style.display = 'block';
-        usernameInput.classList.add('error');
+    if (!username.trim()) {
+        document.getElementById('usernameError').textContent = 'Введите логин';
         isValid = false;
     }
     
-    // Валидация пароля
-    if (!passwordInput.value.trim()) {
-        passwordError.textContent = 'Пожалуйста, введите пароль';
-        passwordError.style.display = 'block';
-        passwordInput.classList.add('error');
+    if (!password.trim()) {
+        document.getElementById('passwordError').textContent = 'Введите пароль';
         isValid = false;
     }
     
-    isFormValid = isValid;
-    return isValid;
-}
+    if (!isValid) return;
+    
+    // Показываем индикатор загрузки
+    const button = document.getElementById('loginButton');
+    const originalText = button.textContent;
+    button.textContent = 'Загрузка...';
+    button.disabled = true;
+    
+    // Отправляем запрос на сервер
+    fetch('/auth/login/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password
+        })
+    })
+    .then(response => {
+        // Восстанавливаем кнопку
+        button.textContent = originalText;
+        button.disabled = false;
+        
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Ошибка аутентификации');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Успешная аутентификация
+        console.log('Успешный вход:', data);
+        
+        // Можно перенаправить пользователя или обновить интерфейс
+        window.location.href = '/'; // Перенаправление на главную страницу
+    })
+    .catch(error => {
+        // Обработка ошибок
+        console.error('Ошибка:', error);
+        
+        // Показываем общую ошибку аутентификации
+        document.getElementById('passwordError').textContent = error.message;
+        
+        // Можно также сбросить поле пароля для безопасности
+        document.getElementById('password').value = '';
+    });
+});
 
-// Обработчики событий для live-валидации
-usernameInput.addEventListener('blur', validateForm);
-passwordInput.addEventListener('blur', validateForm);
-
-// Обработчик для Enter в форме
-loginForm.addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        submitLogin();
+// Обработка нажатия Enter в полях формы
+document.getElementById('loginForm').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('loginButton').click();
     }
 });
 
-// Функция отправки формы
-async function submitLogin() {
-    // Скрываем предыдущие сообщения
-    serverError.classList.remove('show');
-    successMessage.classList.remove('show');
+
+
+
+// Функция для получения CSRF токена
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// Функция для показа уведомления
+function showNotification(message, type = 'success') {
+    // Создаем элемент уведомления
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background-color: ${type === 'success' ? '#4CAF50' : '#f44336'};
+        color: white;
+        border-radius: 4px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 1000;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        animation: slideIn 0.3s ease-out;
+    `;
     
-    // Валидируем форму
-    if (!validateForm()) {
-        return;
-    }
+    // Добавляем анимацию
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
     
-    // Собираем данные формы
-    const formData = {
-        username: usernameInput.value.trim(),
-        password: passwordInput.value
-    };
+    // Добавляем уведомление на страницу
+    document.body.appendChild(notification);
     
-    // Блокируем кнопку и показываем индикатор загрузки
-    loginButton.disabled = true;
-    loginButton.innerHTML = '<span class="loading"></span>Выполняется вход...';
+    // Автоматически скрываем через 3 секунды
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out forwards';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+            if (style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        }, 300);
+    }, 3000);
     
-    try {
-        // Отправляем POST запрос на сервер
-        const response = await fetch('/auth/login/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken') // Для Django CSRF защиты
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const data = await response.json();
-        
-        // Сбрасываем состояние кнопки
-        loginButton.disabled = false;
-        loginButton.textContent = 'Войти';
-        
+    return notification;
+}
+
+function logoutUser() {
+    // Показываем индикатор загрузки на кнопке
+    const logoutButton = document.getElementById('logoutButton');
+    const originalText = logoutButton.textContent;
+    logoutButton.textContent = 'Выход...';
+    logoutButton.disabled = true;
+    
+    fetch('/auth/logout/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        credentials: 'same-origin' // Важно для отправки сессионных куки
+    })
+    .then(response => {
         if (response.ok) {
-            // Успешная авторизация
-            successMessage.classList.add('show');
+            // Показываем уведомление об успешном выходе
+            showNotification('Вы вышли из учетной записи');
             
-            // Сохраняем данные пользователя (например, токен или информацию о пользователе)
-            if (data) {
-                localStorage.setItem('userData', JSON.stringify(data));
-            }
-            
-            // Перенаправление через 2 секунды
+            // Ждем пока уведомление покажется и через секунду перенаправляем
             setTimeout(() => {
-                window.location.href = '/'; // Замените на нужный URL
-            }, 2000);
-            
+                window.location.href = '/';
+            }, 1000);
         } else {
-            // Ошибка авторизации
-            const errorMessage = data.error || 'Неверный логин или пароль';
-            serverError.textContent = errorMessage;
-            serverError.classList.add('show');
-            
-            // Анимация ошибки
-            serverError.style.animation = 'none';
-            setTimeout(() => {
-                serverError.style.animation = 'fadeIn 0.3s ease';
-            }, 10);
+            throw new Error('Ошибка при выходе из системы');
         }
+    })
+    .catch(error => {
+        console.error('Ошибка выхода:', error);
         
-    } catch (error) {
-        // Сетевая ошибка
-        console.error('Ошибка сети:', error);
-        serverError.textContent = 'Ошибка соединения с сервером. Проверьте подключение к интернету.';
-        serverError.classList.add('show');
+        // Восстанавливаем кнопку
+        logoutButton.textContent = originalText;
+        logoutButton.disabled = false;
         
-        // Сбрасываем состояние кнопки
-        loginButton.disabled = false;
-        loginButton.textContent = 'Войти';
-    }
+        // Показываем уведомление об ошибке
+        showNotification('Не удалось выйти. Попробуйте еще раз.', 'error');
+    });
 }
 
-// Функция для получения CSRF токена (для Django)
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-// Инициализация формы
+// Добавляем слушатель кнопки по клику
 document.addEventListener('DOMContentLoaded', function() {
-    // Проверяем, есть ли сохраненный логин
-    const savedUserData = localStorage.getItem('userData');
-    if (savedUserData) {
-        try {
-            const userData = JSON.parse(savedUserData);
-            if (userData.username) {
-                usernameInput.value = userData.username;
-            }
-        } catch (e) {
-            console.error('Ошибка при чтении сохраненных данных:', e);
-        }
-    }
+    const logoutButton = document.getElementById('logoutButton');
     
-    // Фокус на поле логина при загрузке
-    usernameInput.focus();
+    if (logoutButton) {
+        logoutButton.addEventListener('click', logoutUser);
+    }
 });

@@ -414,3 +414,28 @@ animation-duration: 4s;
 animation-duration: 2.5s;
 }
 
+#loginForm div {
+    display: flex;
+    flex-direction: column; /* элементы располагаются в колонку */
+    align-items: center;     /* центрирование по вертикали */
+    gap: 10px;               /* отступ между элементами */
+    padding: 20px;  
+    align-items: flex-start;
+}
+
+/*Стили аутентификации */
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 5px;
+    min-height: 20px;
+}
+
+.input_wrapper {
+    margin-bottom: 10px;
+}

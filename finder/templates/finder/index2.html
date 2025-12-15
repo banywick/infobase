@@ -47,6 +47,14 @@
             <div class="info_window">
             </div>
             <div class="info_update">
+                <div>Пользователь:</div>
+                {% if user.is_authenticated %}
+                <div>{{user.username}}</div>
+                {% else %}
+                <div>Гость</div>
+                {% endif %}
+
+                <br>
                 <div>База обновлена</div>
                 <div>{{file_name}}</div>
             </div>
@@ -297,9 +305,15 @@
                 </div>
                 <div class="menu_row_down">
                     <img src="{% static 'finder/icon/login.svg' %}" alt="Иконка входа">
+                    {% if user.is_authenticated %}
+                        <div id="logoutButton" class="menu_link">Выйти</div>
+                    {% else %}
                     <div class="menu_link">
                         <div class="open-btn" data-popup="popup_auth">Войти</div>
                     </div>
+
+                    {% endif %}
+
                 </div>
                 <div class="menu_row_down">
                     <img src="{% static 'finder/icon/revievs.svg' %}" alt="Иконка отзывов">
@@ -323,23 +337,22 @@
                     <div class="logo">
                         <img src="{% static 'finder/icon/logo_white.svg' %}" alt="Логотип">
                     </div>
+                    <form id="loginForm" method="post">
+                        {% csrf_token %}
+                                <label for="username">Логин</label>
+                                <input class="input_wrapper" type="text" id="username" name="username" placeholder="Введите ваш логин" required>
+                                <div class="error-message" id="usernameError"></div>
+                            
+                                <label for="password">Пароль</label>
+                                <input class="input_wrapper" type="password" id="password" name="password" placeholder="Введите ваш пароль" required>
+                                <div class="error-message" id="passwordError"></div>
+                            <button style="margin-left: 70px;" type="button" class="button button--green" id="loginButton">
+                                Войти
+                            </button>
+                    </form>
                 </div>
-                <form id="loginForm">
-                        <label for="username">Логин</label>
-                        <input class="input_wrapper" type="text" id="username" name="username" placeholder="Введите ваш логин" required>
-                        <div class="error-message" id="usernameError">Пожалуйста, введите логин</div>
-                    
-                        <label for="password">Пароль</label>
-                        <input class="input_wrapper" type="password" id="password" name="password" placeholder="Введите ваш пароль" required>
-                        <div class="error-message" id="passwordError">Пожалуйста, введите пароль</div>
-                    
-                        <button type="button" class="button button--green" id="loginButton" onclick="submitLogin()">
-                        Войти
-                    </button>
-                </form>
             </div>
         </div>
-   
     <script>
         // Определяем пути к статическим файлам
         const staticUrls = {
