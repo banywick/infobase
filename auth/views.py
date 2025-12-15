@@ -1,10 +1,10 @@
-from django.shortcuts import render
 from rest_framework import generics, permissions
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from .serializers import RegisterSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 
 class LoginView(generics.GenericAPIView):
     """Авторизация"""
@@ -30,9 +30,6 @@ class RegisterView(generics.CreateAPIView):
         
 
 class LogoutView(APIView):
-    """Выход из системы"""
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         logout(request)
-        return Response({"detail": "Successfully logged out."})
+        return Response({"message": "Успешный выход"}, status=status.HTTP_200_OK)

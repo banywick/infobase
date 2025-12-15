@@ -7,10 +7,11 @@ from .models import Invoice
 from rest_framework.response import Response
 from .forms import *
 from .utils.filter_session import ComersSessionManager
+from common.utils.access_mixin import UserGroupRequiredMixin
 
 
 
-class ComersView(TemplateView):
+class ComersView(UserGroupRequiredMixin,TemplateView):
     """
     Представление для отображения страницы Недопоставок.
 
@@ -21,6 +22,7 @@ class ComersView(TemplateView):
         template_name (str): Путь к HTML-шаблону, который будет использоваться для отображения страницы.
     """
     template_name = 'comers/index.html'
+    group_required = ['sklad', 'comers']
 
     def get_context_data(self, **kwargs):
         """ Добавляет формы в контекст шаблона."""

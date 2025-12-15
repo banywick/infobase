@@ -47,6 +47,14 @@
             <div class="info_window">
             </div>
             <div class="info_update">
+                <div>Пользователь:</div>
+                {% if user.is_authenticated %}
+                <div>{{user.username}}</div>
+                {% else %}
+                <div>Гость</div>
+                {% endif %}
+
+                <br>
                 <div>База обновлена</div>
                 <div>{{file_name}}</div>
             </div>
@@ -256,50 +264,62 @@
                     </div>
                     <div class="hide_info" id="hide_info">Скрыть информацию</div>
                 </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/notes.svg' %}" alt="Иконка заметок">
-                    <div class="menu_link">
-                        <a href="#">Заметки</a>
+                <div class="menu-container {% if not request.user.is_authenticated %}menu-disabled{% endif %}">
+                    <div class="menu_row">
+                        <img src="{% static 'finder/icon/comers.svg' %}" alt="Иконка недопоставок">
+                        <div class="menu_link">
+                            <a href="/comers">Недопоставки</a>
+                        </div>
                     </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/sahr.svg' %}" alt="Иконка С.А.ХР">
-                    <div class="menu_link">
-                        <a href="#">С.А.ХР</a>
+                    <div class="menu_row">
+                        <img src="{% static 'finder/icon/notes.svg' %}" alt="Иконка заметок">
+                        <div class="menu_link">
+                            <a href="#">Заметки</a>
+                        </div>
                     </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/archive.svg' %}" alt="Иконка архива">
-                    <div class="menu_link">
-                        <a href="#">Архив</a>
+                    <div class="menu_row" >
+                        <img src="{% static 'finder/icon/sahr.svg' %}" alt="Иконка С.А.ХР">
+                        <div class="menu_link" >
+                            <a href="#">С.А.ХР</a>
+                        </div>
                     </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/comers.svg' %}" alt="Иконка недопоставок">
-                    <div class="menu_link">
-                        <a href="#">Недопоставки</a>
+                    <div class="menu_row">
+                        <img src="{% static 'finder/icon/archive.svg' %}" alt="Иконка архива">
+                        <div class="menu_link">
+                            <a href="#">Архив</a>
+                        </div>
                     </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/inventory.svg' %}" alt="Иконка инвентаризации">
-                    <div class="menu_link">
-                        <a href="#">Инвентаризация</a>
+                    <div class="menu_row">
+                        <img src="{% static 'finder/icon/inventory.svg' %}" alt="Иконка инвентаризации">
+                        <div class="menu_link">
+                            <a href="#">Инвентаризация</a>
+                        </div>
                     </div>
-                </div>
-
-
+</div> 
 
             </div> 
             <div class="down_menu">
-                <div class="button button--green button_wrapper_update ">
-                    <img src="{% static 'finder/icon/update_base.svg' %}" alt="Иконка обновления базы">
-                    <div>Обновить базу</div>
-                </div>
+                {% if user.is_authenticated %}
+                {% with user_groups=user.groups.all|join:", " %}
+                {% if "sklad" in user_groups %}
+                    <div class="button button--green button_wrapper_update">
+                        <img src="{% static 'finder/icon/update_base.svg' %}" alt="Иконка обновления базы">
+                        <div>Обновить базу</div>
+                    </div>
+                {% endif %}
+                {% endwith %}
+            {% endif %}
                 <div class="menu_row_down">
                     <img src="{% static 'finder/icon/login.svg' %}" alt="Иконка входа">
+                    {% if user.is_authenticated %}
+                        <div id="logoutButton" class="menu_link">Выйти</div>
+                    {% else %}
                     <div class="menu_link">
-                        <a href="#">Войти</a>
+                        <div class="open-btn" data-popup="popup_auth">Войти</div>
                     </div>
+
+                    {% endif %}
+
                 </div>
                 <div class="menu_row_down">
                     <img src="{% static 'finder/icon/revievs.svg' %}" alt="Иконка отзывов">
@@ -311,6 +331,34 @@
             </div> 
         </div>
     </div>
+        <!--Окно авторизации -->
+        <div id="popup_auth" class="my-popup">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h2>Авторизация</h2>
+                    <span class="close-btn">&times;</span>
+                    
+                </div>
+                <div class="content-area">
+                    <div class="logo">
+                        <img src="{% static 'finder/icon/logo_white.svg' %}" alt="Логотип">
+                    </div>
+                    <form id="loginForm" method="post">
+                        {% csrf_token %}
+                                <label for="username">Логин</label>
+                                <input class="input_wrapper" type="text" id="username" name="username" placeholder="Введите ваш логин" required>
+                                <div class="error-message" id="usernameError"></div>
+                            
+                                <label for="password">Пароль</label>
+                                <input class="input_wrapper" type="password" id="password" name="password" placeholder="Введите ваш пароль" required>
+                                <div class="error-message" id="passwordError"></div>
+                            <button style="margin-left: 70px;" type="button" class="button button--green" id="loginButton">
+                                Войти
+                            </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     <script>
         // Определяем пути к статическим файлам
         const staticUrls = {
@@ -322,7 +370,9 @@
             closeIcon: "{% static 'finder/icon/clear.svg' %}"
         };
     </script>
+    <script src='{% static 'shared/js/components/popup_manager.js' %}'></script>
     <script src='{% static "finder/js/popups.js"%}'></script> 
+    <script src='{% static "finder/js/auth.js"%}'></script> 
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
     <script src='{% static "finder/js/add_pin_positions.js"%}'></script>
     <script src='{% static "finder/js/details.js"%}'></script> 

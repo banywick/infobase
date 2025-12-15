@@ -109,3 +109,13 @@ sudo -u postgres psql -d sklad_db < all_databases.sql
 bash
 Copy
 python manage.py migrate
+
+
+Пример извлечения данных:
+
+# Сделать дампы с прода с приложения comersant. Только данные без схемы
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_invoice --data-only --column-inserts > table_backup_invoice.sql
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_leading --data-only --column-inserts > table_backup_leading.sql
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_specialist --data-only --column-inserts > table_backup_specialist.sql
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_status --data-only --column-inserts > table_backup_status.sql
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_supler --data-only --column-inserts > table_backup_supler.sql

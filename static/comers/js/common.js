@@ -154,10 +154,26 @@ const ComersApp = (function() {
             const specialistName = item.specialist ? (item.specialist.name || item.specialist) : '';
             const statusName = item.status ? (item.status.name || item.status) : '';
             const supplierName = item.supplier ? (item.supplier.name || item.supplier) : '';
-            
+
+            // Определяем класс статуса
+            let statusClass = '';
+            if (statusName) {
+                const statusLower = statusName.toLowerCase().trim();
+                if (statusLower.includes('обработк')) {
+                    statusClass = 'status-processing';
+                } else if (statusLower.includes('допоставк')) {
+                    statusClass = 'status-delivery';
+                } else if (statusLower.includes('списан')) {
+                    statusClass = 'status-writeoff';
+                }
+            }
+                    
             row.innerHTML = `
+                <td hidden class="invoice-project">${item.project || ''}</td>
                 <td class="invoice-number">${item.invoice_number || ''}</td>
-                <td class="date-cell">${item.date ? item.date.split('T')[0] : ''}</td>
+                <td class="date-cell">
+                    ${item.date ? item.date.split('T')[0].split('-').reverse().join('.') : ''}
+                </td>
                 <td class="supplier-cell">${supplierName}</td>
                 <td class="article-cell">${item.article || ''}</td>
                 <td>${item.name || ''}</td>
@@ -167,7 +183,7 @@ const ComersApp = (function() {
                 <td>${item.description_problem || ''}</td>
                 <td>${specialistName}</td>
                 <td>${leadingName}</td>
-                <td class="status-cell">${statusName}</td>
+                <td class="status-cell ${statusClass}">${statusName}</td>
                 <td class="description-cell">${item.description || ''}</td>
                 <td>
                     <div class="action_cell_table">
@@ -186,6 +202,13 @@ const ComersApp = (function() {
                     </div>
                 </td>
             `;
+               // ПРОВЕРКА ПРОЕКТА И ДОБАВЛЕНИЕ КЛАССА - ПОСЛЕ СОЗДАНИЯ СТРОКИ для подсветки строки с проектом!
+            if (item.project === 'БУК-МБ2-6/ГОЗ' || item.project === 255) {
+                row.classList.add('highlight-project');
+            }
+            if (statusName === 'Допоставка') {
+                row.classList.add('highlight-status_supply');
+            }
             
             return row;
         },

@@ -21,7 +21,7 @@ class NotesView(UserGroupRequiredMixin,TemplateView):
         template_name (str): Путь к HTML-шаблону, который будет использоваться для отображения страницы.
     """
     template_name = 'notes/index.html'
-    group_required = ['update_base','sklad','commers','btk', 'other']
+    group_required = ['sklad']
 
 class AddNoteView(BaseNotePositionView, generics.CreateAPIView):
     """
