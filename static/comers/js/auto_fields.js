@@ -30,8 +30,8 @@ check_article.addEventListener('input', async function () {
             if (data.project) {
                 views_project.value = data.project;
             }
-            if (data.unit) {
-                views_unit.value = data.unit;
+            if (data.base_unit) {
+                views_unit.value = data.base_unit;
             }
             if (data.error) {
                 views_title.innerHTML = data.error;
