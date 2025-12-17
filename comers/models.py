@@ -31,7 +31,7 @@ class Supler(models.Model):
         verbose_name_plural = 'Поставщики'
 
 class Status(models.Model):
-    name = models.CharField(max_length=100, default='Запрос', verbose_name='Статус')
+    name = models.CharField(max_length=100, verbose_name='Статус')
 
     def __str__(self):
         return self.name
