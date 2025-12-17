@@ -6,8 +6,6 @@ const views_project = document.getElementById('hidden_project');
 const views_quantity = document.getElementById('hidden_quantity');
 const views_party = document.getElementById('hidden_party');
 
-// Простое тестовое значение
-views_title.value = "111";
 
 check_party.addEventListener('input', async function () {
     const enteredParty = check_party.value.trim(); 

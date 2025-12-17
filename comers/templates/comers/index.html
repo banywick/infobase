@@ -119,14 +119,64 @@
                                         </div>
                                     </div>
                     
-                                    <!-- Поставщик -->
-                                    <div class="form-group">
-                                        <div class="form-group">
-                                            {{ input_data_form.supplier.label }}  <!-- Автоматический лейбл -->
-                                            {{ input_data_form.supplier }}  <!-- Django сам подставит класс и required -->
+                                <!-- Поставщик -->
+                                <div class="form-group">
+                                    <div class="form-group" style="position: relative;">
+                                        <label for="supplier-search-datalist" class="form-label">
+                                            {{ input_data_form.supplier.label }}
+                                            <span id="selected-supplier-id" class="supplier-id-badge" style="display: none;"></span>
+                                        </label>
+                                        
+                                        <!-- Поле ввода с автодополнением -->
+                                        <div class="input-with-icons">
+                                            <input type="text" 
+                                                id="supplier-search-datalist" 
+                                                list="supplier-options"
+                                                placeholder="Начните вводить название поставщика..."
+                                                autocomplete="off"
+                                                class="supplier-input">
+                                            <div class="input-icons">
+                                                <span id="clear-search" class="clear-icon" title="Очистить поиск">✕</span>
+                                                <span id="toggle-list" class="toggle-icon" title="Показать всех поставщиков">▼</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Скрытое поле для отправки ID -->
+                                        <input type="hidden" 
+                                            id="id_supplier_hidden" 
+                                            name="supplier" 
+                                            value="{{ input_data_form.supplier.value|default:'' }}">
+                                        
+                                        <!-- Datalist с вариантами -->
+                                        <datalist id="supplier-options">
+                                            {% for option in input_data_form.supplier.field.queryset %}
+                                                <option value="{{ option.name }}" data-id="{{ option.id }}">
+                                                    {{ option.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </datalist>
+                                        
+                                        <!-- Кастомный выпадающий список (альтернатива datalist) -->
+                                        <div id="custom-dropdown" class="custom-dropdown" style="display: none;">
+                                            <div class="dropdown-header">
+                                                <input type="text" 
+                                                    id="dropdown-search" 
+                                                    placeholder="Фильтр в списке..."
+                                                    class="dropdown-search-input">
+                                                <span class="dropdown-count">Всего: {{ input_data_form.supplier.field.queryset.count }}</span>
+                                            </div>
+                                            <div id="dropdown-options" class="dropdown-options">
+                                                <!-- Опции будут заполняться через JS -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Иконка валидации -->
+                                        <div id="supplier-validation" class="validation-icon" style="display: none;">
+                                            ✓
                                         </div>
                                     </div>
-                    
+                                </div>
+                                                        
                                     <!-- Артикул -->
                                     <div class="form-row">
                                         <div class="form-group">
@@ -388,6 +438,7 @@
             
             <!-- Сначала общий скрипт, затем остальные -->
             <script src='{% static 'comers/js/common.js' %}'></script>
+            <script src='{% static 'comers/js/select_find_supler.js' %}'></script>
             <script src='{% static 'comers/js/info_row.js' %}'></script>
             <script src='{% static 'shared/js/components/popup_manager.js' %}'></script>
             <script src='{% static 'comers/js/get_all_data_load_page.js' %}'></script>
