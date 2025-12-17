@@ -52,7 +52,7 @@
             <div id="popup1" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">1☰</span>
+                        <span class="drag-handle">☰</span>
                         <h2>Внести данные</h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -75,7 +75,7 @@
             <div id="popup2" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">2☰</span>
+                        <span class="drag-handle">☰</span>
                         <h2>Добавить поставщика</h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -92,7 +92,7 @@
             <div id="popup3" class="my-popup">
                 <div class="add_data_mode popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">3☰</span>
+                        <span class="drag-handle">☰</span>
                         <h2>Форма внесения данных</h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -122,10 +122,10 @@
                                 <!-- Поставщик -->
                                 <div class="form-group">
                                     <div class="form-group" style="position: relative;">
-                                        <label for="supplier-search-datalist" class="form-label">
+                                        {% comment %} <label for="supplier-search-datalist" class="form-label">
                                             {{ input_data_form.supplier.label }}
                                             <span id="selected-supplier-id" class="supplier-id-badge" style="display: none;"></span>
-                                        </label>
+                                        </label> {% endcomment %}
                                         
                                         <!-- Поле ввода с автодополнением -->
                                         <div class="input-with-icons">
@@ -156,24 +156,9 @@
                                             {% endfor %}
                                         </datalist>
                                         
-                                        <!-- Кастомный выпадающий список (альтернатива datalist) -->
-                                        <div id="custom-dropdown" class="custom-dropdown" style="display: none;">
-                                            <div class="dropdown-header">
-                                                <input type="text" 
-                                                    id="dropdown-search" 
-                                                    placeholder="Фильтр в списке..."
-                                                    class="dropdown-search-input">
-                                                <span class="dropdown-count">Всего: {{ input_data_form.supplier.field.queryset.count }}</span>
-                                            </div>
-                                            <div id="dropdown-options" class="dropdown-options">
-                                                <!-- Опции будут заполняться через JS -->
-                                            </div>
-                                        </div>
+                                
                                         
-                                        <!-- Иконка валидации -->
-                                        <div id="supplier-validation" class="validation-icon" style="display: none;">
-                                            ✓
-                                        </div>
+                                    
                                     </div>
                                 </div>
                                                         
@@ -225,13 +210,10 @@
                                     </div>
                                 </div>
                             </div>
-                    
-                    
                             <input type="hidden" id="hidden_unit" name="{{ input_data_form.unit.html_name }}">
                             <input type="hidden" id="hidden_article" name="{{ input_data_form.article.html_name }}">
                             <input type="hidden" id="hidden_party" name="{{ input_data_form.party.html_name }}">
                             <input type="hidden" id="hidden_project" name="{{ input_data_form.project.html_name }}">
-                     
                             <!-- Кнопки -->
                             <div class="form-buttons">
                                 <button type="submit" class="send_data_form_button button button--green">Внести данные</button>
@@ -257,7 +239,7 @@
             <div id="popup5" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">5☰</span>
+                        <span class="drag-handle">☰</span>
                         <h2>Редактировать позицию </h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -357,7 +339,7 @@
             <div id="popup6" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">6☰</span>
+                        <span class="drag-handle">☰</span>
                         <h2>Установить статус </h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -384,7 +366,7 @@
             <div id="popup7" class="my-popup">
                 <div class="popup-content">
                     <div class="popup-header">
-                        <span class="drag-handle">7☰</span>
+                        <span class="drag-handle">☰</span>
                         <h2>Удаление позиции </h2>
                         <span class="close-btn">&times;</span>
                     </div>
@@ -438,7 +420,7 @@
             
             <!-- Сначала общий скрипт, затем остальные -->
             <script src='{% static 'comers/js/common.js' %}'></script>
-            <script src='{% static 'comers/js/select_find_supler.js' %}'></script>
+            <script src='{% static 'comers/js/supplier_selection.js' %}'></script>
             <script src='{% static 'comers/js/info_row.js' %}'></script>
             <script src='{% static 'shared/js/components/popup_manager.js' %}'></script>
             <script src='{% static 'comers/js/get_all_data_load_page.js' %}'></script>
