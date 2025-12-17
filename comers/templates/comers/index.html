@@ -130,8 +130,8 @@
                                     <!-- Артикул -->
                                     <div class="form-row">
                                         <div class="form-group">
-                                            {{ input_data_form.article_mirror.label }}  <!-- Автоматический лейбл -->
-                                            {{ input_data_form.article_mirror }}  <!-- Django сам подставит класс и required -->
+                                            {{ input_data_form.party_mirror.label }}  <!-- Автоматический лейбл -->
+                                            {{ input_data_form.party_mirror }}  <!-- Django сам подставит класс и required -->
                                         </div>
 
                                         <!-- Количество -->
@@ -179,6 +179,7 @@
                     
                             <input type="hidden" id="hidden_unit" name="{{ input_data_form.unit.html_name }}">
                             <input type="hidden" id="hidden_article" name="{{ input_data_form.article.html_name }}">
+                            <input type="hidden" id="hidden_party" name="{{ input_data_form.party.html_name }}">
                             <input type="hidden" id="hidden_project" name="{{ input_data_form.project.html_name }}">
                      
                             <!-- Кнопки -->
@@ -244,8 +245,8 @@
                                     <!-- Артикул -->
                                     <div class="form-row">
                                         <div class="form-group">
-                                            {{ invoice_edit_form.article_mirror.label }}  <!-- Автоматический лейбл -->
-                                            {{ invoice_edit_form.article_mirror }}  <!-- Django сам подставит класс и required -->
+                                            {{ invoice_edit_form.party_mirror.label }}  <!-- Автоматический лейбл -->
+                                            {{ invoice_edit_form.party_mirror }}  <!-- Django сам подставит класс и required -->
                                         </div>
 
                                         <!-- Количество -->
@@ -352,10 +353,12 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>⚙️</th>
                             <th>номер накладной</th>
                             <th>дата накладной</th>
                             <th>поставщик</th>
                             <th>артикул</th>
+                            <th>патрия</th>
                             <th>наименование</th>
                             <th>единицы</th>
                             <th>количество</th>
@@ -373,6 +376,9 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Окно детализации строки -->
+            <div id="projectTooltip" class="project-tooltip"></div>
+
             <script>
                 // Глобальные константы для совместимости
                 const ICON_EDIT = "{% static '/comers/icons/icon_edit.png' %}";
@@ -382,6 +388,7 @@
             
             <!-- Сначала общий скрипт, затем остальные -->
             <script src='{% static 'comers/js/common.js' %}'></script>
+            <script src='{% static 'comers/js/info_row.js' %}'></script>
             <script src='{% static 'shared/js/components/popup_manager.js' %}'></script>
             <script src='{% static 'comers/js/get_all_data_load_page.js' %}'></script>
             <script src='{% static 'comers/js/filters.js' %}'></script>

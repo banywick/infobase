@@ -2,6 +2,8 @@ from django.views.generic import TemplateView
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from django.db.models import Q
+
+from finder.models import Remains
 from .serializers import *
 from .models import Invoice
 from rest_framework.response import Response
@@ -54,26 +56,14 @@ class BaseComersPositionView(generics.GenericAPIView):
 
     def get_queryset(self):
         """
-        Возвращает queryset объектов Invoice, отфильтрованный по параметрам из сессии.
+        Возвращает queryset объектов Invoice
 
         Returns:
-            QuerySet: Отфильтрованный queryset объектов Invoice.
+            QuerySet: Invoice.
         """
-        # Получаем значения из сессии
-        leading_id, supplier_id, status_id = ComersSessionManager.get_filter_ids_to_session(self.request)
-
-        # Создаем Q-объекты для фильтрации только если значения не пустые
-        filters = Q()
-
-        if leading_id:
-            filters &= Q(leading_id=leading_id)
-        if supplier_id:
-            filters &= Q(supplier_id=supplier_id)
-        if status_id:
-            filters &= Q(status_id=status_id)
 
         # Применяем фильтры к queryset
-        return Invoice.objects.filter(filters)
+        return Invoice.objects.all()
 
 
 class GetAllPositions(BaseComersPositionView, generics.ListAPIView):
@@ -207,3 +197,55 @@ class RetrieveUpdateInvoiceData(generics.RetrieveUpdateAPIView):
             status=status.HTTP_400_BAD_REQUEST
         )  
 
+class GetInfoParty(APIView):
+    def get(self, request, party):
+        """
+        Получает информацию о конкретной партии по ее уникальному номеру.
+
+        Функция ищет партию в базе данных модели `Remains`. Если партия найдена, возвращает словарь
+        с информацией о товаре, включая название, идентификатор, номер партии, количество,
+        базовую единицу измерения, артикул и проект.
+
+        Параметры:
+        ----------
+        party_number : str
+            Уникальный номер партии, которую необходимо найти в базе данных.
+
+        Возвращает:
+        ----------
+        dict or None
+            Словарь с информацией о партии товара, если партия найдена. Содержит следующие ключи:
+            - "title" (str): Название товара.
+            - "id" (int): Идентификатор записи.
+            - "party" (str): Номер партии.
+            - "quantity" (str): Количество товара в конкретной партии в формате строки с двумя знаками после запятой.
+            - "base_unit" (str): Базовая единица измерения товара.
+            - "article" (str): Артикул товара.
+            - "project" (str): Проект, к которому относится товар.
+            Если партия не найдена, возвращает `None`.
+        """
+    # Ищем запись по уникальному номеру партии
+        party_record = Remains.objects.filter(party__icontains=party).first()
+        
+        if not party_record:
+            return Response(
+                {"error": f"Партия '{party}' не найдена"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        #Форматируем количество
+        quantity = float(party_record.quantity) if party_record.quantity else 0.0
+        formatted_quantity = f'{quantity:.2f}'
+        
+        # Формируем ответ
+        response_data = {
+            "title": party_record.title,
+            "id": party_record.id,
+            "party": party_record.party,  # Используем переданное значение
+            "quantity": formatted_quantity,
+            "base_unit": party_record.base_unit,
+            "article": party_record.article,
+            "project": party_record.project
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)

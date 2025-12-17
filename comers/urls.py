@@ -8,6 +8,8 @@ urlpatterns = [
     path('add_supplier/', AddSupplier.as_view(), name='add_supplier_name'),
     path('add_invoice_data/', AddInvoiceData.as_view(), name='add_invoice'),
     path('edit_invoices/<int:pk>/', RetrieveUpdateInvoiceData.as_view(), name='invoice_detail_edit'),
+    path('get_party_info/<str:party>/', GetInfoParty.as_view(), name='check_party'),
+
     
 ]   
 
