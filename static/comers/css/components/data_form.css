@@ -60,3 +60,204 @@
     display: flex;
     gap: 20px;
 }
+
+
+
+
+/* Стили для поиска выбора поставщика */
+.form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.supplier-id-badge {
+    background: #007bff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.input-with-icons {
+    position: relative;
+    width: 100%;
+}
+
+.supplier-input {
+    width: 100%;
+    padding: 10px 40px 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.supplier-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.supplier-input.has-value {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+.input-icons {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 5px;
+}
+
+.clear-icon, .toggle-icon {
+    cursor: pointer;
+    padding: 4px;
+    color: #999;
+    font-size: 16px;
+    transition: color 0.2s;
+    background: white;
+    border-radius: 4px;
+}
+
+.clear-icon:hover {
+    color: #ff4444;
+    background: #fff5f5;
+}
+
+.toggle-icon:hover {
+    color: #007bff;
+    background: #f0f7ff;
+}
+
+.custom-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.dropdown-header {
+    padding: 10px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.dropdown-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.dropdown-count {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+}
+
+.dropdown-options {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dropdown-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+    font-size: 14px;
+}
+
+.dropdown-option:hover {
+    background: #f0f7ff;
+}
+
+.dropdown-option.selected {
+    background: #007bff;
+    color: white;
+}
+
+.dropdown-option .supplier-id {
+    float: right;
+    font-size: 12px;
+    color: #888;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+}
+
+.dropdown-option:hover .supplier-id {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.dropdown-option.selected .supplier-id {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.validation-icon {
+    position: absolute;
+    right: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #28a745;
+    font-size: 18px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.validation-icon.show {
+    opacity: 1;
+}
+
+/* Анимация */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.custom-dropdown {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Стили для истории поиска */
+.recent-searches {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+.recent-tag {
+    display: inline-block;
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.recent-tag:hover {
+    background: #dee2e6;
+}

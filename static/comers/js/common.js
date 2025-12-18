@@ -171,12 +171,14 @@ const ComersApp = (function() {
             row.innerHTML = `
                 <td hidden class="invoice-project">${item.project || ''}</td>
                 <td hidden class="invoice-unit">${item.unit || ''}</td>
+                <td class="info_project">${'⚙️'}</td>
                 <td class="invoice-number">${item.invoice_number || ''}</td>
                 <td class="date-cell">
                     ${item.date ? item.date.split('T')[0].split('-').reverse().join('.') : ''}
                 </td>
                 <td class="supplier-cell">${supplierName}</td>
                 <td class="article-cell">${item.article || ''}</td>
+                <td class="party-cell">${item.party || ''}</td>
                 <td>${item.name || ''}</td>
                 <td>${item.unit || ''}</td>
                 <td class="quantity-cell">${item.quantity || ''}</td>
@@ -203,9 +205,14 @@ const ComersApp = (function() {
                     </div>
                 </td>
             `;
+
+            // Проверка: если project = 5 и party не пусто
+            const projectValue = String(item.project).trim();
+            const partyValue = String(item.party || '').trim();
+
                // ПРОВЕРКА ПРОЕКТА И ДОБАВЛЕНИЕ КЛАССА - ПОСЛЕ СОЗДАНИЯ СТРОКИ для подсветки строки с проектом!
-            if (item.project === 'БУК-МБ2-6/ГОЗ' || item.project === 255) {
-                row.classList.add('highlight-project');
+            if ((projectValue === 'БУК-МБ2-6/ГОЗ') && partyValue !== '') {
+                row.classList.add('highlight-project'); // или другой класс на ваш выбор
             }
             if (statusName === 'Допоставка') {
                 row.classList.add('highlight-status_supply');

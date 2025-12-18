@@ -27,12 +27,12 @@ class InputDataForm(forms.Form):
         label='Выбор поставщика*'
     )
 
-    article_mirror = forms.CharField(
+    party_mirror = forms.CharField(
         widget=forms.TextInput(attrs={
-        'class':'check_article button_mod_width button button--white',
+        'class':'check_party button_mod_width button button--white',
         'placeholder': 'Артикул'
         }),
-        label='Артикул*'
+        label='Партия*'
     )
     name = forms.CharField(
         widget=forms.TextInput(attrs={
@@ -90,6 +90,9 @@ class InputDataForm(forms.Form):
     )
     project = forms.CharField(
         widget=forms.HiddenInput(attrs={'id': 'hidden_project'})  # Скрытое поле с id
+    )
+    party = forms.CharField(
+        widget=forms.HiddenInput(attrs={'id': 'hidden_party'})  # Скрытое поле с id
     )
 
 
@@ -179,7 +182,7 @@ class InvoiceEditForm(forms.ModelForm):
     # Скрытые поля
     article = forms.CharField(
         widget=forms.TextInput(attrs={
-            'class': 'check_article button_mod_width button button--white',
+            'class': 'check_party button_mod_width button button--white',
             'placeholder': 'Артикул*'
         }),
         label='Артикул'

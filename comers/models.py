@@ -57,6 +57,7 @@ class Invoice(models.Model):
     supplier = models.ForeignKey(Supler, on_delete=models.CASCADE, verbose_name='Поставщик')
     article = models.CharField(max_length=100, verbose_name='Артикул')
     project = models.CharField(max_length=100, blank=True, null=True, verbose_name='Проект')
+    party = models.CharField(max_length=30, blank=True, null=True, verbose_name='Партия')
     name = models.CharField(max_length=100, verbose_name='Название')
     unit = models.CharField(max_length=50, default='шт', verbose_name='Единица измерения')
     quantity = models.FloatField(verbose_name='Количество')
