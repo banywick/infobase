@@ -30,7 +30,7 @@ class InputDataForm(forms.Form):
     party_mirror = forms.CharField(
         widget=forms.TextInput(attrs={
         'class':'check_party button_mod_width button button--white',
-        'placeholder': 'Артикул'
+        'placeholder': 'Партия'
         }),
         label='Партия*'
     )

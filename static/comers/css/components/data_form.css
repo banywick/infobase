@@ -87,15 +87,6 @@
     width: 100%;
 }
 
-.supplier-input {
-    width: 100%;
-    padding: 10px 40px 10px 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-}
 
 .supplier-input:focus {
     outline: none;
