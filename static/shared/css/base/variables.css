@@ -1,0 +1,31 @@
+:root {
+  /* ===== ТИПОГРАФИКА ===== */
+  --font-family: 'Inter', sans-serif;
+  --body-text-color: rgba(31, 58, 85, 1);
+  --body-text-weight: 500;
+  --text-color-white: rgb(255, 255, 255);
+  
+  /* ===== ЦВЕТОВАЯ СИСТЕМА ===== */
+  
+  /* Базовые цвета */
+  --color-green: #0CCF13; 
+  --color-orange: #F64E11;
+  --color-dark-blue: #1F3A55;
+  --color-light-blue: #C2D9FD;
+  --color-very-light-blue: #E9F1FF;
+  --color-white: var(--color-white)
+  
+  /* Альтернативные цвета */
+  --color-green-alt: #9ECCA0;  
+  --color-orange-alt: #FBBBA0; 
+  --color-blue-alt: #A5B0BB;
+  
+  /* Нейтральные цвета */
+  --color-placeholder: #DBDEE3;
+
+  /* Таблицы */
+  --table-header-bg: rgba(158, 236, 160, 1);
+  
+  /* Состояния кнопок */
+  --button-disabled-opacity: 0.3;
+}

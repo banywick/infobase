@@ -109,3 +109,43 @@ sudo -u postgres psql -d sklad_db < all_databases.sql
 bash
 Copy
 python manage.py migrate
+
+
+Пример извлечения данных:
+
+# Сделать дампы с прода с приложения comersant. Только данные без схемы
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_invoice --data-only --column-inserts > table_backup_invoice.sql
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_leading --data-only --column-inserts > table_backup_leading.sql
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_specialist --data-only --column-inserts > table_backup_specialist.sql
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_status --data-only --column-inserts > table_backup_status.sql
+pg_dump -h localhost -p 5432 -U sklad -d sklad_db -t comers_supler --data-only --column-inserts > table_backup_supler.sql
+
+Загрузка данных:
+
+1 копировать на удаленную машину
+
+2 копировать в контейнер с базой
+
+3 перейти в директорию с дампами
+
+4  # Отключаем проверку внешних ключей
+psql -U sklad -d sklad_db -c "SET session_replication_role = 'replica';"
+
+# Порядок загрузки (сначала таблицы без зависимостей)
+# 1. comment (если есть) 
+# 2. supler (поставщики)
+# 3. specialist (специалисты)
+# 4. status (статусы)
+# 5. leading (руководство)
+# 6. invoice (накладные)
+
+# Загружаем
+psql -U sklad -d sklad_db -f table_backup_comment.sql 2>/dev/null || echo "Файл comment не найден или пустой"
+psql -U sklad -d sklad_db -f table_backup_supler.sql
+psql -U sklad -d sklad_db -f table_backup_specialist.sql
+psql -U sklad -d sklad_db -f table_backup_status.sql
+psql -U sklad -d sklad_db -f table_backup_leading.sql
+psql -U sklad -d sklad_db -f table_backup_invoice.sql
+
+# Включаем проверку внешних ключей
+psql -U sklad -d sklad_db -c "SET session_replication_role = 'origin';"

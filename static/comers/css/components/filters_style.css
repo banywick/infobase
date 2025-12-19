@@ -1,0 +1,67 @@
+/* Стили для подсвеченных селектов */
+.filter-selected {
+    background-color: #ff81812b !important;
+    border-color: #4caf50 !important;
+    font-weight: 500;
+}
+
+/* Плавный переход для изменения стилей */
+.input_wrapper.mod_width_input {
+    transition: all 0.3s ease;
+}
+
+/* Стили для опций в подсвеченном селекте */
+.filter-selected option {
+    background-color: white;
+    /* color: #333; */
+}
+
+/* Стиль для выбранной опции в любом селекте */
+.input_wrapper.mod_width_input option:checked {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* Дополнительные стили для лучшего визуального эффекта */
+.filter-selected {
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Добавьте в конец файла static/comers/css/comers.css */
+
+/* Стили для активных фильтров */
+.filter-active {
+    background-color: #e8f5e9 !important;
+    border-color: #4caf50 !important;
+    color: #2e7d32 !important;
+    font-weight: 500;
+}
+
+/* Анимация появления строк */
+@keyframes highlightRow {
+    0% { background-color: #e8f5e9; }
+    100% { background-color: transparent; }
+}
+
+.new-row {
+    animation: highlightRow 1.5s ease;
+}
+
+/* Улучшенные уведомления */
+.comers-notification {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comers-notification .notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Эффект при наведении на строки таблицы */
+#invoiceTableBody tr:hover {
+    background-color: #f5f5f5;
+    transition: background-color 0.2s ease;
+}

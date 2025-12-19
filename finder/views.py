@@ -65,7 +65,7 @@ class FileUploadView(APIView):
 
 class HomeView(TemplateView):
     """Главная страница"""
-    template_name = 'finder/index2.html'
+    template_name = 'finder/index.html'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
@@ -134,7 +134,10 @@ class ProductSearchView(APIView):
 
         # Выполняем запрос
         queryset = ProjectUtils.get_annotated_remains()
-        queryset = queryset.filter(q_search & q_projects)[:200]
+        queryset = queryset.filter(q_search & q_projects)
+
+        #Сортировка проектов для группировки
+        queryset = queryset.order_by('project')[:500]
 
         if not queryset.exists():
             return Response({"detail": "Ничего не найдено"}, status=status.HTTP_200_OK)

@@ -2,15 +2,18 @@ from django.views.generic import TemplateView
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from django.db.models import Q
+
+from finder.models import Remains
 from .serializers import *
 from .models import Invoice
 from rest_framework.response import Response
 from .forms import *
 from .utils.filter_session import ComersSessionManager
+from common.utils.access_mixin import UserGroupRequiredMixin
 
 
 
-class ComersView(TemplateView):
+class ComersView(UserGroupRequiredMixin,TemplateView):
     """
     Представление для отображения страницы Недопоставок.
 
@@ -21,6 +24,7 @@ class ComersView(TemplateView):
         template_name (str): Путь к HTML-шаблону, который будет использоваться для отображения страницы.
     """
     template_name = 'comers/index.html'
+    group_required = ['sklad', 'comers']
 
     def get_context_data(self, **kwargs):
         """ Добавляет формы в контекст шаблона."""
@@ -52,26 +56,14 @@ class BaseComersPositionView(generics.GenericAPIView):
 
     def get_queryset(self):
         """
-        Возвращает queryset объектов Invoice, отфильтрованный по параметрам из сессии.
+        Возвращает queryset объектов Invoice
 
         Returns:
-            QuerySet: Отфильтрованный queryset объектов Invoice.
+            QuerySet: Invoice.
         """
-        # Получаем значения из сессии
-        leading_id, supplier_id, status_id = ComersSessionManager.get_filter_ids_to_session(self.request)
-
-        # Создаем Q-объекты для фильтрации только если значения не пустые
-        filters = Q()
-
-        if leading_id:
-            filters &= Q(leading_id=leading_id)
-        if supplier_id:
-            filters &= Q(supplier_id=supplier_id)
-        if status_id:
-            filters &= Q(status_id=status_id)
 
         # Применяем фильтры к queryset
-        return Invoice.objects.filter(filters)
+        return Invoice.objects.all()
 
 
 class GetAllPositions(BaseComersPositionView, generics.ListAPIView):
@@ -153,115 +145,107 @@ class AddInvoiceData(generics.CreateAPIView):
         create(request, *args, **kwargs): Обрабатывает POST-запрос для создания новой записи Invoice.
     """
     queryset = Invoice.objects.all()
-    serializer_class = InvoiceSerializerSpecialist
+    serializer_class = InvoiceCreateSerializer
 
 
     def create(self, request, *args, **kwargs):
-        """
-        Обрабатывает POST-запрос для создания новой записи Invoice.
-
-        Args:
-            request (HttpRequest): Объект запроса.
-            *args: Дополнительные аргументы.
-            **kwargs: Дополнительные именованные аргументы.
-
-        Returns:
-            Response: Объект ответа с результатом выполнения операции.
-        """
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
-            return Response({"success": True}, status=status.HTTP_200_OK)
-        return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            # Возвращаем данные через InvoiceSerializer
+            instance = serializer.instance
+            response_serializer = InvoiceSerializer(instance)
+            return Response(
+                {
+                    "success": True,
+                    "data": response_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {"errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
 
-class AddFilterInvoiceData(APIView):
-    """
-    Представление для сохранения фильтров Invoice в сессии.
-
-    Этот класс наследуется от APIView и используется для обработки POST-запросов,
-    сохраняющих значения фильтров (supplier_id, leading_id, status_id) в сессии пользователя.
-
-    Methods:
-        post(request): Обрабатывает POST-запрос для сохранения фильтров в сессии.
-    """
-    def post(self, request):
-        """
-        Обрабатывает POST-запрос для сохранения фильтров в сессии.
-
-        Args:
-            request (HttpRequest): Объект запроса.
-
-        Returns:
-            Response: Объект ответа с сообщением об успешном сохранении фильтров.
-        """
-        # Извлекаем значения из данных запроса
-        supplier_id = request.data.get('supplier')
-        leading_id = request.data.get('leading')
-        status_id = request.data.get('status')
-
-        # Помещает данные в сессию пользователя
-        request.session['supplier_id'] = supplier_id
-        request.session['leading_id'] = leading_id
-        request.session['status_id'] = status_id
-
-        # Возвращаем ответ
-        return Response({"message": "Filter values saved successfully."}, status=status.HTTP_200_OK)
+class RetrieveUpdateInvoiceData(generics.RetrieveUpdateAPIView):
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceCreateSerializer  # Дефолтный сериализатор
     
-
-class GetFilterInvoiceData(APIView):
-    """
-    Представление для получения данных фильтров Invoice из сессии.
-
-    Этот класс наследуется от APIView и используется для обработки GET-запросов,
-    возвращающих имена фильтров (leading_name, supplier_name, status_name) из сессии пользователя.
-
-    Methods:
-        get(request): Обрабатывает GET-запрос для получения данных фильтров из сессии.
+    def get_serializer_class(self):
+        # Для GET-запросов используем InvoiceSerializer (только чтение)
+        # Для PUT/PATCH - InvoiceCreateSerializer (создание/обновление)
+        if self.request.method == 'GET':
+            return InvoiceSerializer
+        return InvoiceCreateSerializer
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # partial=True позволяет частичное обновление (PATCH)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
         
-    """
-    def get(self, request):
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            # После успешного обновления возвращаем данные через InvoiceSerializer
+            return Response({
+                "success": True,
+                "data": InvoiceSerializer(instance).data
+            }, status=status.HTTP_200_OK)
+        
+        return Response(
+            {"errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )  
+
+class GetInfoParty(APIView):
+    def get(self, request, party):
         """
-        Обрабатывает GET-запрос для получения данных фильтров из сессии.
+        Получает информацию о конкретной партии по ее уникальному номеру.
 
-        Args:
-            request (HttpRequest): Объект запроса.
+        Функция ищет партию в базе данных модели `Remains`. Если партия найдена, возвращает словарь
+        с информацией о товаре, включая название, идентификатор, номер партии, количество,
+        базовую единицу измерения, артикул и проект.
 
-        Returns:
-            Response: Объект ответа, содержащий имена фильтров.
+        Параметры:
+        ----------
+        party_number : str
+            Уникальный номер партии, которую необходимо найти в базе данных.
+
+        Возвращает:
+        ----------
+        dict or None
+            Словарь с информацией о партии товара, если партия найдена. Содержит следующие ключи:
+            - "title" (str): Название товара.
+            - "id" (int): Идентификатор записи.
+            - "party" (str): Номер партии.
+            - "quantity" (str): Количество товара в конкретной партии в формате строки с двумя знаками после запятой.
+            - "base_unit" (str): Базовая единица измерения товара.
+            - "article" (str): Артикул товара.
+            - "project" (str): Проект, к которому относится товар.
+            Если партия не найдена, возвращает `None`.
         """
-        filter_names = ComersSessionManager.get_filter_name_field(request)
-        return Response(filter_names, status=status.HTTP_200_OK)
-    
-
-class ClearFilterInvoiceData(APIView):
-    """
-    Представление для очистки данных фильтров Invoice из сессии.
-
-    Этот класс наследуется от APIView и используется для обработки POST-запросов,
-    очищающих значения фильтров (leading_id, supplier_id, status_id) из сессии пользователя.
-
-    Methods:
-        post(request): Обрабатывает POST-запрос для очистки данных фильтров из сессии.
-    """
-    def post(self, request):
-        """
-        Обрабатывает POST-запрос для очистки данных фильтров из сессии.
-
-        Args:
-            request (HttpRequest): Объект запроса.
-
-        Returns:
-            Response: Объект ответа с сообщением об успешной очистке фильтров.
-        """
-        if 'leading_id' in self.request.session:
-            del self.request.session['leading_id']
-        if 'supplier_id' in self.request.session:
-            del self.request.session['supplier_id']
-        if 'status_id' in self.request.session:
-            del self.request.session['status_id']
-
-        return Response({"message": "clear successfully"}, status=status.HTTP_200_OK)
-
-
-
+    # Ищем запись по уникальному номеру партии
+        party_record = Remains.objects.filter(party__icontains=party).first()
+        
+        if not party_record:
+            return Response(
+                {"error": f"Партия '{party}' не найдена"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        #Форматируем количество
+        quantity = float(party_record.quantity) if party_record.quantity else 0.0
+        formatted_quantity = f'{quantity:.2f}'
+        
+        # Формируем ответ
+        response_data = {
+            "title": party_record.title,
+            "id": party_record.id,
+            "party": party_record.party,  # Используем переданное значение
+            "quantity": formatted_quantity,
+            "base_unit": party_record.base_unit,
+            "article": party_record.article,
+            "project": party_record.project
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)

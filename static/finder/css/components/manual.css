@@ -1,0 +1,13 @@
+.manual {
+    height: 85vh; /* Фиксированная высота на весь экран */
+    overflow-y: auto; /* Включаем скролл при переполнении */
+    display: none;
+}
+
+
+.manual img {
+    width: 100%;
+    height: auto;
+    min-height: 100vh; /* Гарантирует, что изображение будет больше экрана */
+    object-fit: contain; /* Сохраняет пропорции */
+}

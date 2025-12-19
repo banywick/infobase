@@ -1,0 +1,55 @@
+.project-tooltip {
+    position: fixed;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    max-width: 300px;
+    min-width: 200px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.project-tooltip.visible {
+    opacity: 1;
+}
+
+.project-tooltip h4 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 6px;
+}
+
+.project-tooltip p {
+    margin: 4px 0;
+    color: #555;
+}
+
+.project-tooltip strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.info_project {
+    cursor: help;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.info_project:hover {
+    transform: scale(1.1);
+}
+
+/* Стили для статусов */
+.status-processing { color: #f39c12; }
+.status-completed { color: #27ae60; }
+.status-cancelled { color: #e74c3c; }
+.status-pending { color: #3498db; }

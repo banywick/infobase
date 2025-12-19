@@ -7,9 +7,9 @@ urlpatterns = [
     path('remove_position/<int:id>/', RemovePosition.as_view(), name ='remove_position'),
     path('add_supplier/', AddSupplier.as_view(), name='add_supplier_name'),
     path('add_invoice_data/', AddInvoiceData.as_view(), name='add_invoice'),
-    path('add_filter_invoice_data/', AddFilterInvoiceData.as_view(), name='add_filter_invoice'),
-    path('get_filter_invoice_data/', GetFilterInvoiceData.as_view(), name='get_filter_invoice'),
-    path('clear_filter_invoice_data/', ClearFilterInvoiceData.as_view(), name='clear_filter_invoice'),
+    path('edit_invoices/<int:pk>/', RetrieveUpdateInvoiceData.as_view(), name='invoice_detail_edit'),
+    path('get_party_info/<str:party>/', GetInfoParty.as_view(), name='check_party'),
+
     
 ]   
 

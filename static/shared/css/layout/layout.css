@@ -1,0 +1,42 @@
+/* Переносим из style_finder2.css */
+body {
+    font-family: var(--font-family);
+    font-weight: var(--body_text_weight);
+    color: var(--body_text_color);
+    font-size: 15px;
+}
+
+.wrapper {
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    margin-left: 254px;
+    height: 96px;
+    background: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.main {
+    margin-left: 254px;
+    position: relative;
+    height: 82vh;
+    overflow: hidden;
+}
+
+
+.background-overlay {
+    display: none; /* Скрываем фон по умолчанию */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(31, 58, 85, 0.3);
+    z-index: 9; /* Убедитесь, что фон находится под popup */
+}
