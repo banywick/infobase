@@ -6,6 +6,7 @@ import re
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from finder.utils.auto_replace import TransformationString
 from finder.utils.filters_q import *
 from .utils.add_session_data import SessionManager
 from .models import LinkAccess, Remains
@@ -749,17 +750,14 @@ class CeleryStatusView(APIView):
 
 
 
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from django.views.decorators.csrf import csrf_exempt
-# from django.utils.decorators import method_decorator
+
 
 class AutoFind(APIView):
     def post(self, request, *args, **kwargs):
         try:
             # Используем request.data вместо request.body
             input_text = request.data.get('text', '')
-            processed_text = f"{input_text}+"
+            processed_text = TransformationString.screw(input_text)
             return Response({
                 'status': 'success',
                 'processed_text': processed_text,
