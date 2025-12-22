@@ -2,6 +2,7 @@ import logging
 import time
 import json
 import os
+import re
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -19,7 +20,8 @@ from .utils.connect_redis_bd import connect_redis
 from .utils.file_name_document import get_file_name
 from celery.result import AsyncResult
 from rest_framework.pagination import PageNumberPagination
-import re
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 logger = logging.getLogger(__name__)
 
@@ -741,3 +743,29 @@ class CeleryStatusView(APIView):
             return Response({"status": "Celery работает"}, status=status.HTTP_200_OK)
         else:
             return Response({"status": "Celery не отвечает"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+
+
+
+
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from django.views.decorators.csrf import csrf_exempt
+# from django.utils.decorators import method_decorator
+
+class AutoFind(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            # Используем request.data вместо request.body
+            input_text = request.data.get('text', '')
+            processed_text = f"{input_text}+"
+            return Response({
+                'status': 'success',
+                'processed_text': processed_text,
+            })
+        except Exception as e:
+            return Response({
+                'status': 'error',
+                'message': str(e),
+            }, status=500)

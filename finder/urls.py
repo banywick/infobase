@@ -49,5 +49,8 @@ urlpatterns = [
 
     #Частично удалить проекты с сессии
     path('remove_project_from_session/<int:project_id>/', RemoveProjectFromSessionView.as_view(), name='remove_project_from_session'),
+
+    #Алгортм разбора позиции на составляющие для автопоиска
+    path('auto_find/', AutoFind.as_view(), name='auto_find'),
 ]
 
