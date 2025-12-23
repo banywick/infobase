@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Исходное содержимое буфера обмена:', clipboardText);
 
             // Проверка длины строки
-            if (clipboardText.length > 60) {
-                console.error('Ошибка: текст из буфера обмена слишком длинный. Максимум 60 символов.');
+            if (clipboardText.length > 150) {
+                console.error('Ошибка: текст из буфера обмена слишком длинный. Максимум 150 символов.');
                 return; // Прерываем выполнение
             }
 
