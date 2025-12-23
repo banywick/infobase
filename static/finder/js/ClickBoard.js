@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,  // Передаём CSRF-токен
+                    'X-CSRFToken': csrfToken,
                 },
                 body: JSON.stringify({ text: clipboardText }),
-                credentials: 'include',  // Важно для передачи cookie
+                credentials: 'include',
             });
 
             if (!response.ok) {
@@ -31,6 +31,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const result = await response.json();
             console.log('Обработанный результат с сервера:', result.processed_text);
+            
+            // Вставляем результат в поле поиска
+            const searchInput = document.getElementById('search_input');
+            if (searchInput) {
+                searchInput.value = result.processed_text;
+            } else {
+                console.error('Элемент search_input не найден');
+                return;
+            }
+            
+            // Активируем чекбокс search_by_analog
+            const searchByAnalogCheckbox = document.getElementById('search_by_analog');
+            if (searchByAnalogCheckbox) {
+                searchByAnalogCheckbox.checked = true;
+            } else {
+                console.error('Элемент search_by_analog не найден');
+                return;
+            }
+            
+            // Нажимаем на кнопку search_icon
+            const searchIcon = document.getElementById('search_icon');
+            if (searchIcon) {
+                searchIcon.click();
+            } else {
+                console.error('Элемент search_icon не найден');
+                return;
+            }
+            
+            console.log('Все действия выполнены успешно');
 
         } catch (err) {
             console.error('Ошибка:', err);
