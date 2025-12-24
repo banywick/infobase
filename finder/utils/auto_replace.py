@@ -202,6 +202,6 @@ class TransformationString:
             return f"{fastener_type} {article}"
         
         # Если ничего не найдено
-        return f"{original_text}+"
+        return f"{original_text}"
 
     

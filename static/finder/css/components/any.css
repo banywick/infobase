@@ -163,7 +163,134 @@
     align-content: center;
 }
 
+.find_container_extend_auto {
+    display: flex;
+}
+
 .auto_button {
+    flex-direction: column;
+    height: 68px;
     margin-left: 20px;
-    border: 1px solid;
+}
+
+/*Магическая кнопка     */
+#magic_button {
+    align-items: center;
+    margin-top: 13px;
+}
+
+/* CSS для анимированной кнопки с переливающимися границами */
+#magic_button {
+    position: relative;
+    border-radius:36px;
+    padding: 12px 30px;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    min-width: 180px;
+    z-index: 1;
+}
+
+/* Анимированная рамка */
+#magic_button::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+        #ff0000, #ff7300, #fffb00, 
+        #48ff00, #00ffd5, #002bff, 
+        #7a00ff, #ff00c8, #ff0000);
+    background-size: 400%;
+    border-radius: 10px;
+    z-index: -1;
+    animation: borderGlow 15s linear infinite;
+}
+
+@keyframes borderGlow {
+    0% {
+        background-position: 0 0;
+    }
+    50% {
+        background-position: 400% 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
+
+/* Внутренний контент кнопки */
+.button-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Иконка поиска */
+.search-icon {
+    width: 20px;
+    height: 20px;
+    position: relative;
+}
+
+.search-icon::before {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2px solid white;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+}
+
+.search-icon::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 2px;
+    background: white;
+    transform: rotate(45deg);
+    bottom: 2px;
+    right: 0;
+}
+
+/* Информационный знак */
+.info-sign {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    background: #4a9eff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: help;
+    z-index: 10;
+    transition: all 0.3s ease;
+    border: 1px solid white;
+    font-family: Arial, sans-serif;
+}
+
+.info-sign:hover {
+    background: #2d8cff;
+    transform: scale(1.1);
+}
+
+/* Эффект при наведении на кнопку */
+#magic_button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }

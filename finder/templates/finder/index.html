@@ -5,48 +5,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'finder/css/finder.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <title>Поисковик</title>
 </head>
 <body>
     <div class="wrapper">
         <header>
-            <div class="find_container">
-                <div class="search_bar">
-                    <form id="search_form" method="post">
-                        {% csrf_token %}
-                        <div class="input_wrapper">
-                            <div class="input_container">
-                                <input id="search_input" type="text" name="query" placeholder="поиск по названию, коду, артикулу">
-                            </div>
-                            <img id="search_icon" src="{% static '/finder/icon/lupa_input.png' %}" alt="Иконка поиска">
+            <div class="find_container_extend_auto">
+                    <div class="find_container">
+                        <div class="search_bar">
+                            <form id="search_form" method="post">
+                                {% csrf_token %}
+                                <div class="input_wrapper">
+                                    <div class="input_container">
+                                        <input id="search_input" type="text" name="query" placeholder="поиск по названию, коду, артикулу">
+                                    </div>
+                                    <img id="search_icon" src="{% static '/finder/icon/lupa_input.png' %}" alt="Иконка поиска">
+                                </div>
+                                <div class="filter_container"> 
+                                    <div class="filters">
+                                        <div class="check_box_container">
+                                            <input class='check_box' type="checkbox" id="search_by_code" name="search_by_code" value="true">
+                                            <label for="search_by_code">искать по коду</label>
+                                        </div>
+                                        <div class="check_box_container">
+                                            <input class='check_box' type="checkbox" id="search_by_comment" name="search_by_comment" value="true">
+                                            <label for="search_by_comment">искать по комментарию</label>
+                                        </div>
+                                        <div class="check_box_container">
+                                            <input class='check_box' type="checkbox" id="search_by_analog" name="search_by_analog" value="true">
+                                            <label for="search_by_comment">искать аналоги</label>
+                                        </div>
+                                        <div class="check_box_container">
+                                            <input class='check_box' type="checkbox" id="search_by_kd" name="search_by_kd" value="true">
+                                            <label for="search_by_kd">КД\ТН</label>
+                                        </div>
+                                    </div>
+                                </div> 
+                            </form>    
                         </div>
-                        <div class="filter_container"> 
-                            <div class="filters">
-                                <div class="check_box_container">
-                                    <input class='check_box' type="checkbox" id="search_by_code" name="search_by_code" value="true">
-                                    <label for="search_by_code">искать по коду</label>
-                                </div>
-                                <div class="check_box_container">
-                                    <input class='check_box' type="checkbox" id="search_by_comment" name="search_by_comment" value="true">
-                                    <label for="search_by_comment">искать по комментарию</label>
-                                </div>
-                                <div class="check_box_container">
-                                    <input class='check_box' type="checkbox" id="search_by_analog" name="search_by_analog" value="true">
-                                    <label for="search_by_comment">искать аналоги</label>
-                                </div>
-                                <div class="check_box_container">
-                                    <input class='check_box' type="checkbox" id="search_by_kd" name="search_by_kd" value="true">
-                                    <label for="search_by_kd">КД\ТН</label>
-                                </div>
+                    </div> 
+                    <div class="auto_button">
+                        <button id="magic_button">
+                            <div class="button-content">
+                                <div class="search-icon"></div>
+                                <span>Поиск</span>
                             </div>
-                        </div> 
-                    </form>    
-                </div>
-            </div> 
-                <div class="auto_button">
-                    <button id="magic_button"  class="button">AUTO</button>
-                </div>
+                            <div class="info-sign" 
+                            title="
+                            Кнопка работает с болтами и винтами.
+                            Преобразовывает полное название
+                            в нужную структуру для поиска.
+                            Копируйте полную позицию и нажимайте на эту кнопку">i</div>
+                        </button>
+                        <div hidden >тест</div>
+                    </div>
+            </div>
             <div class="info_window">
             </div>
             <div class="info_update">
