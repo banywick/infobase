@@ -180,57 +180,50 @@
 }
 
 /* CSS для анимированной кнопки с переливающимися границами */
+/* Основные стили */
+.auto_button {
+    
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 #magic_button {
     position: relative;
-    border-radius:36px;
-    padding: 12px 30px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 50px;
+    padding: 0;
     cursor: pointer;
-    font-size: 16px;
-    color: white;
-    font-weight: 600;
-    font-family: Arial, sans-serif;
-    transition: all 0.3s ease;
-    overflow: hidden;
     min-width: 180px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 24px;
+    padding-right: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
     z-index: 1;
 }
 
-/* Анимированная рамка */
-#magic_button::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, 
-        #ff0000, #ff7300, #fffb00, 
-        #48ff00, #00ffd5, #002bff, 
-        #7a00ff, #ff00c8, #ff0000);
-    background-size: 400%;
-    border-radius: 10px;
-    z-index: -1;
-    animation: borderGlow 15s linear infinite;
+/* Эффект увеличения при наведении */
+#magic_button:hover {
+    transform: scale(1.05);
+    border-color: #667eea;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
 }
 
-@keyframes borderGlow {
-    0% {
-        background-position: 0 0;
-    }
-    50% {
-        background-position: 400% 0;
-    }
-    100% {
-        background-position: 0 0;
-    }
+/* Активное состояние */
+#magic_button:active {
+    transform: scale(0.98);
 }
 
-/* Внутренний контент кнопки */
+/* Контент кнопки */
 .button-content {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    gap: 12px;
+    z-index: 2;
 }
 
 /* Иконка поиска */
@@ -238,6 +231,7 @@
     width: 20px;
     height: 20px;
     position: relative;
+    transition: transform 0.3s ease;
 }
 
 .search-icon::before {
@@ -245,52 +239,64 @@
     position: absolute;
     width: 12px;
     height: 12px;
-    border: 2px solid white;
+    border: 2px solid #667eea;
     border-radius: 50%;
-    top: 0;
     left: 0;
+    top: 0;
 }
 
 .search-icon::after {
     content: '';
     position: absolute;
-    width: 6px;
+    width: 8px;
     height: 2px;
-    background: white;
+    background: #667eea;
+    border-radius: 0;
+    top: 15px;
+    left: 11px;
     transform: rotate(45deg);
-    bottom: 2px;
-    right: 0;
+    transform-origin: left center;
 }
 
-/* Информационный знак */
+#magic_button:hover .search-icon {
+    transform: scale(1.1) rotate(10deg);
+}
+
+/* Текст кнопки */
+.button-content span {
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: color 0.3s ease;
+}
+
+#magic_button:hover .button-content span {
+    color: #667eea;
+}
+
+/* Инфо-значок */
 .info-sign {
-    position: absolute;
-    top: 3px;
-    right: 4px;
-    width: 18px;
-    height: 18px;
-    background: #4a9eff;
+    width: 20px;
+    height: 20px;
+    background: #f5f5f5;
+    color: #666;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    font-size: 13px;
     font-weight: bold;
-    font-size: 12px;
+    margin-left: 8px;
     cursor: help;
-    z-index: 10;
     transition: all 0.3s ease;
-    border: 1px solid white;
-    font-family: Arial, sans-serif;
+    z-index: 2;
+    border: 1px solid #e0e0e0;
 }
 
 .info-sign:hover {
-    background: #2d8cff;
-    transform: scale(1.1);
-}
-
-/* Эффект при наведении на кнопку */
-#magic_button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    background: #667eea;
+    color: white;
+    transform: scale(1.2);
+    border-color: #667eea;
 }
