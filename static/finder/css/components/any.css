@@ -162,3 +162,141 @@
 .animate_process svg {
     align-content: center;
 }
+
+.find_container_extend_auto {
+    display: flex;
+}
+
+.auto_button {
+    flex-direction: column;
+    height: 68px;
+    margin-left: 20px;
+}
+
+/*Магическая кнопка     */
+#magic_button {
+    align-items: center;
+    margin-top: 13px;
+}
+
+/* CSS для анимированной кнопки с переливающимися границами */
+/* Основные стили */
+.auto_button {
+    
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#magic_button {
+    position: relative;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 50px;
+    padding: 0;
+    cursor: pointer;
+    min-width: 180px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 24px;
+    padding-right: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Эффект увеличения при наведении */
+#magic_button:hover {
+    transform: scale(1.05);
+    border-color: #667eea;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+}
+
+/* Активное состояние */
+#magic_button:active {
+    transform: scale(0.98);
+}
+
+/* Контент кнопки */
+.button-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 2;
+}
+
+/* Иконка поиска */
+.search-icon {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.search-icon::before {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #667eea;
+    border-radius: 50%;
+    left: 0;
+    top: 0;
+}
+
+.search-icon::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 2px;
+    background: #667eea;
+    border-radius: 0;
+    top: 15px;
+    left: 11px;
+    transform: rotate(45deg);
+    transform-origin: left center;
+}
+
+#magic_button:hover .search-icon {
+    transform: scale(1.1) rotate(10deg);
+}
+
+/* Текст кнопки */
+.button-content span {
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: color 0.3s ease;
+}
+
+#magic_button:hover .button-content span {
+    color: #667eea;
+}
+
+/* Инфо-значок */
+.info-sign {
+    width: 20px;
+    height: 20px;
+    background: #f5f5f5;
+    color: #666;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    margin-left: 8px;
+    cursor: help;
+    transition: all 0.3s ease;
+    z-index: 2;
+    border: 1px solid #e0e0e0;
+}
+
+.info-sign:hover {
+    background: #667eea;
+    color: white;
+    transform: scale(1.2);
+    border-color: #667eea;
+}
