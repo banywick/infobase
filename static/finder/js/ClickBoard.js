@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Получаем CSRF-токен из cookie
             const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1];
 
-            const response = await fetch('http://127.0.0.1:8000/finder/auto_find/', {
+            const response = await fetch('/finder/auto_find/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
