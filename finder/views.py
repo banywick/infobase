@@ -120,6 +120,8 @@ class ProductSearchView(APIView):
 
         # Получаем список аналогов
         list_analogs = get_analogs_list(search_terms, search_by_analog)
+        print('hello')
+        print(list_analogs)
 
 
         #Получаем сопоставление КД\ТН
@@ -744,12 +746,6 @@ class CeleryStatusView(APIView):
             return Response({"status": "Celery работает"}, status=status.HTTP_200_OK)
         else:
             return Response({"status": "Celery не отвечает"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-
-
-
-
-
 
 
 class AutoFind(APIView):

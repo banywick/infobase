@@ -38,7 +38,6 @@ def create_q_objects(values, field_name):
     """
     q_objects = Q()
     for value in values:
-        print(value)
         q_objects |= Q(**{f'{field_name}': value})
     return q_objects
 
