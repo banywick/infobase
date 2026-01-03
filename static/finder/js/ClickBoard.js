@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const clipboardText = await navigator.clipboard.readText();
             console.log('Исходное содержимое буфера обмена:', clipboardText);
 
+             // --- ТЕСТОВОЕ ЗНАЧЕНИЕ ---
+            // const clipboardText = "Штифт 4х30 Хим.Окс.прм ГОСТ 24296-93";
+             // --- КОНЕЦ ТЕСТОВОГО ЗНАЧЕНИЯ ---
+
             // Проверка длины строки
             if (clipboardText.length > 150) {
                 console.error('Ошибка: текст из буфера обмена слишком длинный. Максимум 150 символов.');

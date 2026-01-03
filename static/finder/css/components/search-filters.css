@@ -7,8 +7,9 @@
 
 .filter_container {
     width: 373px;
+    height: 45px;
     padding: 4px;
-    background: #00e6fc1a;
+    background: #0006fc1a;
     border-radius: 6px;
 }
 

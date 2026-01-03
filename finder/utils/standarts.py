@@ -16,7 +16,7 @@ def find_standard_values(value):
     """
     try:
         # Находим исходное стандартное значение
-        standard_value = StandardValue.objects.select_related('standard').filter(value=value).first()
+        standard_value = StandardValue.objects.select_related('standard').get(value=value)
         
         # Получаем все значения из того же стандарта
         values = list(
@@ -29,4 +29,4 @@ def find_standard_values(value):
         
     except StandardValue.DoesNotExist:
         # Если значение не найдено в стандартах
-        return []
+        return None

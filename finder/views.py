@@ -120,8 +120,6 @@ class ProductSearchView(APIView):
 
         # Получаем список аналогов
         list_analogs = get_analogs_list(search_terms, search_by_analog)
-        print('hello')
-        print(list_analogs)
 
 
         #Получаем сопоставление КД\ТН
