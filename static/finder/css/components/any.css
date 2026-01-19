@@ -300,3 +300,9 @@
     transform: scale(1.2);
     border-color: #667eea;
 }
+
+.info-note {
+    color: #ff0000; /* Красный цвет */
+    font-size: 12px;
+    border-bottom: 1px dashed #ffcccc; /* Необязательно: легкая пунктирная граница */
+}

@@ -88,6 +88,10 @@ function renderAnalogList(infoWindow, titleText, items) {
     title.textContent = titleText;
     title.className = 'analogs-title';
 
+    const infoNote = document.createElement('div');
+    infoNote.textContent = 'Информация носит справочный характер!';
+    infoNote.className = 'info-note'; // Добавляем класс для стилизации
+    
     const listContainer = document.createElement('div');
     listContainer.className = 'analogs-container';
 
@@ -99,6 +103,7 @@ function renderAnalogList(infoWindow, titleText, items) {
     });
 
     infoWindow.appendChild(title);
+    infoWindow.appendChild(infoNote); // Добавляем информационную строку
     infoWindow.appendChild(listContainer);
 }
 

@@ -746,12 +746,6 @@ class CeleryStatusView(APIView):
             return Response({"status": "Celery не отвечает"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
-
-
-
-
-
-
 class AutoFind(APIView):
     def post(self, request, *args, **kwargs):
         try:
