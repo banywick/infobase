@@ -25,6 +25,13 @@
     border: 1px solid #ef9a9a;
 }
 
+.status-wait_answer {
+    background-color: #ffe44b63;
+    color: #3e3e3e;
+    border: 1px solid #bbbbbb;
+
+}
+
 /* Альтернативный дизайн с иконками */
 .status-processing::before {
     content: "⏳ ";
@@ -38,6 +45,11 @@
 
 .status-writeoff::before {
     content: "❌ ";
+    font-size: 14px;
+}
+
+.status-wait_answer::before {
+    content: "🕙 ";
     font-size: 14px;
 }
 
