@@ -165,8 +165,10 @@ const ComersApp = (function() {
                     statusClass = 'status-delivery';
                 } else if (statusLower.includes('списан')) {
                     statusClass = 'status-writeoff';
-                }
-            }
+                } else if (statusLower.includes('ждем ответ')) {
+                    statusClass = 'status-wait_answer';
+            } 
+        }
                     
             row.innerHTML = `
                 <td hidden class="invoice-project">${item.project || ''}</td>
