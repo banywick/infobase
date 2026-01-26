@@ -1,0 +1,108 @@
+/* Добавьте в CSS модуля finder или создайте новый файл notes_button.css */
+
+.note_button {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.note_button button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.note_button button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
+.note_button button:active {
+    transform: translateY(0);
+}
+
+.note_button button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Индикатор загрузки */
+.note_button .spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Уведомление о добавлении */
+.note-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    background: white;
+    border-left: 4px solid #4CAF50;
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 400px;
+}
+
+.note-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.note-notification.hide {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.note-notification.error {
+    border-left-color: #f44336;
+}
+
+.note-notification-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.note-notification-message {
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.note-notification-close {
+    color: #999;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 15px;
+    padding: 0 5px;
+}
+
+.note-notification-close:hover {
+    color: #333;
+}

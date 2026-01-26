@@ -282,6 +282,11 @@
                         <p id="count_projects"></p>
                         <img class="arrow_img" src="{% static 'finder/icon/arrow.svg' %}" alt="Стрелка">
                     </div>
+                    {% if user.is_authenticated %}
+                    <div class="note_button">
+                        <button>Добавить в заметки</button>
+                    </div>
+                    {% endif %}
                     <div class="hide_info" id="hide_info">Скрыть информацию</div>
                 </div>
                 <div class="menu-container {% if not request.user.is_authenticated %}menu-disabled{% endif %}">
@@ -294,7 +299,7 @@
                     <div class="menu_row">
                         <img src="{% static 'finder/icon/notes.svg' %}" alt="Иконка заметок">
                         <div class="menu_link">
-                            <a href="#">Заметки</a>
+                            <a href="/notes">Заметки</a>
                         </div>
                     </div>
                     <div class="menu_row" >
@@ -394,6 +399,7 @@
     <script src='{% static "finder/js/popups.js"%}'></script> 
     <script src='{% static "finder/js/ClickBoard.js"%}'></script> 
     <script src='{% static "finder/js/auth.js"%}'></script> 
+    <script src='{% static "finder/js/notes_button.js"%}'></script> 
     <script src='{% static "finder/js/search_finder_input.js"%}'></script> 
     <script src='{% static "finder/js/add_pin_positions.js"%}'></script>
     <script src='{% static "finder/js/details.js"%}'></script> 

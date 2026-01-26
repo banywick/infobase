@@ -1,139 +1,111 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'finder/css/style_finder2.css' %}">
-    <link rel="stylesheet" href="{% static 'finder/css/popups_style.css' %}">
-    {% comment %} <link rel="stylesheet" href="{% static 'finder/css/table_style.css' %}"> {% endcomment %}
-    <link rel="stylesheet" href="{% static 'css/index_all.css' %}">
-    <link rel="stylesheet" href="{% static 'css/null_for_templates.css' %}">
-    <link rel="stylesheet" href="{% static 'notes/css/style_notes.css'%}">
+    <link rel="stylesheet" href="{% static 'notes/css/style_notes.css' %}">
+    <link rel="stylesheet" href="{% static 'notes/css/notes_popup.css' %}">
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
     <title>Заметки</title>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="main_note">
-            <div class="add_note_container">
-                <div class='block_add_note '>
-                    <img id="add_notes" src="{% static 'notes/img/add_note_block.svg' %}" alt="Добавить заметку">
-                {{username}}
-                </div>  
+    <div class="notes-container">
+        <!-- Кнопка возврата на главную -->
+        <a href="{% url 'home_finder' %}" class="back-to-main-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <span>Вернуться на главную</span>
+        </a>
+
+        <!-- Заголовок и кнопка добавления -->
+        <div class="notes-header">
+            <div class="notes-header-left">
+                <h1 class="notes-title">Мои заметки</h1>
+                <p class="notes-subtitle">Всего заметок: <span id="notes-count">0</span></p>
             </div>
-            <div class="background-overlay"></div>
-                <div id="notification" class="notification">
-                    <div class="notification-content">
-                        <span class="notification-message">Заметка успешно сохранена!</span>
-                    </div>
+            <button id="add-note-btn" class="btn-add-note">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Добавить заметку
+            </button>
+        </div>
+
+        <!-- Список заметок -->
+        <div class="notes-list-container">
+            <div id="notes-list" class="notes-list">
+                <!-- Заметки будут загружаться здесь через JavaScript -->
+                <div class="notes-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Загружаем заметки...</p>
                 </div>
-
-            <div class="notes_place">
-                <ul>
-                    <li>bany</li>
-                    <li>bany</li>
-                    <li>bany</li>
-                    <li>bany</li>
-                    <li>bany</li>
-                    <li>bany</li>
-                    <li>bany</li>
-                    <li>bany</li>
-                </ul>
             </div>
+        </div>
 
-            <div class="background-overlay"></div>
+        <!-- Пустое состояние -->
+        <div id="empty-notes" class="empty-notes" style="display: none;">
+            <div class="empty-notes-icon">📝</div>
+            <h3>Заметок пока нет</h3>
+            <p>Создайте свою первую заметку!</p>
+            <button id="add-first-note" class="btn-add-first-note">Добавить заметку</button>
+        </div>
 
-            <div class="popup_note" id="notePopup">
-                <div class="popup_content">
-                    <div class="popup_header">
-                        <h3>Добавить заметку</h3>
-                        <span class="close_popup">&times;</span>
+        <!-- Попап для добавления/редактирования -->
+        <div id="note-popup" class="note-popup" style="display: none;">
+            <div class="popup-overlay"></div>
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h3 id="popup-title">Добавить заметку</h3>
+                    <button id="close-popup" class="btn-close-popup">&times;</button>
+                </div>
+                
+                <form id="note-form" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" id="note-id" name="note_id">
+                    
+                    <div class="form-group">
+                        <textarea id="note-text" name="text" 
+                                  class="note-textarea" 
+                                  placeholder="Введите текст заметки..."
+                                  rows="8" 
+                                  required></textarea>
+                        <div class="char-counter">
+                            <span id="char-count">0</span>/1000
+                        </div>
                     </div>
                     
-                    <form id="noteForm" method="POST" data-user-id="{{ request.user.id }}">
-                        {% csrf_token %}
-                        
-                        <div class="form-group">
-                            <textarea class="note_textarea" name="text" placeholder="Текст заметки" required></textarea>
-                        </div>
-                        
-                        <div class="popup_buttons">
-                            <button type="button" class="cancel_btn">Отменить</button>
-                            <button type="submit" class="add_btn">Добавить</button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="popup-buttons">
+                        <button type="button" id="cancel-btn" class="btn-cancel">Отменить</button>
+                        <button type="submit" id="save-btn" class="btn-save">
+                            <span id="save-btn-text">Сохранить</span>
+                            <span id="save-btn-spinner" style="display: none;">
+                                <div class="small-spinner"></div>
+                            </span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-        <div class="sidebar">
-            <div class="logo">
-                <img src="{% static 'finder/icon/logo_finder.svg' %}" alt="Логотип">
-            </div>
-            <div class="menu_item">
-                <div id="menu_row_find" class="menu_row">
-                    <img id="icon_color" src="{% static 'finder/icon/search.svg' %}" alt="Иконка поиска">
-                    <div class="menu_link">
-                        <a href="{% url 'home_finder' %}">Поиск</a>
-                    </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/notes.svg' %}" alt="Иконка заметок">
-                    <div class="menu_link">
-                        <a href="{% url 'notes_home'%}">Заметки</a>
-                    </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/sahr.svg' %}" alt="Иконка С.А.ХР">
-                    <div class="menu_link">
-                        <a href="#">С.А.ХР</a>
-                    </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/archive.svg' %}" alt="Иконка архива">
-                    <div class="menu_link">
-                        <a href="#">Архив</a>
-                    </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/comers.svg' %}" alt="Иконка недопоставок">
-                    <div class="menu_link">
-                        <a href="#">Недопоставки</a>
-                    </div>
-                </div>
-                <div class="menu_row">
-                    <img src="{% static 'finder/icon/inventory.svg' %}" alt="Иконка инвентаризации">
-                    <div class="menu_link">
-                        <a href="#">Инвентаризация</a>
-                    </div>
-                </div>
 
-
-
-            </div> 
-            <div class="down_menu">
-                <div class="button_wrapper_update">
-                    <img src="{% static 'finder/icon/update_base.svg' %}" alt="Иконка обновления базы">
-                    <div>Обновить базу</div>
-                </div>
-                <div class="menu_row_down">
-                    <img src="{% static 'finder/icon/login.svg' %}" alt="Иконка входа">
-                    <div class="menu_link">
-                        <a href="#">Войти</a>
-                    </div>
-                </div>
-                <div class="menu_row_down">
-                    <img src="{% static 'finder/icon/revievs.svg' %}" alt="Иконка отзывов">
-                    <div class="menu_link">
-                        <a id='revievs_link' href="#">Отзывы и предложения</a>
-                    </div>
-                </div>
-                <p>Ваш отзыв поможет <br> улучшить продукт</p>
-            </div> 
-        </div>
+        <!-- Контейнер для уведомлений -->
+        <div id="notification-container"></div>
     </div>
-        <script src='{% static "notes/js/notes_popup.js"%}'></script> 
-        <script src='{% static "notes/js/notes.js"%}'></script> 
+
+    <!-- Переменная для передачи данных из Django -->
+    <script>
+        window.currentUserId = {{ request.user.id }};
+        window.csrfToken = "{{ csrf_token }}";
+        window.notesApi = {
+            list: "{% url 'all_notes' %}",
+            add: "{% url 'add_notes' %}",
+            edit: "{% url 'edit_note' 0 %}",
+            delete: "{% url 'remove_note' 0 %}"
+        };
+    </script>
+
+    <script src="{% static 'notes/js/notes_api.js' %}"></script>
+    <script src="{% static 'notes/js/notes_ui.js' %}"></script>
 </body>
 </html>
-
-
