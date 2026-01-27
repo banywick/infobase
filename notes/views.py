@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 class NotesView(UserGroupRequiredMixin, TemplateView):
     """Представление для страницы заметок"""
     template_name = 'notes/index.html'
-    group_required = ['sklad']
+    group_required = ['sklad', 'comers', 'everyone']
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
