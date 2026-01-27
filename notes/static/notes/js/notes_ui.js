@@ -1,4 +1,4 @@
-// UI логика приложения заметок - УПРОЩЕННАЯ ВЕРСИЯ
+// UI логика приложения заметок - ОБНОВЛЁННАЯ ВЕРСИЯ
 
 document.addEventListener('DOMContentLoaded', function() {
     // Элементы DOM
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Рендеринг списка заметок - ПРОСТОЙ ВАРИАНТ
+    // Рендеринг списка заметок - ОБНОВЛЁННЫЙ ВАРИАНТ
     function renderNotes() {
         if (!state.notes.length) {
             elements.notesList.innerHTML = '';
@@ -59,16 +59,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
         elements.notesList.innerHTML = state.notes.map((note, index) => {
             const noteText = note.text || '';
-            const date = note.created_at || note.updated_at || new Date().toISOString();
+            const hasScrollableContent = noteText.length > 200;
             
             return `
                 <div class="note-card" data-note-id="${note.id}" style="animation-delay: ${index * 0.1}s">
-                    <div class="note-content">
-                        ${escapeHTML(noteText)}
-                    </div>
-                    <div class="note-meta">
-                        <span class="note-date">${window.NotesAPI.formatDate(date)}</span>
+                    <div class="note-header">
+                        <div class="note-content-wrapper ${hasScrollableContent ? 'scrollable' : ''}">
+                            <div class="note-content">
+                                ${escapeHTML(noteText)}
+                            </div>
+                        </div>
                         <div class="note-actions">
+                            <button class="btn-action btn-copy" data-note-id="${note.id}" title="Скопировать текст">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                            </button>
                             <button class="btn-action btn-edit" data-note-id="${note.id}" title="Редактировать">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -99,6 +106,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Инициализация обработчиков событий для заметок
     function initNoteEventHandlers() {
+        // Обработчики для кнопок копирования
+        document.querySelectorAll('.btn-copy').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const noteId = this.dataset.noteId;
+                if (noteId) {
+                    copyNoteText(parseInt(noteId));
+                }
+            });
+        });
+        
         // Обработчики для кнопок редактирования
         document.querySelectorAll('.btn-edit').forEach(button => {
             button.addEventListener('click', function(e) {
@@ -120,6 +138,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+    }
+
+    // Копирование текста заметки
+    function copyNoteText(noteId) {
+        const note = state.notes.find(n => n.id === noteId);
+        if (!note || !note.text) return;
+        
+        const text = note.text;
+        
+        // Используем современный Clipboard API
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                // Показать визуальную обратную связь
+                const button = document.querySelector(`.btn-copy[data-note-id="${noteId}"]`);
+                if (button) {
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    `;
+                    button.classList.add('copied');
+                    button.title = "Скопировано!";
+                    
+                    // Вернуть оригинальную иконку через 2 секунды
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('copied');
+                        button.title = "Скопировать текст";
+                    }, 2000);
+                }
+                
+                showNotification('Текст заметки скопирован в буфер обмена', 'success');
+            })
+            .catch(err => {
+                console.error('Ошибка копирования:', err);
+                showNotification('Не удалось скопировать текст', 'error');
+            });
     }
 
     // Показать состояние загрузки
@@ -146,13 +202,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обновить счетчик заметок
     function updateNotesCount() {
         const countElement = document.getElementById('notes-count');
+        const notesCount = state.notes.length;
+        
         if (countElement) {
-            countElement.textContent = state.notes.length;
+            countElement.textContent = notesCount;
             countElement.classList.add('pulse');
             setTimeout(() => {
                 countElement.classList.remove('pulse');
             }, 300);
         }
+        
+        // ✅ Ключевое изменение: Сохраняем количество в localStorage
+        localStorage.setItem('notesCount', notesCount);
+        
+        // Также можно сохранять время обновления
+        localStorage.setItem('notesCountUpdated', new Date().toISOString());
     }
 
     // Редактировать заметку

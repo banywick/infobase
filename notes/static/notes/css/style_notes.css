@@ -180,17 +180,6 @@
     background: linear-gradient(to bottom, #667eea, #764ba2);
 }
 
-.note-content {
-    margin-bottom: 20px;
-    line-height: 1.7;
-    color: #444;
-    font-size: 15px;
-    max-height: 180px;
-    overflow: hidden;
-    position: relative;
-    transition: max-height 0.3s ease;
-}
-
 
 
 .note-meta {
@@ -456,4 +445,166 @@
     border-radius: 50%;
     border-top-color: white;
     animation: spin 1s linear infinite;
+}
+
+/* Стили для заметок */
+.note-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    height: 180px; /* Фиксированная высота карточки */
+    position: relative;
+}
+
+.note-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.note-header {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.note-content-wrapper {
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.note-content-wrapper.scrollable {
+    max-height: 120px; /* Высота для появления скролла */
+    overflow-y: auto;  /* Вертикальный скролл */
+}
+
+/* Стилизация скроллбара для заметок */
+.note-content-wrapper.scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.note-content-wrapper.scrollable::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.note-content-wrapper.scrollable::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.note-content-wrapper.scrollable::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.note-content {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+.note-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-action {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #6c757d;
+}
+
+.btn-action:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+    transform: scale(1.1);
+}
+
+.btn-copy:hover {
+    color: #28a745;
+}
+
+.btn-edit:hover {
+    color: #007bff;
+}
+
+.btn-delete:hover {
+    color: #dc3545;
+}
+
+.btn-copy.copied {
+    color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.btn-copy.copied svg {
+    stroke: #28a745 !important;
+}
+
+/* Анимации */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.note-card {
+    animation: slideIn 0.3s ease forwards;
+}
+
+/* Стили для уведомлений */
+.notification {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .note-card {
+        height: 160px;
+        padding: 12px;
+    }
+    
+    .note-content-wrapper.scrollable {
+        max-height: 100px;
+    }
+    
+    .btn-action {
+        width: 28px;
+        height: 28px;
+    }
 }

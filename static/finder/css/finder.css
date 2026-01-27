@@ -14,6 +14,7 @@
 /* Фаза 3: Специфичные стили finder (позже перенесем сюда) */
 
 @import url('components/sidebar.css');
+@import url('components/note_natification_circle.css');
 @import url('components/add_button.css');
 @import url('components/popups.css');
 @import url('components/search-filters.css');

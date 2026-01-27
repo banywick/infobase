@@ -83,7 +83,7 @@ class NotesButton {
         };
         
         // Форматируем текст заметки
-        let noteText = '=== ИНФОРМАЦИЯ О ПОЗИЦИИ ===\n\n';
+        let noteText = '= ИНФОРМАЦИЯ О ПОЗИЦИИ =\n\n';
         
         if (data.name) noteText += `Наименование: ${data.name}\n`;
         if (data.article) noteText += `Артикул: ${data.article}\n`;
