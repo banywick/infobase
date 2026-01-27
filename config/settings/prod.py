@@ -19,6 +19,8 @@ STATICFILES_DIRS = [
     '/app/static',  # основная папка static в корне проекта
 ]
 
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
 # Database
 DATABASES = {
     'default': {
