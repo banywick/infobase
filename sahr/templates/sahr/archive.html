@@ -1,47 +1,140 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- Пример мета-тега с CSRF-токеном -->
-    <title>АРХИВ</title>
-    <h1>ТЕСТОВАЯ СТРАНИЦА ПОИСКА УДАЛЕННЫХ СТРОК АРХИВ</h1>
-</head> 
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Архив САХР</title>
+    <link rel="stylesheet" href="{% static 'sahr/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
 <body>
-    <form id="searchForm">
-        <input type="text" name="query" placeholder="Введите запрос" required>
-        <button type="submit">Отправить</button>
-    </form>
+    <div class="app-container">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <i class="fas fa-archive"></i>
+                    <h1>Архив САХР</h1>
+                </div>
+                <a href="{% url 'sahr_main' %}" class="nav-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>На главную</span>
+                </a>
+            </div>
+        </nav>
+
+        <main class="main-content" style="padding: 2rem;">
+            <div class="content-area">
+                <div class="content-header">
+                    <h2>Поиск в архиве</h2>
+                    <div class="search-container" style="max-width: 500px;">
+                        <input type="text" 
+                               id="archiveSearch" 
+                               class="search-input" 
+                               placeholder="Введите артикул, партию или адрес...">
+                        <button id="archiveSearchBtn" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Поиск
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Артикул</th>
+                                <th>Номенклатура</th>
+                                <th>Партия</th>
+                                <th>Адрес</th>
+                                <th>Кол-во</th>
+                                <th>Ед. изм.</th>
+                                <th>Дата удаления</th>
+                                <th>Примечание</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archiveTableBody">
+                            <!-- Данные будут загружены через JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script>
-        // Функция для получения CSRF-токена из мета-тега
-        function getCSRFToken() {
-            const metaTag = document.querySelector('meta[name="csrf-token"]');
-            return metaTag ? metaTag.getAttribute('content') : '';
-        }
-
-        document.getElementById('searchForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Предотвращаем отправку формы
-
-            const query = document.querySelector('input[name="query"]').value;
-            const csrfToken = getCSRFToken();
-
-            fetch('/sahr/find_archive_position/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken // Отправляем CSRF-токен в заголовке
-                },
-                body: JSON.stringify({ query: query })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                // Здесь вы можете обработать ответ от сервера
-            })
-            .catch((error) => {
-                console.error('Error:', error);
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchBtn = document.getElementById('archiveSearchBtn');
+            const searchInput = document.getElementById('archiveSearch');
+            
+            async function searchArchive() {
+                const query = searchInput.value.trim();
+                if (!query) return;
+                
+                try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const response = await fetch('/sahr/sahr_find_archive/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({ query })
+                    });
+                    
+                    const results = await response.json();
+                    displayResults(results);
+                } catch (error) {
+                    console.error('Ошибка поиска:', error);
+                }
+            }
+            
+            function displayResults(results) {
+                const tbody = document.getElementById('archiveTableBody');
+                tbody.innerHTML = '';
+                
+                if (results.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="text-center" style="padding: 2rem; color: var(--text-muted);">
+                                Ничего не найдено
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                results.forEach(item => {
+                    const row = document.createElement('tr');
+                    const deletedDate = item.deleted_at 
+                        ? new Date(item.deleted_at).toLocaleDateString('ru-RU')
+                        : '—';
+                    
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.article || '—'}</td>
+                        <td class="text-truncate">${item.title || '—'}</td>
+                        <td>${item.party || '—'}</td>
+                        <td>${item.address || '—'}</td>
+                        <td class="text-center">${item.quantity || 0}</td>
+                        <td class="text-center">${item.base_unit || '—'}</td>
+                        <td>${deletedDate}</td>
+                        <td class="text-truncate">${item.note || '—'}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+            
+            searchBtn.addEventListener('click', searchArchive);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchArchive();
             });
+            
+            // Загрузить все записи при открытии
+            searchInput.value = '';
+            searchArchive();
         });
     </script>
 </body>

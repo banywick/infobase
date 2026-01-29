@@ -1,44 +1,318 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- Пример мета-тега с CSRF-токеном -->
-    <title>САХР</title>
-    <h1>Тестовая страница САХР</h1>
-   
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>САХР - Система адресного хранения</title>
+    <link rel="stylesheet" href="{% static 'sahr/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Форма для поиска -->
-    <form id="searchForm">
-        <input type="text" name="query" placeholder="Введите запрос" required>
-        <button type="submit">Отправить</button>
-    </form>
-    <br>
-    <br>
+    <div class="app-container">
+        <!-- Навигационная панель -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <i class="fas fa-warehouse"></i>
+                    <h1>САХР</h1>
+                    <span class="nav-subtitle">Система адресного хранения</span>
+                </div>
+                
+                <div class="nav-menu">
+                    <button class="nav-btn active" id="mainTabBtn">
+                        <i class="fas fa-table"></i>
+                        <span>Основная таблица</span>
+                    </button>
+                    <button class="nav-btn" id="archiveTabBtn">
+                        <i class="fas fa-archive"></i>
+                        <span>Архив</span>
+                    </button>
+                    <a href="{% url 'sahr_archive' %}" class="nav-btn" target="_blank">
+                        <i class="fas fa-history"></i>
+                        <span>История архива</span>
+                    </a>
+                </div>
+                
+                <div class="nav-actions">
+                    <button class="btn btn-icon" id="backupBtn" title="Скачать резервную копию">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <div class="user-menu">
+                        <span class="username">{{ user.username }}</span>
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </nav>
 
-    <!-- Форма для проверки артикула -->
-    <form id="articleForm">
-        <label for="article">Артикул:</label>
-        <input type="text" id="article" name="article" required>
-        <br>
-        <label for="title">Название:</label>
-        <input type="text" id="title" name="title" readonly>
-        <br>
-        <label for="comment">Комментарий:</label>
-        <input type="text" id="comment" name="comment">
-        <br>
-        <label for="address">Адрес:</label>
-        <input type="text" id="address" name="address" required >
-        <br>
-        <label for="party">Партии:</label>
-        <select id="party" name="party" required multiple>
-            <!-- Варианты будут заполняться динамически -->
-        </select>
-        <br>
-        <button type="button" onclick="submitArticleForm()">Отправить</button>
-    </form>
-    <script src="{% static 'sahr/js/query.js' %}"></script> <!-- Подключение внешнего JS-файла -->
+        <!-- Основной контент -->
+        <main class="main-content">
+            <!-- Левая панель - Поиск и добавление -->
+            <aside class="sidebar">
+
+                
+                <div class="sidebar-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-search"></i>
+                        Поиск позиций
+                    </h3>
+                    <div class="search-container">
+                        <input type="text" 
+                               id="searchInput" 
+                               class="search-input" 
+                               placeholder="Введите артикул, партию или адрес...">
+                        <button id="searchBtn" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="search-results" id="searchResults">
+                        <!-- Результаты поиска будут здесь -->
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-plus-circle"></i>
+                        Добавить позицию
+                    </h3>
+                    <form id="articleForm" class="add-form">
+                        <div class="form-group">
+                            <label for="article">Артикул</label>
+                            <div class="input-with-loader">
+                                <input type="text" 
+                                       id="article" 
+                                       name="article" 
+                                       class="form-input"
+                                       placeholder="Введите артикул..."
+                                       autocomplete="off">
+                                <div class="loader" id="articleLoader"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="title">Номенклатура</label>
+                            <input type="text" 
+                                   id="title" 
+                                   class="form-input" 
+                                   readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="party">Партия</label>
+                            <select id="party" name="party" class="form-select">
+                                <option value="">Выберите партию...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="address">Адрес хранения</label>
+                                <input type="text" 
+                                       id="address" 
+                                       name="address" 
+                                       class="form-input"
+                                       placeholder="Например: А-1-2"
+                                       required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="quantity">Количество</label>
+                                <input type="number" 
+                                       id="quantity" 
+                                       name="quantity" 
+                                       class="form-input"
+                                       step="0.01"
+                                       placeholder="0.00"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="note">Примечание</label>
+                            <textarea id="note" 
+                                      name="note" 
+                                      class="form-textarea"
+                                      placeholder="Дополнительная информация..."
+                                      rows="3"></textarea>
+                        </div>
+
+                        <button type="button" 
+                                onclick="submitArticleForm()" 
+                                class="btn btn-success btn-block">
+                            <i class="fas fa-save"></i>
+                            Сохранить позицию
+                        </button>
+                    </form>
+                </div>
+
+
+
+
+
+                <div class="sidebar-info">
+                    <div class="info-card">
+                        <i class="fas fa-boxes"></i>
+                        <div class="info-content">
+                            <span class="info-label">Всего позиций</span>
+                            <span class="info-value" id="totalPositions">0</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="info-content">
+                            <span class="info-label">В основной базе</span>
+                            <span class="info-value" id="inBasePositions">0</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Правая панель - Основная таблица -->
+            <section class="content-area">
+                <div class="content-header">
+                    <h2 id="contentTitle">Основная таблица позиций</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i>
+                            Обновить
+                        </button>
+                        <div class="table-controls">
+                            <input type="text" 
+                                   id="tableFilter" 
+                                   class="filter-input" 
+                                   placeholder="Фильтр таблицы...">
+                            <select id="rowsPerPage" class="page-select">
+                                <option value="10">10 строк</option>
+                                <option value="25" selected>25 строк</option>
+                                <option value="50">50 строк</option>
+                                <option value="100">100 строк</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table" id="mainTable">
+                        <thead>
+                            <tr>
+                                <th data-sort="id">ID</th>
+                                <th data-sort="article">Артикул</th>
+                                <th data-sort="title">Номенклатура</th>
+                                <th data-sort="party">Партия</th>
+                                <th data-sort="address">Адрес</th>
+                                <th data-sort="quantity">Кол-во</th>
+                                <th data-sort="base_unit">Ед. изм.</th>
+                                <th data-sort="index_remains">Статус</th>
+                                <th data-sort="created_at">Дата добавления</th>
+                                <th data-sort="note">Примечание</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Данные будут загружены через JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div class="pagination-info" id="paginationInfo">
+                        Показано 0 из 0 записей
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="pagination-btn" id="firstPage" disabled>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button class="pagination-btn" id="prevPage" disabled>
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+                        <span class="page-numbers" id="pageNumbers">1</span>
+                        <button class="pagination-btn" id="nextPage" disabled>
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button class="pagination-btn" id="lastPage" disabled>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Модальные окна -->
+        <div class="modal" id="editModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Редактирование позиции</h3>
+                    <button class="modal-close" onclick="closeEditModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId" name="id">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editAddress">Адрес хранения</label>
+                                <input type="text" id="editAddress" name="address" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editQuantity">Количество</label>
+                                <input type="number" id="editQuantity" name="quantity" class="form-input" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editNote">Примечание</label>
+                            <textarea id="editNote" name="note" class="form-textarea" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeEditModal()">Отмена</button>
+                    <button class="btn btn-primary" onclick="saveEdit()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="historyModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>История изменений</h3>
+                    <button class="modal-close" onclick="closeHistoryModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="history-list" id="historyList">
+                        <!-- История будет загружена здесь -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="deleteModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Подтверждение удаления</h3>
+                    <button class="modal-close" onclick="closeDeleteModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите удалить эту позицию? Это действие нельзя отменить.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeDeleteModal()">Отмена</button>
+                    <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Уведомления -->
+        <div class="notifications" id="notifications"></div>
+    </div>
+
+    <script src="{% static 'sahr/js/main.js' %}"></script>
 </body>
 </html>
