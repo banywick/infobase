@@ -17,24 +17,26 @@
                     <i class="fas fa-archive"></i>
                     <h1>Архив САХР</h1>
                 </div>
-                <a href="{% url 'sahr_main' %}" class="nav-btn">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>На главную</span>
-                </a>
+                <div class="nav-menu">
+                    <a href="{% url 'sahr_main' %}" class="nav-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Назад к основной таблице</span>
+                    </a>
+                </div>
             </div>
         </nav>
 
         <main class="main-content" style="padding: 2rem;">
             <div class="content-area">
                 <div class="content-header">
-                    <h2>Поиск в архиве</h2>
+                    <h2>Архив удаленных позиций</h2>
                     <div class="search-container" style="max-width: 500px;">
                         <input type="text" 
                                id="archiveSearch" 
                                class="search-input" 
-                               placeholder="Введите артикул, партию или адрес...">
+                               placeholder="Поиск по артикулу, партии или адресу...">
                         <button id="archiveSearchBtn" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Поиск
+                            <i class="fas fa-search"></i>
                         </button>
                     </div>
                 </div>
@@ -43,15 +45,13 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Артикул</th>
                                 <th>Номенклатура</th>
                                 <th>Партия</th>
                                 <th>Адрес</th>
-                                <th>Кол-во</th>
-                                <th>Ед. изм.</th>
                                 <th>Дата удаления</th>
                                 <th>Примечание</th>
+                                <th>Статус</th>
                             </tr>
                         </thead>
                         <tbody id="archiveTableBody">
@@ -59,83 +59,31 @@
                         </tbody>
                     </table>
                 </div>
+
+                <div class="table-footer">
+                    <div class="pagination-info" id="paginationInfo">
+                        Показано 0 из 0 записей
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="pagination-btn" id="firstPage" disabled>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button class="pagination-btn" id="prevPage" disabled>
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+                        <span class="page-numbers" id="pageNumbers">1</span>
+                        <button class="pagination-btn" id="nextPage" disabled>
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button class="pagination-btn" id="lastPage" disabled>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchBtn = document.getElementById('archiveSearchBtn');
-            const searchInput = document.getElementById('archiveSearch');
-            
-            async function searchArchive() {
-                const query = searchInput.value.trim();
-                if (!query) return;
-                
-                try {
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    const response = await fetch('/sahr/sahr_find_archive/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken
-                        },
-                        body: JSON.stringify({ query })
-                    });
-                    
-                    const results = await response.json();
-                    displayResults(results);
-                } catch (error) {
-                    console.error('Ошибка поиска:', error);
-                }
-            }
-            
-            function displayResults(results) {
-                const tbody = document.getElementById('archiveTableBody');
-                tbody.innerHTML = '';
-                
-                if (results.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="9" class="text-center" style="padding: 2rem; color: var(--text-muted);">
-                                Ничего не найдено
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                results.forEach(item => {
-                    const row = document.createElement('tr');
-                    const deletedDate = item.deleted_at 
-                        ? new Date(item.deleted_at).toLocaleDateString('ru-RU')
-                        : '—';
-                    
-                    row.innerHTML = `
-                        <td>${item.id}</td>
-                        <td>${item.article || '—'}</td>
-                        <td class="text-truncate">${item.title || '—'}</td>
-                        <td>${item.party || '—'}</td>
-                        <td>${item.address || '—'}</td>
-                        <td class="text-center">${item.quantity || 0}</td>
-                        <td class="text-center">${item.base_unit || '—'}</td>
-                        <td>${deletedDate}</td>
-                        <td class="text-truncate">${item.note || '—'}</td>
-                    `;
-                    
-                    tbody.appendChild(row);
-                });
-            }
-            
-            searchBtn.addEventListener('click', searchArchive);
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') searchArchive();
-            });
-            
-            // Загрузить все записи при открытии
-            searchInput.value = '';
-            searchArchive();
-        });
-    </script>
+    <script src="{% static 'sahr/js/archive.js' %}"></script>
 </body>
 </html>

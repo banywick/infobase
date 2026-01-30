@@ -49,7 +49,7 @@ body {
 
 /* Навигационная панель */
 .navbar {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    background: #1F3A55;
     color: white;
     padding: 0.75rem 1.5rem;
     box-shadow: var(--shadow-md);
@@ -519,7 +519,7 @@ body {
 }
 
 .data-table thead {
-    background: var(--bg-tertiary);
+    background: rgba(158, 236, 160, 1);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -532,7 +532,7 @@ body {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-secondary);
+    color:  #1F3A55;;
     border-bottom: 2px solid var(--border-color);
     cursor: pointer;
     user-select: none;
@@ -955,4 +955,137 @@ body {
 .form-select.error,
 .form-textarea.error {
     border-color: var(--danger-color) !important;
+}
+
+
+/* В раздел со стилями статусов добавьте: */
+.status-unknown {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Или более яркий вариант: */
+.status-unknown {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* Стили для истории изменений */
+.history-header {
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+}
+
+.history-position-info {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0.5rem 0;
+}
+
+.history-count {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.history-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
+}
+
+.history-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-change-type {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--primary-color);
+    padding: 0.25rem 0.5rem;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.history-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.history-content {
+    font-size: 0.875rem;
+}
+
+.history-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.history-field {
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-field strong {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.history-changes {
+    padding: 0.75rem;
+    background: #fff3cd;
+    border-left: 3px solid #ffc107;
+    border-radius: var(--radius-sm);
+    margin: 0.75rem 0;
+    font-size: 0.875rem;
+}
+
+.history-user {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: right;
+    margin-top: 0.5rem;
+}
+
+.history-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+/* Стили для архивного режима */
+.archive-mode .actions-cell {
+    display: none;
+}
+
+.archive-mode .status-badge {
+    display: none;
+}
+
+/* Индикатор архивной записи */
+.archive-indicator {
+    color: var(--warning-color);
+    font-size: 1.25rem;
 }

@@ -14,6 +14,38 @@ class SahrApp {
         this.init();
     }
 
+    // Метод для форматирования даты
+    formatDateTime(dateString) {
+        if (!dateString) return '—';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '—';
+            return date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        } catch (error) {
+            console.error('Ошибка форматирования даты:', error);
+            return '—';
+        }
+    }
+
+    // Метод для преобразования времени в локальный часовой пояс
+    convertToLocalTime(utcDateString) {
+        if (!utcDateString) return null;
+        try {
+            const date = new Date(utcDateString);
+            return new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+        } catch (error) {
+            console.error('Ошибка преобразования времени:', error);
+            return null;
+        }
+    }
+
     async init() {
         this.setupEventListeners();
         await this.loadAllPositions();
@@ -22,22 +54,38 @@ class SahrApp {
     }
 
     getCSRFToken() {
-        return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        return metaTag ? metaTag.getAttribute('content') : '';
     }
 
     async fetchWithCSRF(url, options = {}) {
+        const csrfToken = this.getCSRFToken();
         const defaultOptions = {
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': this.getCSRFToken()
+                'X-CSRFToken': csrfToken
             }
         };
         
         return fetch(url, { ...defaultOptions, ...options });
     }
 
+    async fetchFormData(url, formData) {
+        const csrfToken = this.getCSRFToken();
+        
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        });
+    }
+
     showNotification(message, type = 'info') {
         const notifications = document.getElementById('notifications');
+        if (!notifications) return;
+        
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.innerHTML = `
@@ -54,42 +102,83 @@ class SahrApp {
 
     setupEventListeners() {
         // Поиск
-        document.getElementById('searchBtn').addEventListener('click', () => this.searchPositions());
-        document.getElementById('searchInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.searchPositions();
-        });
+        const searchBtn = document.getElementById('searchBtn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => this.searchPositions());
+        }
+        
+        // Поиск в архиве
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.searchPositions();
+            });
+        }
 
         // Пагинация
-        document.getElementById('refreshBtn').addEventListener('click', () => this.refreshData());
-        document.getElementById('rowsPerPage').addEventListener('change', (e) => {
-            this.rowsPerPage = parseInt(e.target.value);
-            this.currentPage = 1;
-            this.renderTable();
-        });
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.refreshData());
+        }
+        
+        const rowsPerPage = document.getElementById('rowsPerPage');
+        if (rowsPerPage) {
+            rowsPerPage.addEventListener('change', (e) => {
+                this.rowsPerPage = parseInt(e.target.value);
+                this.currentPage = 1;
+                this.renderTable();
+            });
+        }
 
         // Кнопки пагинации
-        document.getElementById('firstPage').addEventListener('click', () => this.goToPage(1));
-        document.getElementById('prevPage').addEventListener('click', () => this.goToPage(this.currentPage - 1));
-        document.getElementById('nextPage').addEventListener('click', () => this.goToPage(this.currentPage + 1));
-        document.getElementById('lastPage').addEventListener('click', () => this.goToPage(this.getTotalPages()));
+        const firstPage = document.getElementById('firstPage');
+        if (firstPage) firstPage.addEventListener('click', () => this.goToPage(1));
+        
+        const prevPage = document.getElementById('prevPage');
+        if (prevPage) prevPage.addEventListener('click', () => this.goToPage(this.currentPage - 1));
+        
+        const nextPage = document.getElementById('nextPage');
+        if (nextPage) nextPage.addEventListener('click', () => this.goToPage(this.currentPage + 1));
+        
+        const lastPage = document.getElementById('lastPage');
+        if (lastPage) lastPage.addEventListener('click', () => this.goToPage(this.getTotalPages()));
 
-        // Фильтр таблицы
-        document.getElementById('tableFilter').addEventListener('input', (e) => {
-            this.filterTable(e.target.value);
-        });
+        // Фильтр таблицы - ВАЖНО! Только для основной таблицы
+        const tableFilter = document.getElementById('tableFilter');
+        if (tableFilter) {
+            // Удаляем старые обработчики
+            tableFilter.removeEventListener('input', this.filterTable.bind(this));
+            // Добавляем новый обработчик
+            tableFilter.addEventListener('input', (e) => {
+                this.filterTable(e.target.value);
+            });
+            
+            // Сбрасываем значение при инициализации
+            tableFilter.value = '';
+        }
 
         // Резервное копирование
-        document.getElementById('backupBtn').addEventListener('click', () => this.downloadBackup());
+        const backupBtn = document.getElementById('backupBtn');
+        if (backupBtn) {
+            backupBtn.addEventListener('click', () => this.downloadBackup());
+        }
 
-        // Вкладки
-        document.getElementById('mainTabBtn').addEventListener('click', () => this.switchTab('main'));
-        document.getElementById('archiveTabBtn').addEventListener('click', () => this.switchTab('archive'));
-
-        // Поиск артикула (из вашего scripts.js)
+        // Поиск артикула
         const checkArticle = document.getElementById('article');
-        checkArticle.addEventListener('input', async () => {
-            await this.checkArticle();
-        });
+        if (checkArticle) {
+            checkArticle.addEventListener('input', async () => {
+                await this.checkArticle();
+            });
+        }
+
+        // Обработчик отправки формы добавления позиции
+        const articleForm = document.getElementById('articleForm');
+        if (articleForm) {
+            articleForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.submitArticleForm();
+            });
+        }
     }
 
     setupSorting() {
@@ -129,7 +218,10 @@ class SahrApp {
     }
 
     async searchPositions() {
-        const query = document.getElementById('searchInput').value.trim();
+        const searchInput = document.getElementById('searchInput');
+        if (!searchInput) return;
+        
+        const query = searchInput.value.trim();
         if (!query) {
             this.showNotification('Введите поисковый запрос', 'warning');
             return;
@@ -153,9 +245,11 @@ class SahrApp {
 
     displaySearchResults(results) {
         const container = document.getElementById('searchResults');
+        if (!container) return;
+        
         container.innerHTML = '';
 
-        if (results.length === 0) {
+        if (!results || results.length === 0) {
             container.innerHTML = '<div class="text-center" style="padding: 1rem; color: var(--text-muted);">Ничего не найдено</div>';
             return;
         }
@@ -168,13 +262,13 @@ class SahrApp {
                 <div class="result-details">
                     <span>${result.party || 'Без партии'}</span>
                     <span>${result.address || 'Без адреса'}</span>
-                    <span>${result.quantity || 0} ${result.base_unit || ''}</span>
                 </div>
             `;
             
             item.addEventListener('click', () => {
                 this.highlightTableRow(result.id);
-                document.getElementById('searchInput').value = '';
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) searchInput.value = '';
                 container.innerHTML = '';
             });
             
@@ -207,6 +301,10 @@ class SahrApp {
             this.totalPositions = this.allPositions.length;
             this.inBasePositions = this.allPositions.filter(p => p.index_remains === 1).length;
             
+            // Сбрасываем фильтр при загрузке
+            const tableFilter = document.getElementById('tableFilter');
+            if (tableFilter) tableFilter.value = '';
+            
             this.sortPositions();
             this.renderTable();
         } catch (error) {
@@ -238,9 +336,16 @@ class SahrApp {
         } else {
             const lowerQuery = query.toLowerCase();
             this.filteredPositions = this.allPositions.filter(position => {
-                return Object.values(position).some(value => 
-                    value && value.toString().toLowerCase().includes(lowerQuery)
-                );
+                // Ищем во всех текстовых полях
+                return Object.entries(position).some(([key, value]) => {
+                    // Пропускаем технические поля
+                    if (key === 'id' || key === 'index_remains') return false;
+                    
+                    if (value !== null && value !== undefined) {
+                        return value.toString().toLowerCase().includes(lowerQuery);
+                    }
+                    return false;
+                });
             });
         }
         
@@ -262,43 +367,66 @@ class SahrApp {
 
     renderTable() {
         const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
-
+    
         const startIndex = (this.currentPage - 1) * this.rowsPerPage;
         const endIndex = startIndex + this.rowsPerPage;
         const pageData = this.filteredPositions.slice(startIndex, endIndex);
-
+    
+        if (pageData.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" class="text-center" style="padding: 3rem;">
+                        <div style="color: var(--text-muted);">
+                            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                            <p>Нет данных для отображения</p>
+                            ${this.allPositions.length > 0 ? '<p class="text-small">Попробуйте изменить поисковый запрос</p>' : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+            this.updatePagination();
+            return;
+        }
+    
         pageData.forEach(position => {
             const row = document.createElement('tr');
             row.dataset.id = position.id;
             
-            const createdDate = position.created_at 
-                ? new Date(position.created_at).toLocaleDateString('ru-RU')
-                : '—';
+            const formattedDate = this.formatDateTime(position.date);
             
-            const statusBadge = position.index_remains === 1
-                ? '<span class="status-badge status-in-base"><i class="fas fa-check"></i> В базе</span>'
-                : '<span class="status-badge status-not-in-base"><i class="fas fa-times"></i> Нет в базе</span>';
+            // Статус
+            let statusBadge = '';
+            if (position.index_remains === 1) {
+                statusBadge = '<span class="status-badge status-in-base"><i class="fas fa-check"></i> В базе</span>';
+            } else if (position.index_remains === 0) {
+                statusBadge = '<span class="status-badge status-not-in-base"><i class="fas fa-times"></i> Нет в базе</span>';
+            } else {
+                statusBadge = '<span class="status-badge status-unknown"><i class="fas fa-question"></i> Не проверен</span>';
+            }
+            
+            const commentText = position.comment || position.note || '';
             
             row.innerHTML = `
-                <td>${position.id}</td>
-                <td class="text-truncate">${position.article || '—'}</td>
+                <td hidden>${position.id}</td>
+                <td class="text-truncate" title="${position.article || ''}">${position.article || '—'}</td>
+                <td class="text-truncate" title="${position.party || ''}">${position.party || '—'}</td>
                 <td class="text-truncate" title="${position.title || ''}">${position.title || '—'}</td>
-                <td>${position.party || '—'}</td>
                 <td>${position.address || '—'}</td>
-                <td class="text-center">${position.quantity || 0}</td>
                 <td class="text-center">${position.base_unit || '—'}</td>
+                <td class="text-truncate">${formattedDate}</td>
+                <td class="text-truncate" title="${commentText}">${commentText || '—'}</td>
                 <td>${statusBadge}</td>
-                <td>${createdDate}</td>
-                <td class="text-truncate" title="${position.note || ''}">${position.note || '—'}</td>
                 <td class="actions-cell">
-                    <button class="action-btn edit" onclick="app.editPosition(${position.id})" title="Редактировать">
+                    <button class="action-btn edit" data-id="${position.id}" title="Редактировать">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="action-btn history" onclick="app.showHistory(${position.id})" title="История изменений">
+                    <button class="action-btn history" data-id="${position.id}" title="История изменений">
                         <i class="fas fa-history"></i>
                     </button>
-                    <button class="action-btn delete" onclick="app.confirmDelete(${position.id})" title="Удалить">
+                    <button class="action-btn delete" data-id="${position.id}" title="Удалить">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -306,8 +434,65 @@ class SahrApp {
             
             tbody.appendChild(row);
         });
-
+    
+        this.addActionHandlers();
         this.updatePagination();
+    }
+
+    addActionHandlers() {
+        console.log('Добавление обработчиков действий...');
+        
+        // Обработчики для кнопок редактирования
+        const editButtons = document.querySelectorAll('.action-btn.edit');
+        console.log('Найдено кнопок редактирования:', editButtons.length);
+        
+        editButtons.forEach(button => {
+            // Удаляем старые обработчики
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            newButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(e.currentTarget.dataset.id);
+                console.log('Клик по редактированию ID:', id);
+                this.editPosition(id);
+            });
+        });
+    
+        // Обработчики для кнопок истории
+        const historyButtons = document.querySelectorAll('.action-btn.history');
+        console.log('Найдено кнопок истории:', historyButtons.length);
+        
+        historyButtons.forEach(button => {
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            newButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(e.currentTarget.dataset.id);
+                console.log('Клик по истории ID:', id);
+                this.showHistory(id);
+            });
+        });
+    
+        // Обработчики для кнопок удаления
+        const deleteButtons = document.querySelectorAll('.action-btn.delete');
+        console.log('Найдено кнопок удаления:', deleteButtons.length);
+        
+        deleteButtons.forEach(button => {
+            // Создаем новую кнопку для сброса старых обработчиков
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            // Добавляем новый обработчик
+            newButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const id = parseInt(newButton.dataset.id);
+                console.log('Клик по удалению ID:', id);
+                this.confirmDelete(id);
+            });
+        });
     }
 
     updatePagination() {
@@ -316,25 +501,40 @@ class SahrApp {
         const startItem = totalItems > 0 ? (this.currentPage - 1) * this.rowsPerPage + 1 : 0;
         const endItem = Math.min(this.currentPage * this.rowsPerPage, totalItems);
 
-        document.getElementById('paginationInfo').textContent = 
-            `Показано ${startItem}-${endItem} из ${totalItems} записей`;
+        const paginationInfo = document.getElementById('paginationInfo');
+        if (paginationInfo) {
+            paginationInfo.textContent = `Показано ${startItem}-${endItem} из ${totalItems} записей`;
+        }
 
-        document.getElementById('pageNumbers').textContent = 
-            `${this.currentPage} из ${totalPages}`;
+        const pageNumbers = document.getElementById('pageNumbers');
+        if (pageNumbers) {
+            pageNumbers.textContent = `${this.currentPage} из ${totalPages}`;
+        }
 
-        document.getElementById('firstPage').disabled = this.currentPage === 1;
-        document.getElementById('prevPage').disabled = this.currentPage === 1;
-        document.getElementById('nextPage').disabled = this.currentPage === totalPages;
-        document.getElementById('lastPage').disabled = this.currentPage === totalPages;
+        // Обновляем состояние кнопок пагинации
+        const firstPage = document.getElementById('firstPage');
+        const prevPage = document.getElementById('prevPage');
+        const nextPage = document.getElementById('nextPage');
+        const lastPage = document.getElementById('lastPage');
+
+        if (firstPage) firstPage.disabled = this.currentPage === 1;
+        if (prevPage) prevPage.disabled = this.currentPage === 1;
+        if (nextPage) nextPage.disabled = this.currentPage === totalPages;
+        if (lastPage) lastPage.disabled = this.currentPage === totalPages;
     }
 
     updateStats() {
-        document.getElementById('totalPositions').textContent = this.totalPositions;
-        document.getElementById('inBasePositions').textContent = this.inBasePositions;
+        const totalPositionsEl = document.getElementById('totalPositions');
+        const inBasePositionsEl = document.getElementById('inBasePositions');
+        
+        if (totalPositionsEl) totalPositionsEl.textContent = this.totalPositions;
+        if (inBasePositionsEl) inBasePositionsEl.textContent = this.inBasePositions;
     }
 
     async refreshData() {
         const refreshBtn = document.getElementById('refreshBtn');
+        if (!refreshBtn) return;
+        
         const originalHtml = refreshBtn.innerHTML;
         refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обновление...';
         refreshBtn.disabled = true;
@@ -348,130 +548,222 @@ class SahrApp {
     }
 
     async checkArticle() {
-    const articleInput = document.getElementById('article');
-    const loader = document.getElementById('articleLoader');
-    const titleInput = document.getElementById('title');
-    const partySelect = document.getElementById('party');
-    const hiddenIdInput = document.getElementById('hiddenId'); // Обновлено
-    const hiddenBaseUnitInput = document.getElementById('hiddenBaseUnit'); // Обновлено
-    const enteredArticle = articleInput.value.trim();
+        const articleInput = document.getElementById('article');
+        const loader = document.getElementById('articleLoader');
+        const titleInput = document.getElementById('title');
+        const partySelect = document.getElementById('party');
+        
+        if (!articleInput || !titleInput || !partySelect) {
+            console.error('Не найдены элементы формы');
+            return;
+        }
+        
+        const enteredArticle = articleInput.value.trim();
 
-    if (!enteredArticle) {
-        titleInput.value = '';
-        partySelect.innerHTML = '<option value="">Выберите партию...</option>';
-        hiddenIdInput.value = ''; // Очищаем
-        hiddenBaseUnitInput.value = ''; // Очищаем
-        return;
-    }
-
-    loader.style.display = 'block';
-
-    try {
-        const response = await fetch(`/sahr/check-article_form/${enteredArticle}/`);
-        if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error('Товар не найден');
-            } else {
-                throw new Error(`HTTP error ${response.status}`);
-            }
+        if (!enteredArticle) {
+            titleInput.value = '';
+            partySelect.innerHTML = '<option value="">Выберите партию...</option>';
+            return;
         }
 
-        const data = await response.json();
-        console.log('Получены данные:', data);
+        if (loader) loader.style.display = 'block';
 
-        if (data.error) {
-            titleInput.value = data.error;
-            titleInput.classList.add('error-text');
-            partySelect.innerHTML = '<option value="">Нет доступных партий</option>';
-            hiddenIdInput.value = '';
-            hiddenBaseUnitInput.value = '';
-            this.showNotification('Товар не найден в базе', 'warning');
-        } else {
-            // Заполняем поля формы
-            titleInput.value = data.title;
-            titleInput.classList.remove('error-text');
-            
-            // Очищаем и заполняем список партий
-            partySelect.innerHTML = '<option value="">Выберите партию...</option>';
-            if (data.party && typeof data.party === 'object') {
-                Object.values(data.party).forEach(party => {
-                    if (party && party.trim()) {
+        try {
+            const response = await fetch(`/sahr/check-article_form/${enteredArticle}/`);
+            if (!response.ok) throw new Error('Ошибка проверки артикула');
+
+            const data = await response.json();
+            console.log('Получены данные:', data);
+
+            if (data.error) {
+                titleInput.value = data.error;
+                partySelect.innerHTML = '<option value="">Нет доступных партий</option>';
+                this.showNotification('Товар не найден в базе', 'warning');
+            } else {
+                titleInput.value = data.title;
+                
+                partySelect.innerHTML = '<option value="">Выберите партию...</option>';
+                if (data.party && typeof data.party === 'object') {
+                    Object.values(data.party).forEach(party => {
                         const option = document.createElement('option');
                         option.value = party;
                         option.textContent = party;
                         partySelect.appendChild(option);
-                    }
-                });
-            }
+                    });
+                }
 
-            // Заполняем скрытые поля
-            if (data.id) {
-                hiddenIdInput.value = data.id;
-                console.log('ID установлен:', data.id);
-            }
-            if (data.base_unit) {
-                hiddenBaseUnitInput.value = data.base_unit;
-                console.log('Ед. изм. установлена:', data.base_unit);
-            }
+                // Добавляем скрытые поля
+                this.addHiddenFields(data);
 
-            // Если есть только одна партия - выбираем её автоматически
-            if (partySelect.options.length === 2) { // 1 опция + заголовок
-                partySelect.selectedIndex = 1;
+                this.showNotification('Товар найден', 'success');
             }
-
-            this.showNotification('Товар найден', 'success');
-        }
-    } catch (error) {
-        console.error('Ошибка при проверке артикула:', error);
-        titleInput.value = 'Ошибка при проверке артикула';
-        titleInput.classList.add('error-text');
-        partySelect.innerHTML = '<option value="">Ошибка загрузки</option>';
-        hiddenIdInput.value = '';
-        hiddenBaseUnitInput.value = '';
-        
-        if (error.message === 'Товар не найден') {
-            this.showNotification('Товар не найден в базе данных', 'warning');
-        } else {
+        } catch (error) {
+            console.error('Ошибка при проверке артикула:', error);
+            titleInput.value = 'Ошибка при проверке';
             this.showNotification('Ошибка при проверке артикула', 'error');
+        } finally {
+            if (loader) loader.style.display = 'none';
         }
-    } finally {
-        loader.style.display = 'none';
     }
-}
+
+    addHiddenFields(data) {
+        const form = document.getElementById('articleForm');
+        if (!form) return;
+
+        // Удаляем существующие скрытые поля
+        const existingHiddenFields = form.querySelectorAll('input[type="hidden"]');
+        existingHiddenFields.forEach(field => {
+            if (field.name === 'id' || field.name === 'base_unit' || field.name === 'title' || field.name === 'article') {
+                field.remove();
+            }
+        });
+
+        // Добавляем скрытое поле для id
+        const idField = document.createElement('input');
+        idField.type = 'hidden';
+        idField.name = 'id';
+        idField.value = data.id || '';
+        form.appendChild(idField);
+
+        // Добавляем скрытое поле для base_unit
+        const unitField = document.createElement('input');
+        unitField.type = 'hidden';
+        unitField.name = 'base_unit';
+        unitField.value = data.base_unit || '';
+        form.appendChild(unitField);
+
+        // Добавляем скрытое поле для title (если нужно)
+        const titleField = document.createElement('input');
+        titleField.type = 'hidden';
+        titleField.name = 'title';
+        titleField.value = data.title || '';
+        form.appendChild(titleField);
+
+        // Добавляем скрытое поле для article
+        const articleField = document.createElement('input');
+        articleField.type = 'hidden';
+        articleField.name = 'article';
+        articleField.value = data.article || '';
+        form.appendChild(articleField);
+    }
+
+    async submitArticleForm() {
+        const form = document.getElementById('articleForm');
+        if (!form) {
+            console.error('Форма не найдена');
+            return;
+        }
+    
+        const formData = new FormData(form);
+    
+        // Проверка обязательных полей
+        const requiredFields = ['article', 'party', 'address'];
+        const missingFields = [];
+        
+        requiredFields.forEach(field => {
+            if (!formData.get(field)) {
+                missingFields.push(field);
+            }
+        });
+    
+        if (missingFields.length > 0) {
+            this.showNotification(`Заполните обязательные поля: ${missingFields.join(', ')}`, 'warning');
+            return;
+        }
+    
+        // Исправляем: отправляем comment вместо note
+        const noteField = document.getElementById('note');
+        if (noteField && noteField.value) {
+            formData.append('comment', noteField.value);
+        }
+    
+        try {
+            const response = await this.fetchFormData('/sahr/add_position/', formData);
+            
+            const result = await response.json();
+            console.log('Результат добавления:', result);
+    
+            if (response.ok) {
+                this.showNotification('Позиция успешно добавлена!', 'success');
+                
+                // Сбрасываем форму
+                form.reset();
+                
+                // Очищаем дополнительные поля
+                const titleInput = document.getElementById('title');
+                const partySelect = document.getElementById('party');
+                if (titleInput) titleInput.value = '';
+                if (partySelect) partySelect.innerHTML = '<option value="">Выберите партию...</option>';
+                
+                // Обновляем таблицу
+                await this.refreshData();
+            } else {
+                this.showNotification(`Ошибка: ${result.error || 'Неизвестная ошибка'}`, 'error');
+            }
+        } catch (error) {
+            console.error('Ошибка при добавлении:', error);
+            this.showNotification('Ошибка при добавлении позиции', 'error');
+        }
+    }
 
     editPosition(id) {
         const position = this.allPositions.find(p => p.id === id);
         if (!position) return;
-
+    
         this.editingId = id;
-        document.getElementById('editId').value = id;
-        document.getElementById('editAddress').value = position.address || '';
-        document.getElementById('editQuantity').value = position.quantity || '';
-        document.getElementById('editNote').value = position.note || '';
-
-        document.getElementById('editModal').classList.add('active');
+        
+        const editModal = document.getElementById('editModal');
+        const editId = document.getElementById('editId');
+        const editAddress = document.getElementById('editAddress');
+        const editComment = document.getElementById('editComment');
+        
+        if (editId) editId.value = id;
+        if (editAddress) editAddress.value = position.address || '';
+        if (editComment) editComment.value = position.comment || position.note || '';
+        if (editModal) editModal.classList.add('active');
     }
 
     closeEditModal() {
-        document.getElementById('editModal').classList.remove('active');
+        const editModal = document.getElementById('editModal');
+        if (editModal) editModal.classList.remove('active');
         this.editingId = null;
     }
 
     async saveEdit() {
-        const formData = new FormData(document.getElementById('editForm'));
-
+        const form = document.getElementById('editForm');
+        if (!form || !this.editingId) return;
+    
+        // Собираем данные из формы
+        const formData = new FormData(form);
+        const data = {
+            address: formData.get('address') || '',
+            comment: formData.get('comment') || '',
+        };
+    
+        // Удаляем пустые поля
+        Object.keys(data).forEach(key => {
+            if (data[key] === '' || data[key] === null) {
+                delete data[key];
+            }
+        });
+    
+        console.log('Отправляемые данные для обновления:', data);
+    
         try {
             const response = await this.fetchWithCSRF(`/sahr/edit_position/${this.editingId}/`, {
-                method: 'PUT',
-                body: formData
+                method: 'PATCH',
+                body: JSON.stringify(data)
             });
-
+    
+            const result = await response.json();
+            console.log('Результат обновления:', result);
+    
             if (response.ok) {
                 this.showNotification('Позиция успешно обновлена', 'success');
                 this.closeEditModal();
                 await this.refreshData();
             } else {
-                this.showNotification('Ошибка при обновлении', 'error');
+                this.showNotification(`Ошибка при обновлении: ${result.error || 'Неизвестная ошибка'}`, 'error');
             }
         } catch (error) {
             console.error('Ошибка при обновлении:', error);
@@ -479,79 +771,76 @@ class SahrApp {
         }
     }
 
-    async showHistory(id) {
-        try {
-            const response = await this.fetchWithCSRF(`/sahr/history/${id}/`);
-            if (!response.ok) throw new Error('Ошибка загрузки истории');
-
-            const data = await response.json();
-            this.displayHistory(data.data, data.related_count);
-        } catch (error) {
-            console.error('Ошибка загрузки истории:', error);
-            this.showNotification('Ошибка загрузки истории', 'error');
-        }
-    }
-
-    displayHistory(history, count) {
-        const container = document.getElementById('historyList');
-        container.innerHTML = '';
-
-        if (history.length === 0) {
-            container.innerHTML = '<div class="text-center" style="padding: 1rem; color: var(--text-muted);">История изменений отсутствует</div>';
-        } else {
-            history.forEach(item => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
-                
-                const date = new Date(item.created_at).toLocaleString('ru-RU');
-                
-                historyItem.innerHTML = `
-                    <div class="history-meta">
-                        <span>${item.user || 'Система'}</span>
-                        <span>${date}</span>
-                    </div>
-                    <div class="history-changes">${item.changes || 'Изменения не указаны'}</div>
-                `;
-                
-                container.appendChild(historyItem);
-            });
-        }
-
-        document.getElementById('historyModal').classList.add('active');
-    }
-
-    closeHistoryModal() {
-        document.getElementById('historyModal').classList.remove('active');
-    }
-
     confirmDelete(id) {
         this.deletingId = id;
-        document.getElementById('deleteModal').classList.add('active');
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) deleteModal.classList.add('active');
     }
 
     closeDeleteModal() {
-        document.getElementById('deleteModal').classList.remove('active');
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) deleteModal.classList.remove('active');
         this.deletingId = null;
     }
 
-    async confirmDelete() {
-        if (!this.deletingId) return;
-
+    async performDelete() {
+        if (!this.deletingId) {
+            console.error('Нет ID для удаления');
+            return;
+        }
+        
+        const id = this.deletingId;
+        console.log('🔄 Начинаем удаление позиции ID:', id);
+        
         try {
-            const response = await this.fetchWithCSRF(`/sahr/remove_position/${this.deletingId}/`, {
+            const response = await this.fetchWithCSRF(`/sahr/remove_position/${id}/`, {
                 method: 'DELETE'
             });
-
+            
+            console.log('📊 Статус ответа:', response.status);
+            console.log('📊 Статус текст:', response.statusText);
+            
             if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Успешное удаление:', result);
+                
                 this.showNotification('Позиция успешно удалена', 'success');
                 this.closeDeleteModal();
-                await this.refreshData();
+                
+                // Удаляем позицию из локального массива без перезагрузки
+                this.allPositions = this.allPositions.filter(p => p.id !== id);
+                this.filteredPositions = this.filteredPositions.filter(p => p.id !== id);
+                
+                // Обновляем таблицу
+                this.renderTable();
+                this.updateStats();
+                
             } else {
-                this.showNotification('Ошибка при удалении', 'error');
+                let errorText = '';
+                try {
+                    const errorData = await response.json();
+                    errorText = JSON.stringify(errorData);
+                } catch {
+                    errorText = await response.text();
+                }
+                
+                console.error('❌ Ошибка удаления:', response.status, errorText);
+                
+                let errorMessage = `Ошибка удаления: ${response.status}`;
+                if (response.status === 403) {
+                    errorMessage = 'Доступ запрещен. Проверьте права доступа.';
+                } else if (response.status === 404) {
+                    errorMessage = 'Позиция не найдена. Возможно, она уже удалена.';
+                }
+                
+                this.showNotification(errorMessage, 'error');
+                this.closeDeleteModal();
             }
+            
         } catch (error) {
-            console.error('Ошибка при удалении:', error);
-            this.showNotification('Ошибка при удалении позиции', 'error');
+            console.error('💥 Исключение при удалении:', error);
+            this.showNotification(`Ошибка сети: ${error.message}`, 'error');
+            this.closeDeleteModal();
         }
     }
 
@@ -577,37 +866,122 @@ class SahrApp {
         }
     }
 
-    switchTab(tab) {
-        const mainTabBtn = document.getElementById('mainTabBtn');
-        const archiveTabBtn = document.getElementById('archiveTabBtn');
-        const contentTitle = document.getElementById('contentTitle');
-
-        if (tab === 'main') {
-            mainTabBtn.classList.add('active');
-            archiveTabBtn.classList.remove('active');
-            contentTitle.textContent = 'Основная таблица позиций';
-            this.loadAllPositions();
-        } else if (tab === 'archive') {
-            mainTabBtn.classList.remove('active');
-            archiveTabBtn.classList.add('active');
-            contentTitle.textContent = 'Архив удаленных позиций';
-            this.loadArchive();
+    async showHistory(id) {
+        console.log('Загрузка истории для позиции ID:', id);
+        
+        try {
+            const response = await this.fetchWithCSRF(`/sahr/history/${id}/`);
+            if (!response.ok) throw new Error('Ошибка загрузки истории');
+    
+            const data = await response.json();
+            console.log('Данные истории:', data);
+            
+            this.displayHistory(data.data, data.related_count, id);
+            
+        } catch (error) {
+            console.error('Ошибка загрузки истории:', error);
+            this.showNotification('Ошибка загрузки истории изменений', 'error');
+        }
+    }
+    
+    displayHistory(history, count, positionId) {
+        const container = document.getElementById('historyList');
+        if (!container) return;
+        
+        container.innerHTML = '';
+    
+        // Получаем информацию о текущей позиции
+        const currentPosition = this.allPositions.find(p => p.id === positionId);
+        const positionInfo = currentPosition ? 
+            `${currentPosition.article} - ${currentPosition.title}` : 
+            `Позиция ID: ${positionId}`;
+    
+        // Заголовок с информацией о позиции
+        const header = document.createElement('div');
+        header.className = 'history-header';
+        header.innerHTML = `
+            <h4>История изменений</h4>
+            <p class="history-position-info">Позиция: ${positionInfo}</p>
+            <p class="history-count">Всего изменений: ${count}</p>
+        `;
+        container.appendChild(header);
+    
+        if (!history || history.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'history-empty';
+            emptyMessage.innerHTML = `
+                <div class="text-center" style="padding: 2rem; color: var(--text-muted);">
+                    <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>История изменений отсутствует</p>
+                </div>
+            `;
+            container.appendChild(emptyMessage);
+        } else {
+            // Сортируем историю по дате (сначала новые)
+            const sortedHistory = [...history].sort((a, b) => 
+                new Date(b.created_at || b.date) - new Date(a.created_at || a.date)
+            );
+    
+            sortedHistory.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                // Определяем тип изменения
+                let changeType = 'Изменение';
+                if (index === 0) changeType = 'Текущее состояние';
+                else if (item.changes && item.changes.includes('создан')) changeType = 'Создание';
+                
+                const date = item.created_at || item.date 
+                    ? this.formatDateTime(item.created_at || item.date)
+                    : 'Дата не указана';
+                
+                // Форматируем изменения
+                let changesText = 'Изменения не указаны';
+                if (item.changes) {
+                    changesText = item.changes;
+                } else {
+                    // Автоматически определяем изменения по полям
+                    const changes = [];
+                    if (item.address) changes.push(`Адрес: ${item.address}`);
+                    if (item.comment) changes.push(`Примечание: ${item.comment}`);
+                    if (changes.length > 0) {
+                        changesText = changes.join(', ');
+                    }
+                }
+                
+                historyItem.innerHTML = `
+                    <div class="history-item-header">
+                        <span class="history-change-type">${changeType}</span>
+                        <span class="history-date">${date}</span>
+                    </div>
+                    <div class="history-content">
+                        <div class="history-fields">
+                            ${item.article ? `<div class="history-field"><strong>Артикул:</strong> ${item.article}</div>` : ''}
+                            ${item.party ? `<div class="history-field"><strong>Партия:</strong> ${item.party}</div>` : ''}
+                            ${item.title ? `<div class="history-field"><strong>Номенклатура:</strong> ${item.title}</div>` : ''}
+                            ${item.address ? `<div class="history-field"><strong>Адрес:</strong> ${item.address}</div>` : ''}
+                            ${item.comment ? `<div class="history-field"><strong>Примечание:</strong> ${item.comment}</div>` : ''}
+                        </div>
+                        ${item.changes ? `<div class="history-changes"><strong>Описание изменений:</strong> ${item.changes}</div>` : ''}
+                        ${item.user ? `<div class="history-user"><strong>Пользователь:</strong> ${item.user}</div>` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(historyItem);
+            });
+        }
+    
+        // Открываем модальное окно
+        const historyModal = document.getElementById('historyModal');
+        if (historyModal) {
+            historyModal.classList.add('active');
+            console.log('Модальное окно истории открыто');
         }
     }
 
-    async loadArchive() {
-        try {
-            const response = await this.fetchWithCSRF('/sahr/archive_remove_positions/');
-            if (!response.ok) throw new Error('Ошибка загрузки архива');
-            
-            this.allPositions = await response.json();
-            this.filteredPositions = [...this.allPositions];
-            this.sortPositions();
-            this.renderTable();
-        } catch (error) {
-            console.error('Ошибка загрузки архива:', error);
-            this.showNotification('Ошибка загрузки архива', 'error');
-        }
+    closeHistoryModal() {
+        const historyModal = document.getElementById('historyModal');
+        if (historyModal) historyModal.classList.remove('active');
     }
 }
 
@@ -615,13 +989,66 @@ class SahrApp {
 let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new SahrApp();
+    console.log('✅ Приложение SahrApp инициализировано');
 });
 
 // Экспорт функций для глобального использования
 window.app = app;
-window.submitArticleForm = () => app.submitArticleForm();
-window.closeEditModal = () => app.closeEditModal();
-window.saveEdit = () => app.saveEdit();
-window.closeHistoryModal = () => app.closeHistoryModal();
-window.closeDeleteModal = () => app.closeDeleteModal();
-window.confirmDelete = () => app.confirmDelete();
+
+// ОЧЕНЬ ВАЖНО: эти функции должны быть доступны глобально
+window.closeEditModal = () => {
+    console.log('closeEditModal вызван');
+    if (app && app.closeEditModal) {
+        app.closeEditModal();
+    }
+};
+
+window.saveEdit = () => {
+    console.log('saveEdit вызван');
+    if (app && app.saveEdit) {
+        app.saveEdit();
+    }
+};
+
+window.closeHistoryModal = () => {
+    console.log('closeHistoryModal вызван');
+    if (app && app.closeHistoryModal) {
+        app.closeHistoryModal();
+    }
+};
+
+window.closeDeleteModal = () => {
+    console.log('closeDeleteModal вызван');
+    if (app && app.closeDeleteModal) {
+        app.closeDeleteModal();
+    } else {
+        // Fallback если app не инициализирован
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.classList.remove('active');
+            console.log('Модальное окно закрыто (fallback)');
+        }
+    }
+};
+
+window.confirmDelete = () => {
+    console.log('confirmDelete вызван из HTML');
+    if (app && app.performDelete) {
+        console.log('Вызываем app.performDelete()');
+        app.performDelete();
+    } else if (app && app.confirmDelete) {
+        console.log('Вызываем app.confirmDelete()');
+        app.confirmDelete();
+    } else {
+        console.error('app или методы не найдены');
+        alert('Ошибка: приложение не инициализировано');
+    }
+};
+
+// Для совместимости
+window.submitArticleForm = () => {
+    console.log('submitArticleForm вызван из HTML');
+    if (app && app.submitArticleForm) {
+        app.submitArticleForm();
+    }
+};
