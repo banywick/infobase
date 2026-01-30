@@ -1089,3 +1089,32 @@ body {
     color: var(--warning-color);
     font-size: 1.25rem;
 }
+
+
+/* Стиль для активной кнопки истории */
+.action-btn.history .history-active {
+    color: #ff4444 !important;
+    text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+}
+
+.action-btn.history:hover .history-active {
+    color: #ff0000 !important;
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
+}
+
+/* Анимация для кнопки с историей */
+@keyframes history-pulse {
+    0% {
+        text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 8px rgba(255, 68, 68, 0.8);
+    }
+    100% {
+        text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+    }
+}
+
+.action-btn.history .history-active {
+    animation: history-pulse 2s infinite;
+}

@@ -10,6 +10,7 @@ class SahrApp {
         this.inBasePositions = 0;
         this.editingId = null;
         this.deletingId = null;
+        this.positionsWithHistory = new Set(); // Храним ID позиций с реальной историей
         
         this.init();
     }
@@ -304,12 +305,61 @@ class SahrApp {
             // Сбрасываем фильтр при загрузке
             const tableFilter = document.getElementById('tableFilter');
             if (tableFilter) tableFilter.value = '';
+
+            // Проверяем историю для позиций на текущей странице
+            await this.checkHistoryForCurrentPage();
             
             this.sortPositions();
             this.renderTable();
         } catch (error) {
             console.error('Ошибка загрузки позиций:', error);
             this.showNotification('Ошибка загрузки данных', 'error');
+        }
+    }
+
+    async checkHistoryForCurrentPage() {
+        // Очищаем предыдущие данные
+        this.positionsWithHistory.clear();
+        
+        // Получаем позиции для текущей страницы
+        const startIndex = (this.currentPage - 1) * this.rowsPerPage;
+        const endIndex = startIndex + this.rowsPerPage;
+        const pagePositions = this.allPositions.slice(startIndex, endIndex);
+        
+        for (const position of pagePositions) {
+            try {
+                const hasRealHistory = await this.checkIfPositionHasRealHistory(position.id);
+                if (hasRealHistory) {
+                    this.positionsWithHistory.add(position.id);
+                }
+            } catch (error) {
+                console.error(`Ошибка проверки истории для позиции ${position.id}:`, error);
+            }
+        }
+        
+        console.log('Позиции с реальной историей:', Array.from(this.positionsWithHistory));
+    }
+
+    async checkIfPositionHasRealHistory(id) {
+        try {
+            const response = await this.fetchWithCSRF(`/sahr/history/${id}/`);
+            if (!response.ok) return false;
+            
+            const data = await response.json();
+            
+            // Проверяем, есть ли реальная история (больше чем 1 запись - только текущее состояние)
+            if (!data.data || data.data.length <= 1) {
+                return false;
+            }
+            
+            // Также проверяем, есть ли среди записей что-то кроме текущего состояния
+            // Фильтруем записи, исключая текущее состояние (оно всегда первое после сортировки)
+            const realHistory = data.data.slice(1); // Пропускаем первую запись (текущее состояние)
+            
+            return realHistory.length > 0;
+        } catch (error) {
+            console.error(`Ошибка при проверке истории для ID ${id}:`, error);
+            return false;
         }
     }
 
@@ -350,6 +400,8 @@ class SahrApp {
         }
         
         this.currentPage = 1;
+        // Проверяем историю для отфильтрованных позиций
+        this.checkHistoryForCurrentPage();
         this.renderTable();
     }
 
@@ -362,6 +414,8 @@ class SahrApp {
         if (page < 1 || page > totalPages) return;
         
         this.currentPage = page;
+        // При переходе на другую страницу проверяем историю для новой страницы
+        this.checkHistoryForCurrentPage();
         this.renderTable();
     }
 
@@ -409,22 +463,27 @@ class SahrApp {
             
             const commentText = position.comment || position.note || '';
             
+            // Проверяем, есть ли у позиции реальная история изменений
+            const hasRealHistory = this.positionsWithHistory.has(position.id);
+            const historyIconClass = hasRealHistory ? 'fas fa-history history-active' : 'fas fa-history';
+            const historyTitle = hasRealHistory ? 'Есть история изменений' : 'История изменений';
+            
             row.innerHTML = `
                 <td hidden>${position.id}</td>
                 <td class="text-truncate" title="${position.article || ''}">${position.article || '—'}</td>
-                <td class="text-truncate" title="${position.party || ''}">${position.party || '—'}</td>
                 <td class="text-truncate" title="${position.title || ''}">${position.title || '—'}</td>
+                <td class="text-truncate" title="${position.party || ''}">${position.party || '—'}</td>
                 <td>${position.address || '—'}</td>
                 <td class="text-center">${position.base_unit || '—'}</td>
+                <td>${statusBadge}</td>
                 <td class="text-truncate">${formattedDate}</td>
                 <td class="text-truncate" title="${commentText}">${commentText || '—'}</td>
-                <td>${statusBadge}</td>
                 <td class="actions-cell">
                     <button class="action-btn edit" data-id="${position.id}" title="Редактировать">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="action-btn history" data-id="${position.id}" title="История изменений">
-                        <i class="fas fa-history"></i>
+                    <button class="action-btn history" data-id="${position.id}" title="${historyTitle}">
+                        <i class="${historyIconClass}"></i>
                     </button>
                     <button class="action-btn delete" data-id="${position.id}" title="Удалить">
                         <i class="fas fa-trash"></i>
@@ -811,6 +870,9 @@ class SahrApp {
                 this.allPositions = this.allPositions.filter(p => p.id !== id);
                 this.filteredPositions = this.filteredPositions.filter(p => p.id !== id);
                 
+                // Удаляем из списка позиций с историей
+                this.positionsWithHistory.delete(id);
+                
                 // Обновляем таблицу
                 this.renderTable();
                 this.updateStats();
@@ -876,11 +938,37 @@ class SahrApp {
             const data = await response.json();
             console.log('Данные истории:', data);
             
+            // Проверяем, есть ли реальная история (больше чем текущее состояние)
+            const hasRealHistory = data.data && data.data.length > 1;
+            
+            // Добавляем позицию в список тех, у кого есть реальная история
+            if (hasRealHistory) {
+                this.positionsWithHistory.add(id);
+                // Обновляем кнопку на красную
+                this.updateHistoryButton(id, true);
+            }
+            
             this.displayHistory(data.data, data.related_count, id);
             
         } catch (error) {
             console.error('Ошибка загрузки истории:', error);
             this.showNotification('Ошибка загрузки истории изменений', 'error');
+        }
+    }
+
+    updateHistoryButton(id, hasRealHistory) {
+        const button = document.querySelector(`.action-btn.history[data-id="${id}"]`);
+        if (button) {
+            const icon = button.querySelector('i');
+            if (icon) {
+                if (hasRealHistory) {
+                    icon.className = 'fas fa-history history-active';
+                    button.title = 'Есть история изменений';
+                } else {
+                    icon.className = 'fas fa-history';
+                    button.title = 'История изменений';
+                }
+            }
         }
     }
     
