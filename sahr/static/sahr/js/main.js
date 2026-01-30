@@ -465,7 +465,8 @@ class SahrApp {
             
             // Проверяем, есть ли у позиции реальная история изменений
             const hasRealHistory = this.positionsWithHistory.has(position.id);
-            const historyIconClass = hasRealHistory ? 'fas fa-history history-active' : 'fas fa-history';
+            // Добавляем класс для подсветки иконки истории
+            const historyButtonClass = hasRealHistory ? 'edit_invoice_button edit_status_button has-history' : 'edit_invoice_button edit_status_button';
             const historyTitle = hasRealHistory ? 'Есть история изменений' : 'История изменений';
             
             row.innerHTML = `
@@ -479,15 +480,15 @@ class SahrApp {
                 <td class="text-truncate">${formattedDate}</td>
                 <td class="text-truncate" title="${commentText}">${commentText || '—'}</td>
                 <td class="actions-cell">
-                    <button class="action-btn edit" data-id="${position.id}" title="Редактировать">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn history" data-id="${position.id}" title="${historyTitle}">
-                        <i class="${historyIconClass}"></i>
-                    </button>
-                    <button class="action-btn delete" data-id="${position.id}" title="Удалить">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="action-btn edit" data-id="${position.id}">
+                        <img src="/static/comers/icons/icon_edit.png" title="Редактировать">
+                    </div>
+                    <div class="${historyButtonClass}" data-id="${position.id}">
+                        <img src="/static/comers/icons/icon_status.png" title="${historyTitle}">
+                    </div>
+                    <div class="edit_invoice_button delete_button" data-id="${position.id}">
+                        <img src="/static/comers/icons/icon_delete.png" title="Удалить">
+                    </div>
                 </td>
             `;
             
@@ -518,8 +519,8 @@ class SahrApp {
             });
         });
     
-        // Обработчики для кнопок истории
-        const historyButtons = document.querySelectorAll('.action-btn.history');
+        // Обработчики для кнопок истории - теперь используем новый класс
+        const historyButtons = document.querySelectorAll('.edit_invoice_button.edit_status_button');
         console.log('Найдено кнопок истории:', historyButtons.length);
         
         historyButtons.forEach(button => {
@@ -535,7 +536,7 @@ class SahrApp {
         });
     
         // Обработчики для кнопок удаления
-        const deleteButtons = document.querySelectorAll('.action-btn.delete');
+        const deleteButtons = document.querySelectorAll('.edit_invoice_button.delete_button');
         console.log('Найдено кнопок удаления:', deleteButtons.length);
         
         deleteButtons.forEach(button => {
@@ -957,17 +958,16 @@ class SahrApp {
     }
 
     updateHistoryButton(id, hasRealHistory) {
-        const button = document.querySelector(`.action-btn.history[data-id="${id}"]`);
+        const button = document.querySelector(`.edit_invoice_button.edit_status_button[data-id="${id}"]`);
         if (button) {
-            const icon = button.querySelector('i');
-            if (icon) {
-                if (hasRealHistory) {
-                    icon.className = 'fas fa-history history-active';
-                    button.title = 'Есть история изменений';
-                } else {
-                    icon.className = 'fas fa-history';
-                    button.title = 'История изменений';
-                }
+            if (hasRealHistory) {
+                button.classList.add('has-history');
+                const img = button.querySelector('img');
+                if (img) img.title = 'Есть история изменений';
+            } else {
+                button.classList.remove('has-history');
+                const img = button.querySelector('img');
+                if (img) img.title = 'История изменений';
             }
         }
     }

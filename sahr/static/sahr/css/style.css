@@ -1,7 +1,7 @@
 /* Базовые стили */
 :root {
     --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
+    --primary-hover: #575757;
     --secondary-color: #64748b;
     --success-color: #10b981;
     --danger-color: #ef4444;
@@ -247,7 +247,7 @@ body {
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    /* background: var(--primary-color); */
     color: white;
 }
 
@@ -1117,4 +1117,71 @@ body {
 
 .action-btn.history .history-active {
     animation: history-pulse 2s infinite;
+}
+
+
+/* Стили для кнопок действий */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.action-btn, .edit_invoice_button {
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+}
+
+.action-btn:hover, .edit_invoice_button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.action-btn img, .edit_invoice_button img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* Подсветка для кнопки истории */
+.edit_invoice_button.edit_status_button.has-history img {
+    filter: brightness(0) saturate(100%) invert(25%) sepia(100%) saturate(3000%) hue-rotate(350deg) brightness(90%) contrast(100%);
+}
+
+/* Анимация пульсации для кнопки с историей */
+@keyframes history-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(255, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
+    }
+}
+
+.edit_invoice_button.edit_status_button.has-history {
+    position: relative;
+    animation: history-pulse 2s infinite;
+}
+
+/* Красная точка-индикатор */
+.edit_invoice_button.edit_status_button.has-history::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background-color: #ff4444;
+    border-radius: 50%;
+    border: 1px solid white;
 }

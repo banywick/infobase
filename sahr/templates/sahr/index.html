@@ -8,11 +8,6 @@
     <link rel="icon" href="{% static 'shared/img/favicon/favicon.ico' %}" type="image/x-icon">
     <title>САХР</title>
     <link rel="stylesheet" href="{% static 'sahr/css/style.css' %}" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
     <div class="app-container">
@@ -26,10 +21,6 @@
           </div>
 
           <div class="nav-menu">
-            <button class="nav-btn active" id="mainTabBtn">
-                <i class="fas fa-table"></i>
-                <span>Основная таблица</span>
-            </button>
             <a href="{% url 'sahr_archive' %}" class="nav-btn" id="archiveLinkBtn">
                 <i class="fas fa-archive"></i>
                 <span>Архив</span>
@@ -38,7 +29,7 @@
 
           <div class="nav-actions">
             <button class="btn btn-icon" id="backupBtn" title="Скачать резервную копию">
-              <i class="fas fa-download"></i>
+                <img id="search_icon" src="{% static '/sahr/img/save_report.png' %}" alt="Отчет">
             </button>
             <div class="user-menu">
               <span class="username">{{ user.username }}</span>
@@ -65,7 +56,7 @@
                 placeholder="Введите значение ..."
               />
               <button id="searchBtn" class="btn btn-primary">
-                <i class="fas fa-search"></i>
+                <img id="search_icon" src="{% static '/finder/icon/lupa_input.png' %}" alt="Иконка поиска">
               </button>
             </div>
             <div class="search-results" id="searchResults">
