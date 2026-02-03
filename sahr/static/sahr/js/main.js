@@ -10,7 +10,7 @@ class SahrApp {
         this.inBasePositions = 0;
         this.editingId = null;
         this.deletingId = null;
-        this.positionsWithHistory = new Set(); // Храним ID позиций с реальной историей
+        this.positionsWithHistory = new Set(); // Храним ID позиций с реальной истории
         
         this.init();
     }
@@ -178,6 +178,17 @@ class SahrApp {
             articleForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 await this.submitArticleForm();
+            });
+        }
+
+        // Обработчики для модального окна редактирования
+        const editPartySelect = document.getElementById('editParty');
+        if (editPartySelect) {
+            editPartySelect.addEventListener('change', (e) => {
+                const article = document.getElementById('editId')?.value;
+                if (article && e.target.value) {
+                    this.getArticleParties(article);
+                }
             });
         }
     }
@@ -397,17 +408,36 @@ class SahrApp {
         pageData.forEach(position => {
             const row = document.createElement('tr');
             row.dataset.id = position.id;
+            row.dataset.article = position.article;
             
             const formattedDate = this.formatDateTime(position.date);
             
-            // Статус
+            // Статус - теперь кликабельный
             let statusBadge = '';
             if (position.index_remains === 1) {
-                statusBadge = '<span class="status-badge status-in-base"><i class="fas fa-check"></i> В базе</span>';
+                statusBadge = `
+                    <span class="status-badge status-in-base clickable-status" 
+                          title="Кликните для проверки остатков" 
+                          data-article="${position.article}">
+                        <i class="fas fa-check"></i> В базе
+                    </span>
+                `;
             } else if (position.index_remains === 0) {
-                statusBadge = '<span class="status-badge status-not-in-base"><i class="fas fa-times"></i> Нет в базе</span>';
+                statusBadge = `
+                    <span class="status-badge status-not-in-base clickable-status" 
+                          title="Кликните для проверки остатков" 
+                          data-article="${position.article}">
+                        <i class="fas fa-times"></i> Нет в базе
+                    </span>
+                `;
             } else {
-                statusBadge = '<span class="status-badge status-unknown"><i class="fas fa-question"></i> Не проверен</span>';
+                statusBadge = `
+                    <span class="status-badge status-unknown clickable-status" 
+                          title="Кликните для проверки остатков" 
+                          data-article="${position.article}">
+                        <i class="fas fa-question"></i> Не проверен
+                    </span>
+                `;
             }
             
             const commentText = position.comment || position.note || '';
@@ -443,9 +473,11 @@ class SahrApp {
     }
 
     addActionHandlers() {
+        console.log('Добавление обработчиков действий...');
         
         // Обработчики для кнопок редактирования
         const editButtons = document.querySelectorAll('.action-btn.edit');
+        console.log('Найдено кнопок редактирования:', editButtons.length);
         
         editButtons.forEach(button => {
             // Удаляем старые обработчики
@@ -455,12 +487,14 @@ class SahrApp {
             newButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = parseInt(e.currentTarget.dataset.id);
+                console.log('Клик по редактированию ID:', id);
                 this.editPosition(id);
             });
         });
     
         // Обработчики для кнопок истории
         const historyButtons = document.querySelectorAll('.edit_invoice_button.edit_status_button');
+        console.log('Найдено кнопок истории:', historyButtons.length);
         
         historyButtons.forEach(button => {
             const newButton = button.cloneNode(true);
@@ -469,12 +503,14 @@ class SahrApp {
             newButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = parseInt(e.currentTarget.dataset.id);
+                console.log('Клик по истории ID:', id);
                 this.showHistory(id);
             });
         });
     
         // Обработчики для кнопок удаления
         const deleteButtons = document.querySelectorAll('.edit_invoice_button.delete_button');
+        console.log('Найдено кнопок удаления:', deleteButtons.length);
         
         deleteButtons.forEach(button => {
             // Создаем новую кнопку для сброса старых обработчиков
@@ -486,7 +522,24 @@ class SahrApp {
                 e.stopPropagation();
                 e.preventDefault();
                 const id = parseInt(newButton.dataset.id);
+                console.log('Клик по удалению ID:', id);
                 this.confirmDelete(id);
+            });
+        });
+
+        // Обработчики для кликабельного статуса
+        const statusBadges = document.querySelectorAll('.clickable-status');
+        console.log('Найдено кликабельных статусов:', statusBadges.length);
+        
+        statusBadges.forEach(badge => {
+            const newBadge = badge.cloneNode(true);
+            badge.parentNode.replaceChild(newBadge, badge);
+            
+            newBadge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const article = e.currentTarget.dataset.article;
+                console.log('Клик по статусу артикула:', article);
+                this.checkArticleStock(article);
             });
         });
     }
@@ -553,6 +606,72 @@ class SahrApp {
         }
     }
 
+    async checkArticleStock(article) {
+        if (!article) {
+            this.showNotification('Артикул не найден', 'warning');
+            return;
+        }
+
+        try {
+            // Показываем loader
+            const loader = this.createStatusLoader();
+            document.querySelectorAll(`.clickable-status[data-article="${article}"]`).forEach(badge => {
+                badge.appendChild(loader);
+            });
+
+            const response = await fetch(`/finder/get_details/article_id/${article}/`);
+            if (!response.ok) throw new Error('Ошибка проверки остатков');
+
+            const data = await response.json();
+            console.log('Данные об остатках:', data);
+
+            // Удаляем loader
+            loader.remove();
+
+            // Показываем результат пользователю
+            const stockInfo = data.total_sum_any_projects || 0;
+            const unit = data.base_unit || 'шт';
+            
+            this.showNotification(`Остаток по артикулу ${article}: ${stockInfo} ${unit}`, 'success');
+
+            // Обновляем статус в таблице если нужно
+            if (stockInfo > 0) {
+                this.updateStockStatus(article, stockInfo, unit);
+            }
+
+        } catch (error) {
+            console.error('Ошибка проверки остатков:', error);
+            this.showNotification('Ошибка при проверке остатков', 'error');
+        }
+    }
+
+    createStatusLoader() {
+        const loader = document.createElement('span');
+        loader.className = 'status-loader';
+        loader.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-left: 5px;"></i>';
+        return loader;
+    }
+
+    updateStockStatus(article, stock, unit) {
+        // Находим все строки с этим артикулом
+        const rows = document.querySelectorAll(`tr[data-article="${article}"]`);
+        rows.forEach(row => {
+            const statusCell = row.querySelector('.clickable-status');
+            if (statusCell) {
+                // Обновляем title и добавляем информацию об остатке
+                statusCell.title = `Остаток: ${stock} ${unit}`;
+                
+                // Можно обновить текст статуса если нужно
+                if (stock > 0) {
+                    const icon = statusCell.querySelector('i');
+                    if (icon) {
+                        statusCell.innerHTML = `<i class="fas fa-check"></i> ${stock} ${unit}`;
+                    }
+                }
+            }
+        });
+    }
+
     updateStats() {
         const totalPositionsEl = document.getElementById('totalPositions');
         const inBasePositionsEl = document.getElementById('inBasePositions');
@@ -603,6 +722,7 @@ class SahrApp {
             if (!response.ok) throw new Error('Ошибка проверки артикула');
 
             const data = await response.json();
+            console.log('Получены данные:', data);
 
             if (data.error) {
                 titleInput.value = data.error;
@@ -710,6 +830,7 @@ class SahrApp {
             const response = await this.fetchFormData('/sahr/add_position/', formData);
             
             const result = await response.json();
+            console.log('Результат добавления:', result);
     
             if (response.ok) {
                 this.showNotification('Позиция успешно добавлена!', 'success');
@@ -734,6 +855,39 @@ class SahrApp {
         }
     }
 
+    async getArticleParties(article) {
+        if (!article) return;
+
+        try {
+            const response = await fetch(`/finder/get_details/article_id/${article}/`);
+            if (!response.ok) throw new Error('Ошибка загрузки партий');
+
+            const data = await response.json();
+            
+            const partySelect = document.getElementById('editParty');
+            if (partySelect && data.party && Array.isArray(data.party)) {
+                // Сохраняем текущее значение
+                const currentValue = partySelect.value;
+                
+                // Обновляем список
+                partySelect.innerHTML = '<option value="">Выберите партию...</option>';
+                data.party.forEach(party => {
+                    const option = document.createElement('option');
+                    option.value = party;
+                    option.textContent = party;
+                    partySelect.appendChild(option);
+                });
+                
+                // Восстанавливаем предыдущее значение если оно есть в новом списке
+                if (currentValue) {
+                    partySelect.value = currentValue;
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки партий:', error);
+        }
+    }
+
     editPosition(id) {
         const position = this.allPositions.find(p => p.id === id);
         if (!position) return;
@@ -744,10 +898,48 @@ class SahrApp {
         const editId = document.getElementById('editId');
         const editAddress = document.getElementById('editAddress');
         const editComment = document.getElementById('editComment');
+        const editParty = document.getElementById('editParty');
+        const editArticle = document.getElementById('editArticle');
+        const editTitle = document.getElementById('editTitle');
+        
+        // Получаем элементы для отображения
+        const editArticleDisplay = document.getElementById('editArticleDisplay');
+        const editTitleDisplay = document.getElementById('editTitleDisplay');
+        const editUnitDisplay = document.getElementById('editUnitDisplay');
+        const editBaseUnit = document.getElementById('editBaseUnit');
         
         if (editId) editId.value = id;
         if (editAddress) editAddress.value = position.address || '';
         if (editComment) editComment.value = position.comment || position.note || '';
+        if (editParty) editParty.value = position.party || '';
+        
+        // Заполняем скрытые поля
+        if (editArticle) editArticle.value = position.article || '';
+        if (editTitle) editTitle.value = position.title || '';
+        
+        // Заполняем элементы отображения
+        if (editArticleDisplay) {
+            editArticleDisplay.textContent = position.article || '—';
+            editArticleDisplay.style.display = 'block';
+        }
+        
+        if (editTitleDisplay) {
+            editTitleDisplay.textContent = position.title || '—';
+            editTitleDisplay.style.display = 'block';
+        }
+        
+        if (editUnitDisplay) {
+            editUnitDisplay.textContent = position.base_unit || 'шт';
+            editUnitDisplay.style.display = 'block';
+        }
+        
+        if (editBaseUnit) editBaseUnit.value = position.base_unit || '';
+        
+        // Загружаем доступные партии для этого артикула
+        if (position.article) {
+            this.getArticleParties(position.article);
+        }
+    
         if (editModal) editModal.classList.add('active');
     }
 
@@ -766,6 +958,7 @@ class SahrApp {
         const data = {
             address: formData.get('address') || '',
             comment: formData.get('comment') || '',
+            party: formData.get('party') || ''
         };
     
         // Удаляем пустые поля
@@ -775,6 +968,7 @@ class SahrApp {
             }
         });
     
+        console.log('Отправляемые данные для обновления:', data);
     
         try {
             const response = await this.fetchWithCSRF(`/sahr/edit_position/${this.editingId}/`, {
@@ -783,6 +977,7 @@ class SahrApp {
             });
     
             const result = await response.json();
+            console.log('Результат обновления:', result);
     
             if (response.ok) {
                 this.showNotification('Позиция успешно обновлена', 'success');
@@ -816,15 +1011,19 @@ class SahrApp {
         }
         
         const id = this.deletingId;
+        console.log('🔄 Начинаем удаление позиции ID:', id);
         
         try {
             const response = await this.fetchWithCSRF(`/sahr/remove_position/${id}/`, {
                 method: 'DELETE'
             });
             
+            console.log('📊 Статус ответа:', response.status);
+            console.log('📊 Статус текст:', response.statusText);
             
             if (response.ok) {
                 const result = await response.json();
+                console.log('✅ Успешное удаление:', result);
                 
                 this.showNotification('Позиция успешно удалена', 'success');
                 this.closeDeleteModal();
@@ -892,12 +1091,14 @@ class SahrApp {
     }
 
     async showHistory(id) {
+        console.log('Загрузка истории для позиции ID:', id);
         
         try {
             const response = await this.fetchWithCSRF(`/sahr/history/${id}/`);
             if (!response.ok) throw new Error('Ошибка загрузки истории');
     
             const data = await response.json();
+            console.log('Данные истории:', data);
             
             this.displayHistory(data.data, data.related_count, id);
             
@@ -998,6 +1199,7 @@ class SahrApp {
         const historyModal = document.getElementById('historyModal');
         if (historyModal) {
             historyModal.classList.add('active');
+            console.log('Модальное окно истории открыто');
         }
     }
 
@@ -1019,24 +1221,28 @@ window.app = app;
 
 // ОЧЕНЬ ВАЖНО: эти функции должны быть доступны глобально
 window.closeEditModal = () => {
+    console.log('closeEditModal вызван');
     if (app && app.closeEditModal) {
         app.closeEditModal();
     }
 };
 
 window.saveEdit = () => {
+    console.log('saveEdit вызван');
     if (app && app.saveEdit) {
         app.saveEdit();
     }
 };
 
 window.closeHistoryModal = () => {
+    console.log('closeHistoryModal вызван');
     if (app && app.closeHistoryModal) {
         app.closeHistoryModal();
     }
 };
 
 window.closeDeleteModal = () => {
+    console.log('closeDeleteModal вызван');
     if (app && app.closeDeleteModal) {
         app.closeDeleteModal();
     } else {
@@ -1044,14 +1250,18 @@ window.closeDeleteModal = () => {
         const deleteModal = document.getElementById('deleteModal');
         if (deleteModal) {
             deleteModal.classList.remove('active');
+            console.log('Модальное окно закрыто (fallback)');
         }
     }
 };
 
 window.confirmDelete = () => {
+    console.log('confirmDelete вызван из HTML');
     if (app && app.performDelete) {
+        console.log('Вызываем app.performDelete()');
         app.performDelete();
     } else if (app && app.confirmDelete) {
+        console.log('Вызываем app.confirmDelete()');
         app.confirmDelete();
     } else {
         console.error('app или методы не найдены');
@@ -1061,6 +1271,7 @@ window.confirmDelete = () => {
 
 // Для совместимости
 window.submitArticleForm = () => {
+    console.log('submitArticleForm вызван из HTML');
     if (app && app.submitArticleForm) {
         app.submitArticleForm();
     }
