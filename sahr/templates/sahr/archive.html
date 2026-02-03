@@ -8,7 +8,6 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>Архив САХР</title>
     <link rel="stylesheet" href="{% static 'sahr/css/style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="app-container">
@@ -37,7 +36,7 @@
                                class="search-input" 
                                placeholder="Поиск по артикулу, партии или адресу...">
                         <button id="archiveSearchBtn" class="btn btn-primary">
-                            <i class="fas fa-search"></i>
+                            <img id="search_icon" src="{% static '/finder/icon/lupa_input.png' %}" alt="Иконка поиска">
                         </button>
                     </div>
                 </div>

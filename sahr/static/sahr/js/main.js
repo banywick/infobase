@@ -3,7 +3,7 @@ class SahrApp {
         this.currentPage = 1;
         this.rowsPerPage = 25;
         this.sortField = 'id';
-        this.sortDirection = 'asc';
+        this.sortDirection = 'desc'; // Изменено на desc по умолчанию, чтобы новые были сверху
         this.allPositions = [];
         this.filteredPositions = [];
         this.totalPositions = 0;
@@ -298,6 +298,8 @@ class SahrApp {
             if (!response.ok) throw new Error('Ошибка загрузки данных');
             
             this.allPositions = await response.json();
+            // Сортируем по ID в порядке убывания (новые сверху)
+            this.allPositions.sort((a, b) => b.id - a.id);
             this.filteredPositions = [...this.allPositions];
             this.totalPositions = this.allPositions.length;
             this.inBasePositions = this.allPositions.filter(p => p.index_remains === 1).length;
@@ -305,61 +307,12 @@ class SahrApp {
             // Сбрасываем фильтр при загрузке
             const tableFilter = document.getElementById('tableFilter');
             if (tableFilter) tableFilter.value = '';
-
-            // Проверяем историю для позиций на текущей странице
-            await this.checkHistoryForCurrentPage();
             
             this.sortPositions();
             this.renderTable();
         } catch (error) {
             console.error('Ошибка загрузки позиций:', error);
             this.showNotification('Ошибка загрузки данных', 'error');
-        }
-    }
-
-    async checkHistoryForCurrentPage() {
-        // Очищаем предыдущие данные
-        this.positionsWithHistory.clear();
-        
-        // Получаем позиции для текущей страницы
-        const startIndex = (this.currentPage - 1) * this.rowsPerPage;
-        const endIndex = startIndex + this.rowsPerPage;
-        const pagePositions = this.allPositions.slice(startIndex, endIndex);
-        
-        for (const position of pagePositions) {
-            try {
-                const hasRealHistory = await this.checkIfPositionHasRealHistory(position.id);
-                if (hasRealHistory) {
-                    this.positionsWithHistory.add(position.id);
-                }
-            } catch (error) {
-                console.error(`Ошибка проверки истории для позиции ${position.id}:`, error);
-            }
-        }
-        
-        console.log('Позиции с реальной историей:', Array.from(this.positionsWithHistory));
-    }
-
-    async checkIfPositionHasRealHistory(id) {
-        try {
-            const response = await this.fetchWithCSRF(`/sahr/history/${id}/`);
-            if (!response.ok) return false;
-            
-            const data = await response.json();
-            
-            // Проверяем, есть ли реальная история (больше чем 1 запись - только текущее состояние)
-            if (!data.data || data.data.length <= 1) {
-                return false;
-            }
-            
-            // Также проверяем, есть ли среди записей что-то кроме текущего состояния
-            // Фильтруем записи, исключая текущее состояние (оно всегда первое после сортировки)
-            const realHistory = data.data.slice(1); // Пропускаем первую запись (текущее состояние)
-            
-            return realHistory.length > 0;
-        } catch (error) {
-            console.error(`Ошибка при проверке истории для ID ${id}:`, error);
-            return false;
         }
     }
 
@@ -400,8 +353,6 @@ class SahrApp {
         }
         
         this.currentPage = 1;
-        // Проверяем историю для отфильтрованных позиций
-        this.checkHistoryForCurrentPage();
         this.renderTable();
     }
 
@@ -414,8 +365,6 @@ class SahrApp {
         if (page < 1 || page > totalPages) return;
         
         this.currentPage = page;
-        // При переходе на другую страницу проверяем историю для новой страницы
-        this.checkHistoryForCurrentPage();
         this.renderTable();
     }
 
@@ -463,28 +412,22 @@ class SahrApp {
             
             const commentText = position.comment || position.note || '';
             
-            // Проверяем, есть ли у позиции реальная история изменений
-            const hasRealHistory = this.positionsWithHistory.has(position.id);
-            // Добавляем класс для подсветки иконки истории
-            const historyButtonClass = hasRealHistory ? 'edit_invoice_button edit_status_button has-history' : 'edit_invoice_button edit_status_button';
-            const historyTitle = hasRealHistory ? 'Есть история изменений' : 'История изменений';
-            
             row.innerHTML = `
                 <td hidden>${position.id}</td>
                 <td class="text-truncate" title="${position.article || ''}">${position.article || '—'}</td>
-                <td class="text-truncate" title="${position.title || ''}">${position.title || '—'}</td>
                 <td class="text-truncate" title="${position.party || ''}">${position.party || '—'}</td>
+                <td class="text-truncate" title="${position.title || ''}">${position.title || '—'}</td>
                 <td>${position.address || '—'}</td>
                 <td class="text-center">${position.base_unit || '—'}</td>
-                <td>${statusBadge}</td>
                 <td class="text-truncate">${formattedDate}</td>
                 <td class="text-truncate" title="${commentText}">${commentText || '—'}</td>
+                <td>${statusBadge}</td>
                 <td class="actions-cell">
                     <div class="action-btn edit" data-id="${position.id}">
                         <img src="/static/comers/icons/icon_edit.png" title="Редактировать">
                     </div>
-                    <div class="${historyButtonClass}" data-id="${position.id}">
-                        <img src="/static/comers/icons/icon_status.png" title="${historyTitle}">
+                    <div class="edit_invoice_button edit_status_button" data-id="${position.id}">
+                        <img src="/static/comers/icons/icon_status.png" title="История изменений">
                     </div>
                     <div class="edit_invoice_button delete_button" data-id="${position.id}">
                         <img src="/static/comers/icons/icon_delete.png" title="Удалить">
@@ -500,11 +443,9 @@ class SahrApp {
     }
 
     addActionHandlers() {
-        console.log('Добавление обработчиков действий...');
         
         // Обработчики для кнопок редактирования
         const editButtons = document.querySelectorAll('.action-btn.edit');
-        console.log('Найдено кнопок редактирования:', editButtons.length);
         
         editButtons.forEach(button => {
             // Удаляем старые обработчики
@@ -514,14 +455,12 @@ class SahrApp {
             newButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = parseInt(e.currentTarget.dataset.id);
-                console.log('Клик по редактированию ID:', id);
                 this.editPosition(id);
             });
         });
     
-        // Обработчики для кнопок истории - теперь используем новый класс
+        // Обработчики для кнопок истории
         const historyButtons = document.querySelectorAll('.edit_invoice_button.edit_status_button');
-        console.log('Найдено кнопок истории:', historyButtons.length);
         
         historyButtons.forEach(button => {
             const newButton = button.cloneNode(true);
@@ -530,14 +469,12 @@ class SahrApp {
             newButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = parseInt(e.currentTarget.dataset.id);
-                console.log('Клик по истории ID:', id);
                 this.showHistory(id);
             });
         });
     
         // Обработчики для кнопок удаления
         const deleteButtons = document.querySelectorAll('.edit_invoice_button.delete_button');
-        console.log('Найдено кнопок удаления:', deleteButtons.length);
         
         deleteButtons.forEach(button => {
             // Создаем новую кнопку для сброса старых обработчиков
@@ -549,7 +486,6 @@ class SahrApp {
                 e.stopPropagation();
                 e.preventDefault();
                 const id = parseInt(newButton.dataset.id);
-                console.log('Клик по удалению ID:', id);
                 this.confirmDelete(id);
             });
         });
@@ -577,10 +513,44 @@ class SahrApp {
         const nextPage = document.getElementById('nextPage');
         const lastPage = document.getElementById('lastPage');
 
-        if (firstPage) firstPage.disabled = this.currentPage === 1;
-        if (prevPage) prevPage.disabled = this.currentPage === 1;
-        if (nextPage) nextPage.disabled = this.currentPage === totalPages;
-        if (lastPage) lastPage.disabled = this.currentPage === totalPages;
+        if (firstPage) {
+            firstPage.disabled = this.currentPage === 1;
+            // Добавляем SVG стрелочку для первой страницы (≪)
+            firstPage.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 12L4 8L8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 12L8 8L12 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+        }
+        if (prevPage) {
+            prevPage.disabled = this.currentPage === 1;
+            // Добавляем SVG стрелочку для предыдущей страницы (‹)
+            prevPage.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+        }
+        if (nextPage) {
+            nextPage.disabled = this.currentPage === totalPages;
+            // Добавляем SVG стрелочку для следующей страницы (›)
+            nextPage.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+        }
+        if (lastPage) {
+            lastPage.disabled = this.currentPage === totalPages;
+            // Добавляем SVG стрелочку для последней страницы (≫)
+            lastPage.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M4 12L8 8L4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 12L12 8L8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+        }
     }
 
     updateStats() {
@@ -633,7 +603,6 @@ class SahrApp {
             if (!response.ok) throw new Error('Ошибка проверки артикула');
 
             const data = await response.json();
-            console.log('Получены данные:', data);
 
             if (data.error) {
                 titleInput.value = data.error;
@@ -741,7 +710,6 @@ class SahrApp {
             const response = await this.fetchFormData('/sahr/add_position/', formData);
             
             const result = await response.json();
-            console.log('Результат добавления:', result);
     
             if (response.ok) {
                 this.showNotification('Позиция успешно добавлена!', 'success');
@@ -807,7 +775,6 @@ class SahrApp {
             }
         });
     
-        console.log('Отправляемые данные для обновления:', data);
     
         try {
             const response = await this.fetchWithCSRF(`/sahr/edit_position/${this.editingId}/`, {
@@ -816,7 +783,6 @@ class SahrApp {
             });
     
             const result = await response.json();
-            console.log('Результат обновления:', result);
     
             if (response.ok) {
                 this.showNotification('Позиция успешно обновлена', 'success');
@@ -850,19 +816,15 @@ class SahrApp {
         }
         
         const id = this.deletingId;
-        console.log('🔄 Начинаем удаление позиции ID:', id);
         
         try {
             const response = await this.fetchWithCSRF(`/sahr/remove_position/${id}/`, {
                 method: 'DELETE'
             });
             
-            console.log('📊 Статус ответа:', response.status);
-            console.log('📊 Статус текст:', response.statusText);
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ Успешное удаление:', result);
                 
                 this.showNotification('Позиция успешно удалена', 'success');
                 this.closeDeleteModal();
@@ -930,45 +892,18 @@ class SahrApp {
     }
 
     async showHistory(id) {
-        console.log('Загрузка истории для позиции ID:', id);
         
         try {
             const response = await this.fetchWithCSRF(`/sahr/history/${id}/`);
             if (!response.ok) throw new Error('Ошибка загрузки истории');
     
             const data = await response.json();
-            console.log('Данные истории:', data);
-            
-            // Проверяем, есть ли реальная история (больше чем текущее состояние)
-            const hasRealHistory = data.data && data.data.length > 1;
-            
-            // Добавляем позицию в список тех, у кого есть реальная история
-            if (hasRealHistory) {
-                this.positionsWithHistory.add(id);
-                // Обновляем кнопку на красную
-                this.updateHistoryButton(id, true);
-            }
             
             this.displayHistory(data.data, data.related_count, id);
             
         } catch (error) {
             console.error('Ошибка загрузки истории:', error);
             this.showNotification('Ошибка загрузки истории изменений', 'error');
-        }
-    }
-
-    updateHistoryButton(id, hasRealHistory) {
-        const button = document.querySelector(`.edit_invoice_button.edit_status_button[data-id="${id}"]`);
-        if (button) {
-            if (hasRealHistory) {
-                button.classList.add('has-history');
-                const img = button.querySelector('img');
-                if (img) img.title = 'Есть история изменений';
-            } else {
-                button.classList.remove('has-history');
-                const img = button.querySelector('img');
-                if (img) img.title = 'История изменений';
-            }
         }
     }
     
@@ -1063,7 +998,6 @@ class SahrApp {
         const historyModal = document.getElementById('historyModal');
         if (historyModal) {
             historyModal.classList.add('active');
-            console.log('Модальное окно истории открыто');
         }
     }
 
@@ -1085,28 +1019,24 @@ window.app = app;
 
 // ОЧЕНЬ ВАЖНО: эти функции должны быть доступны глобально
 window.closeEditModal = () => {
-    console.log('closeEditModal вызван');
     if (app && app.closeEditModal) {
         app.closeEditModal();
     }
 };
 
 window.saveEdit = () => {
-    console.log('saveEdit вызван');
     if (app && app.saveEdit) {
         app.saveEdit();
     }
 };
 
 window.closeHistoryModal = () => {
-    console.log('closeHistoryModal вызван');
     if (app && app.closeHistoryModal) {
         app.closeHistoryModal();
     }
 };
 
 window.closeDeleteModal = () => {
-    console.log('closeDeleteModal вызван');
     if (app && app.closeDeleteModal) {
         app.closeDeleteModal();
     } else {
@@ -1114,18 +1044,14 @@ window.closeDeleteModal = () => {
         const deleteModal = document.getElementById('deleteModal');
         if (deleteModal) {
             deleteModal.classList.remove('active');
-            console.log('Модальное окно закрыто (fallback)');
         }
     }
 };
 
 window.confirmDelete = () => {
-    console.log('confirmDelete вызван из HTML');
     if (app && app.performDelete) {
-        console.log('Вызываем app.performDelete()');
         app.performDelete();
     } else if (app && app.confirmDelete) {
-        console.log('Вызываем app.confirmDelete()');
         app.confirmDelete();
     } else {
         console.error('app или методы не найдены');
@@ -1135,7 +1061,6 @@ window.confirmDelete = () => {
 
 // Для совместимости
 window.submitArticleForm = () => {
-    console.log('submitArticleForm вызван из HTML');
     if (app && app.submitArticleForm) {
         app.submitArticleForm();
     }

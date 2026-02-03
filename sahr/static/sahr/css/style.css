@@ -1,7 +1,7 @@
 /* Базовые стили */
 :root {
     --primary-color: #2563eb;
-    --primary-hover: #575757;
+    --primary-hover: #7fe46b;
     --secondary-color: #64748b;
     --success-color: #10b981;
     --danger-color: #ef4444;
@@ -247,7 +247,7 @@ body {
 }
 
 .btn-primary {
-    /* background: var(--primary-color); */
+    background: var(--primary-color);
     color: white;
 }
 
