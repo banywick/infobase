@@ -28,7 +28,9 @@ def check_article(art):
         Если артикул не найден, возвращает `None`.
     """
     article = Remains.objects.filter(article__icontains=art).first()
+    
     if article:
+        print(article)
         total_quantity = Remains.objects.filter(article=article).aggregate(sum_quantity=Sum('quantity'))['sum_quantity']
         all_party = Remains.objects.filter(article=article)
         party = {i: p.party for i, p in enumerate(all_party)}
@@ -38,6 +40,7 @@ def check_article(art):
         project = article.project
         id = article.id
         total_quantity = f'{total_quantity:.2f}'
+        print(party)
         return {
             "title": title,
             "id": id,

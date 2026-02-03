@@ -372,7 +372,9 @@ class CheckArticleAPIView(APIView):
 
         """
         result = check_article(art)
+        print(art)
         if result:
+            print(result)
             return Response(result)
         return Response({"error": "Товара нет в базе"}, status=status.HTTP_404_NOT_FOUND)   
     
