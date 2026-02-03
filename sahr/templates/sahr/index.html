@@ -15,7 +15,7 @@
       <nav class="navbar">
         <div class="nav-container">
           <div class="nav-brand">
-            <i class="fas fa-warehouse"></i>
+            <a href="{% url 'home_finder' %}"><<<</a>
             <h1>INFOBASE САХР</h1>
             <span class="nav-subtitle">Система адресного хранения</span>
           </div>
@@ -232,17 +232,53 @@
           </div>
           <div class="modal-body">
             <form id="editForm">
-                <input type="hidden" id="editId" name="id">
-                <div class="form-group">
-                    <label for="editAddress">Адрес хранения</label>
-                    <input type="text" id="editAddress" name="address" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="editComment">Примечание</label>
-                    <!-- ИСПРАВЛЕНО: используем comment вместо note -->
-                    <textarea id="editComment" name="comment" class="form-textarea" rows="3"></textarea>
-                </div>
-            </form>
+              <input type="hidden" id="editId" name="id">
+              
+              <!-- Информация об артикуле (только для чтения) -->
+              <div class="form-group">
+                  <label>Артикул</label>
+                  <div class="form-info-display" id="editArticleDisplay"></div>
+                  <input type="hidden" id="editArticle" name="article">
+              </div>
+              
+              <!-- Информация о номенклатуре (только для чтения) -->
+              <div class="form-group">
+                  <label>Номенклатура</label>
+                  <div class="form-info-display" id="editTitleDisplay"></div>
+                  <input type="hidden" id="editTitle" name="title">
+              </div>
+              
+              <!-- Поле для редактирования партии -->
+              <div class="form-group">
+                  <label for="editParty">Партия</label>
+                  <select id="editParty" name="party" class="form-input" required>
+                      <option value="">Выберите партию...</option>
+                      <!-- Опции будут загружаться динамически -->
+                  </select>
+                  <div class="form-help">Выберите партию из доступных для данного артикула</div>
+              </div>
+              
+              <!-- Поле для редактирования адреса -->
+              <div class="form-group">
+                  <label for="editAddress">Адрес хранения</label>
+                  <input type="text" id="editAddress" name="address" class="form-input" required>
+                  <div class="form-help">Например: Стеллаж A1, Полка 3</div>
+              </div>
+              
+              <!-- Поле для редактирования примечания -->
+              <div class="form-group">
+                  <label for="editComment">Примечание</label>
+                  <textarea id="editComment" name="comment" class="form-textarea" rows="3" 
+                            placeholder="Дополнительная информация..."></textarea>
+              </div>
+              
+              <!-- Дополнительная информация (опционально) -->
+              <div class="form-group" style="display: none;" id="editUnitGroup">
+                  <label>Единица измерения</label>
+                  <div class="form-info-display" id="editUnitDisplay"></div>
+                  <input type="hidden" id="editBaseUnit" name="base_unit">
+              </div>
+          </form>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeEditModal()">Отмена</button>

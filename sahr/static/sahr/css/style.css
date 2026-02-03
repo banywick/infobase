@@ -83,12 +83,19 @@ body {
     font-weight: 700;
     margin: 0;
 }
+.nav-brand a {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    text-decoration: none;
+    color: white;
+}
 
 .nav-subtitle {
     font-size: 0.875rem;
     opacity: 0.9;
     margin-left: 0.5rem;
-    display: none;
+    display: block;
 }
 
 .nav-menu {
@@ -1185,3 +1192,7 @@ body {
     border-radius: 50%;
     border: 1px solid white;
 }
+
+
+
+
