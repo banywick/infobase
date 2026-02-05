@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}" />
     <link rel="icon" href="{% static 'shared/img/favicon/favicon.ico' %}" type="image/x-icon">
     <link rel="stylesheet" href="{% static 'finder/css/finder.css' %}">
 
@@ -46,24 +47,62 @@
                             </form>    
                         </div>
                     </div> 
-                    <div class="auto_button">
-                        <button id="magic_button">
-                            <div class="button-content">
-                                <div class="search-icon"></div>
-                                <span>АвтоПоиск</span>
+                    <div class="auto_and_address">
+                        <div class="auto_button">
+                            <button id="magic_button">
+                                <div class="button-content">
+                                    <div class="search-icon"></div>
+                                    <span>АвтоПоиск</span>
+                                </div>
+                                <div class="info-sign" 
+                                title="
+                                Кнопка работает с болтами и винтами.
+                                Преобразовывает полное название
+                                в нужную структуру для поиска.
+                                Копируйте полную позицию и нажимайте на эту кнопку">i</div>
+                            </button>
+                        </div>
+
+                        <div class="button_find_address ">
+                            <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
+                            <div class="open-btn" data-popup="find_address">Найти адрес</div>
+                        </div>    
+
+                        <div id="find_address" class="my-popup">
+                            <div class="popup-content">
+                                <div class="popup-header">
+                                    <span class="drag-handle">☰</span>
+                                    <h2>Адрес товара</h2>
+                                    <span class="close-btn">&times;</span>
+                                </div>
+                                <div class="content-area">
+                                    <div class="sidebar-section">
+                                        <h3 class="section-title">
+                                        Артикул или партия
+                                        </h3>
+                                        <div class="search-container">
+                                        <input
+                                            type="text"
+                                            id="searchInput"
+                                            class="search-input"
+                                            placeholder="Введите значение ..."
+                                        />
+                                        <button id="searchBtn" class="btn btn-primary">
+                                            <img src="{% static '/finder/icon/lupa_input.png' %}" alt="Иконка поиска">
+                                        </button>
+                                        </div>
+                                        <div class="search-results" id="searchResults">
+                                        <!-- Результаты поиска будут здесь -->
+                                        </div>
+                                    </div>
+                                
+                                </div>
                             </div>
-                            <div class="info-sign" 
-                            title="
-                            Кнопка работает с болтами и винтами.
-                            Преобразовывает полное название
-                            в нужную структуру для поиска.
-                            Копируйте полную позицию и нажимайте на эту кнопку">i</div>
-                        </button>
-                        <div hidden >тест</div>
-                    </div>
-            </div>
-            <div class="info_window">
-                <p>Byajhvfwbz!!</p>
+                        </div>
+                    </div>   
+                    <div class="info_window">
+                        {% comment %} Авто заполнение {% endcomment %}
+                    </div>        
             </div>
             <div class="info_update">
                 <div>Пользователь:</div>
@@ -393,7 +432,7 @@
             closeIcon: "{% static 'finder/icon/clear.svg' %}"
         };
     </script>
-    <script src='{% static 'shared/js/components/popup_manager.js' %}'></script>
+    <script src='{% static "shared/js/components/popup_manager.js" %}'></script>
     <script src='{% static "finder/js/popups.js"%}'></script> 
     <script src='{% static "finder/js/ClickBoard.js"%}'></script> 
     <script src='{% static "finder/js/auth.js"%}'></script> 
@@ -411,6 +450,7 @@
     <script src='{% static "finder/js/copy.js"%}'></script> 
     <script src='{% static "finder/js/copy_all_pin.js"%}'></script> 
     <script src='{% static "finder/js/switch_manual_finger.js"%}'></script> 
+    <script src="{% static 'sahr/js/main.js' %}"></script>
 </body>
 </html>
 
