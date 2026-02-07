@@ -24,7 +24,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -40,7 +39,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Убедитесь что этот путь правильный
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -59,15 +58,16 @@ AUTH_PASSWORD_VALIDATORS = [
     # ... ваши валидаторы паролей ...
 ]
 
-HOME_PAGE_URL = 'home_finder'  # имя URL из urlpatterns
-
+HOME_PAGE_URL = 'home_finder'
 
 LANGUAGE_CODE = 'ru'
 TIME_ZONE = 'Europe/Minsk'
 USE_I18N = True
 USE_TZ = True
 
+# Базовые настройки статики
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
@@ -77,5 +77,5 @@ REST_FRAMEWORK = {
     ]
 }
 
-# Используем CompressedManifestStaticFilesStorage для версионирования и сжатия
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# УБРАНО: STATICFILES_STORAGE из base.py
+# Настройки WhiteNoise будут ТОЛЬКО в prod.py

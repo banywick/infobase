@@ -1,7 +1,6 @@
 from .base import *
 
 DEBUG = True
-
 ALLOWED_HOSTS = ['*']
 
 DATABASES = {
@@ -18,10 +17,3 @@ DATABASES = {
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
 
-# Настройки статики
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Для collectstatic
-
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',                # Основная папка static
-]
