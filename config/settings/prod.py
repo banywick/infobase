@@ -19,11 +19,11 @@ STATICFILES_DIRS = [
     '/app/static',  # основная папка static в корне проекта
 ]
 
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+# STORAGES = {
+#     "staticfiles": {
+#         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+#     },
+# }
 
 # Опционально: настройки Whitenoise
 # WHITENOISE_USE_FINDERS = True
