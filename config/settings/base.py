@@ -20,7 +20,6 @@ INSTALLED_APPS = [
     'reviews',
     'sahr',
     'comers',
-    'whitenoise.runserver_nostatic',
 ]
 
 MIDDLEWARE = [
@@ -68,7 +67,6 @@ TIME_ZONE = 'Europe/Minsk'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
@@ -78,5 +76,3 @@ REST_FRAMEWORK = {
     ]
 }
 
-# Используем CompressedManifestStaticFilesStorage для версионирования и сжатия
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

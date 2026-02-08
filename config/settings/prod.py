@@ -19,6 +19,8 @@ STATICFILES_DIRS = [
     '/app/static',  # основная папка static в корне проекта
 ]
 
+# Используем CompressedManifestStaticFilesStorage для версионирования и сжатия
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Database
 DATABASES = {

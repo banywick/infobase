@@ -20,7 +20,6 @@ CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
 
 # Настройки статики
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Для collectstatic
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static',                # Основная папка static
