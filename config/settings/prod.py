@@ -26,6 +26,9 @@ STORAGES = {
     },
 }
 
+
+
+
 # Database
 DATABASES = {
     'default': {

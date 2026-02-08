@@ -71,9 +71,11 @@ class HomeView(TemplateView):
     template_name = 'finder/index.html'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
-        user_group = None
-        allowed_link_names = []
+        user = None
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            user_group = None
+            allowed_link_names = []
 
         if user.is_authenticated:
             user_groups = user.groups.all()
