@@ -20,11 +20,11 @@ STATICFILES_DIRS = [
 ]
 
 
-# # Убрать Whitenoise из middleware
-# MIDDLEWARE = [m for m in MIDDLEWARE if 'whitenoise' not in m]
-
-# Стандартное хранилище
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+}
 
 # Database
 DATABASES = {
