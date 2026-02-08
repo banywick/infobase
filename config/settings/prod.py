@@ -20,8 +20,11 @@ STATICFILES_DIRS = [
 ]
 
 
-# Используем CompressedManifestStaticFilesStorage для версионирования и сжатия
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# # Убрать Whitenoise из middleware
+# MIDDLEWARE = [m for m in MIDDLEWARE if 'whitenoise' not in m]
+
+# Стандартное хранилище
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Database
 DATABASES = {
