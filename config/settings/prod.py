@@ -19,17 +19,9 @@ STATICFILES_DIRS = [
     '/app/static',  # основная папка static в корне проекта
 ]
 
-# STORAGES = {
-#     "staticfiles": {
-#         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-#     },
-# }
 
-# Опционально: настройки Whitenoise
-# WHITENOISE_USE_FINDERS = True
-# WHITENOISE_MANIFEST_STRICT = False
-# WHITENOISE_KEEP_ONLY_HASHED_FILES = True
-
+# Используем CompressedManifestStaticFilesStorage для версионирования и сжатия
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Database
 DATABASES = {
