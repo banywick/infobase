@@ -15,11 +15,7 @@ USE_X_FORWARDED_PORT = True
 STATIC_ROOT = '/app/staticfiles'
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = [
-    '/app/static',  # основная папка static в корне проекта
-]
 
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 # Database
 DATABASES = {
