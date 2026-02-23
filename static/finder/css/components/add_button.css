@@ -1,16 +1,16 @@
 /* Добавьте в CSS модуля finder или создайте новый файл notes_button.css */
 
-.note_button {
-    margin: 20px 0;
-    text-align: center;
+.compare_button {
+    align-items: center;
+    margin-bottom: 10px;
 }
-
-.note_button button {
+/* Общие стили для кнопок */
+.note_button button,
+.compare_button button {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 12px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     border-radius: 25px;
@@ -18,26 +18,44 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.note_button button:hover {
+/* Цвет для кнопки "Сопоставить" */
+.compare_button button {
+    background: #0bb6f5cf
+}
+
+/* Цвет для кнопки в .note_button (если нужно) */
+.note_button button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+
+/* Эффект при наведении */
+.note_button button:hover,
+.compare_button button:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
 }
 
-.note_button button:active {
+/* Эффект при нажатии */
+.note_button button:active,
+.compare_button button:active {
     transform: translateY(0);
 }
 
-.note_button button:disabled {
+/* Состояние disabled */
+.note_button button:disabled,
+.compare_button button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
 }
 
 /* Индикатор загрузки */
-.note_button .spinner {
+.note_button .spinner,
+.compare_button .spinner {
     display: inline-block;
     width: 18px;
     height: 18px;
@@ -46,6 +64,7 @@
     border-top-color: white;
     animation: spin 1s linear infinite;
 }
+
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
