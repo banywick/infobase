@@ -99,6 +99,24 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div id="compare" class="my-popup">
+                            <div class="popup-content">
+                                <div class="popup-header">
+                                    <span class="drag-handle">☰</span>
+                                    <h2>Сопоставить товар</h2>
+                                    <span class="close-btn">&times;</span>
+                                </div>
+                                <div class="content-area">
+                                    <h2 >Информация о позиции</h2>
+                                    <h3 >Наименование бухгалтерское:</h3>
+                                    <p id="position_name"></p>
+                                    <h3 >Артикул:</h3>
+                                    <p id="position_article"></p>
+
+                                </div>
+                            </div>
+                        </div>
                     </div>   
                     <div class="info_window">
                         {% comment %} Авто заполнение {% endcomment %}
@@ -320,6 +338,11 @@
                         <p id="count_projects"></p>
                         <img class="arrow_img" src="{% static 'finder/icon/arrow.svg' %}" alt="Стрелка">
                     </div>
+                    {% if user.is_authenticated %}
+                    <div class="compare_button">
+                        <button class="open-btn" data-popup="compare">Сопоставить</button>
+                    </div>
+                    {% endif %}
                     {% if user.is_authenticated %}
                     <div class="note_button">
                         <button>Добавить в заметки</button>
