@@ -749,13 +749,31 @@ class CeleryStatusView(APIView):
 class AutoFind(APIView):
     def post(self, request, *args, **kwargs):
         try:
-            # Используем request.data вместо request.body
             input_text = request.data.get('text', '')
+            
+            # Проверяем, есть ли такая позиция в nomenclature_kd
+            existing_entry = AccountingData.objects.filter(
+                nomenclature_kd__iexact=input_text  # iexact для регистронезависимого поиска
+            ).first()
+            
+            if existing_entry:
+                # Если нашли, возвращаем исходную строку
+                return Response({
+                    'status': 'success',
+                    'processed_text': input_text,
+                    'message': 'Позиция найдена в справочнике',
+                    'found_in_db': True
+                })
+            
+            # Если не нашли, обрабатываем через TransformationString
             processed_text = TransformationString.screw(input_text)
+            
             return Response({
                 'status': 'success',
                 'processed_text': processed_text,
+                'found_in_db': False
             })
+            
         except Exception as e:
             return Response({
                 'status': 'error',

@@ -55,13 +55,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Не прерываем выполнение, так как это не критично для основного функционала
             }
             
-            // Активируем чекбокс search_by_analog
+            // Активируем 2 чекбокса
             const searchByAnalogCheckbox = document.getElementById('search_by_analog');
-            if (searchByAnalogCheckbox) {
+            const searchKdCheckbox = document.getElementById('search_by_kd');
+            
+            if (searchByAnalogCheckbox && searchKdCheckbox) {
                 searchByAnalogCheckbox.checked = true;
+                searchKdCheckbox.checked = true;
+                console.log('Оба чекбокса активированы');
             } else {
-                console.error('Элемент search_by_analog не найден');
-                return;
+                console.error('Один или оба чекбокса не найдены:', {
+                    search_by_analog: !!searchByAnalogCheckbox,
+                    search_by_kd: !!searchKdCheckbox
+                });
             }
             
             // Нажимаем на кнопку search_icon
