@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                console.log('Отправка данных для редактирования:', data);
+                 // console.log('Отправка данных для редактирования:', data);
                 
                 // Отправляем запрос на обновление через правильный эндпоинт
                 const response = await fetch(`/comers/edit_invoices/${currentEditId}/`, {
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 const result = await response.json();
-                console.log('Ответ сервера:', result);
+                 // console.log('Ответ сервера:', result);
                 
                 if (response.ok && result.success) {
                     ComersApp.showNotification('✅ Данные успешно обновлены!', 'success');

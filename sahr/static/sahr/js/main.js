@@ -473,11 +473,11 @@ class SahrApp {
     }
 
     addActionHandlers() {
-        console.log('Добавление обработчиков действий...');
+        //  // console.log('Добавление обработчиков действий...');
         
         // Обработчики для кнопок редактирования
         const editButtons = document.querySelectorAll('.action-btn.edit');
-        console.log('Найдено кнопок редактирования:', editButtons.length);
+         // console.log('Найдено кнопок редактирования:', editButtons.length);
         
         editButtons.forEach(button => {
             // Удаляем старые обработчики
@@ -487,14 +487,14 @@ class SahrApp {
             newButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = parseInt(e.currentTarget.dataset.id);
-                console.log('Клик по редактированию ID:', id);
+                 // console.log('Клик по редактированию ID:', id);
                 this.editPosition(id);
             });
         });
     
         // Обработчики для кнопок истории
         const historyButtons = document.querySelectorAll('.edit_invoice_button.edit_status_button');
-        console.log('Найдено кнопок истории:', historyButtons.length);
+         // console.log('Найдено кнопок истории:', historyButtons.length);
         
         historyButtons.forEach(button => {
             const newButton = button.cloneNode(true);
@@ -503,14 +503,14 @@ class SahrApp {
             newButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = parseInt(e.currentTarget.dataset.id);
-                console.log('Клик по истории ID:', id);
+                 // console.log('Клик по истории ID:', id);
                 this.showHistory(id);
             });
         });
     
         // Обработчики для кнопок удаления
         const deleteButtons = document.querySelectorAll('.edit_invoice_button.delete_button');
-        console.log('Найдено кнопок удаления:', deleteButtons.length);
+         // console.log('Найдено кнопок удаления:', deleteButtons.length);
         
         deleteButtons.forEach(button => {
             // Создаем новую кнопку для сброса старых обработчиков
@@ -522,14 +522,14 @@ class SahrApp {
                 e.stopPropagation();
                 e.preventDefault();
                 const id = parseInt(newButton.dataset.id);
-                console.log('Клик по удалению ID:', id);
+                 // console.log('Клик по удалению ID:', id);
                 this.confirmDelete(id);
             });
         });
 
         // Обработчики для кликабельного статуса
         const statusBadges = document.querySelectorAll('.clickable-status');
-        console.log('Найдено кликабельных статусов:', statusBadges.length);
+         // console.log('Найдено кликабельных статусов:', statusBadges.length);
         
         statusBadges.forEach(badge => {
             const newBadge = badge.cloneNode(true);
@@ -538,7 +538,7 @@ class SahrApp {
             newBadge.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const article = e.currentTarget.dataset.article;
-                console.log('Клик по статусу артикула:', article);
+                 // console.log('Клик по статусу артикула:', article);
                 this.checkArticleStock(article);
             });
         });
@@ -623,7 +623,7 @@ class SahrApp {
             if (!response.ok) throw new Error('Ошибка проверки остатков');
 
             const data = await response.json();
-            console.log('Данные об остатках:', data);
+             // console.log('Данные об остатках:', data);
 
             // Удаляем loader
             loader.remove();
@@ -722,7 +722,7 @@ class SahrApp {
             if (!response.ok) throw new Error('Ошибка проверки артикула');
 
             const data = await response.json();
-            console.log('Получены данные:', data);
+             // console.log('Получены данные:', data);
 
             if (data.error) {
                 titleInput.value = data.error;
@@ -830,7 +830,7 @@ class SahrApp {
             const response = await this.fetchFormData('/sahr/add_position/', formData);
             
             const result = await response.json();
-            console.log('Результат добавления:', result);
+             // console.log('Результат добавления:', result);
     
             if (response.ok) {
                 this.showNotification('Позиция успешно добавлена!', 'success');
@@ -968,7 +968,7 @@ class SahrApp {
             }
         });
     
-        console.log('Отправляемые данные для обновления:', data);
+         // console.log('Отправляемые данные для обновления:', data);
     
         try {
             const response = await this.fetchWithCSRF(`/sahr/edit_position/${this.editingId}/`, {
@@ -977,7 +977,7 @@ class SahrApp {
             });
     
             const result = await response.json();
-            console.log('Результат обновления:', result);
+             // console.log('Результат обновления:', result);
     
             if (response.ok) {
                 this.showNotification('Позиция успешно обновлена', 'success');
@@ -1011,19 +1011,19 @@ class SahrApp {
         }
         
         const id = this.deletingId;
-        console.log('🔄 Начинаем удаление позиции ID:', id);
+         // console.log('🔄 Начинаем удаление позиции ID:', id);
         
         try {
             const response = await this.fetchWithCSRF(`/sahr/remove_position/${id}/`, {
                 method: 'DELETE'
             });
             
-            console.log('📊 Статус ответа:', response.status);
-            console.log('📊 Статус текст:', response.statusText);
+             // console.log('📊 Статус ответа:', response.status);
+             // console.log('📊 Статус текст:', response.statusText);
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ Успешное удаление:', result);
+                 // console.log('✅ Успешное удаление:', result);
                 
                 this.showNotification('Позиция успешно удалена', 'success');
                 this.closeDeleteModal();
@@ -1091,14 +1091,14 @@ class SahrApp {
     }
 
     async showHistory(id) {
-        console.log('Загрузка истории для позиции ID:', id);
+         // console.log('Загрузка истории для позиции ID:', id);
         
         try {
             const response = await this.fetchWithCSRF(`/sahr/history/${id}/`);
             if (!response.ok) throw new Error('Ошибка загрузки истории');
     
             const data = await response.json();
-            console.log('Данные истории:', data);
+             // console.log('Данные истории:', data);
             
             this.displayHistory(data.data, data.related_count, id);
             
@@ -1199,7 +1199,7 @@ class SahrApp {
         const historyModal = document.getElementById('historyModal');
         if (historyModal) {
             historyModal.classList.add('active');
-            console.log('Модальное окно истории открыто');
+             // console.log('Модальное окно истории открыто');
         }
     }
 
@@ -1213,7 +1213,6 @@ class SahrApp {
 let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new SahrApp();
-    console.log('✅ Приложение SahrApp инициализировано');
 });
 
 // Экспорт функций для глобального использования
@@ -1221,28 +1220,28 @@ window.app = app;
 
 // ОЧЕНЬ ВАЖНО: эти функции должны быть доступны глобально
 window.closeEditModal = () => {
-    console.log('closeEditModal вызван');
+     // console.log('closeEditModal вызван');
     if (app && app.closeEditModal) {
         app.closeEditModal();
     }
 };
 
 window.saveEdit = () => {
-    console.log('saveEdit вызван');
+     // console.log('saveEdit вызван');
     if (app && app.saveEdit) {
         app.saveEdit();
     }
 };
 
 window.closeHistoryModal = () => {
-    console.log('closeHistoryModal вызван');
+     // console.log('closeHistoryModal вызван');
     if (app && app.closeHistoryModal) {
         app.closeHistoryModal();
     }
 };
 
 window.closeDeleteModal = () => {
-    console.log('closeDeleteModal вызван');
+     // console.log('closeDeleteModal вызван');
     if (app && app.closeDeleteModal) {
         app.closeDeleteModal();
     } else {
@@ -1250,18 +1249,18 @@ window.closeDeleteModal = () => {
         const deleteModal = document.getElementById('deleteModal');
         if (deleteModal) {
             deleteModal.classList.remove('active');
-            console.log('Модальное окно закрыто (fallback)');
+             // console.log('Модальное окно закрыто (fallback)');
         }
     }
 };
 
 window.confirmDelete = () => {
-    console.log('confirmDelete вызван из HTML');
+     // console.log('confirmDelete вызван из HTML');
     if (app && app.performDelete) {
-        console.log('Вызываем app.performDelete()');
+         // console.log('Вызываем app.performDelete()');
         app.performDelete();
     } else if (app && app.confirmDelete) {
-        console.log('Вызываем app.confirmDelete()');
+         // console.log('Вызываем app.confirmDelete()');
         app.confirmDelete();
     } else {
         console.error('app или методы не найдены');
@@ -1271,7 +1270,7 @@ window.confirmDelete = () => {
 
 // Для совместимости
 window.submitArticleForm = () => {
-    console.log('submitArticleForm вызван из HTML');
+     // console.log('submitArticleForm вызван из HTML');
     if (app && app.submitArticleForm) {
         app.submitArticleForm();
     }

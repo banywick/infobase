@@ -1,17 +1,17 @@
 // notes_button.js - упрощенная версия без проверки пользователя
 
-console.log('notes_button.js загружен');
+ // console.log('notes_button.js загружен');
 
 class NotesButton {
     constructor() {
-        console.log('NotesButton конструктор вызван');
+         // console.log('NotesButton конструктор вызван');
         this.button = this.findButton();
         this.init();
     }
 
     findButton() {
         const button = document.querySelector('.note_button button');
-        console.log('Найдена кнопка:', button);
+         // console.log('Найдена кнопка:', button);
         return button;
     }
 
@@ -27,18 +27,18 @@ class NotesButton {
             this.handleClick(e);
         });
         
-        console.log('Кнопка инициализирована');
+         // console.log('Кнопка инициализирована');
     }
 
     async handleClick(e) {
-        console.log('Начало обработки клика');
+         // console.log('Начало обработки клика');
         
         // Показываем сообщение о начале
         this.showNotification('Собираем данные...', 'info');
         
         // Собираем данные
         const noteText = this.getNoteText();
-        console.log('Текст заметки:', noteText);
+         // console.log('Текст заметки:', noteText);
         
         if (!noteText.trim()) {
             this.showNotification('Нет данных для сохранения', 'error');
@@ -51,7 +51,7 @@ class NotesButton {
         try {
             // Сохраняем заметку
             const result = await this.saveNote(noteText);
-            console.log('Результат сохранения:', result);
+             // console.log('Результат сохранения:', result);
             
             // Показываем уведомление об успехе
             this.showNotification('✅ Заметка успешно сохранена!', 'success');
@@ -100,7 +100,7 @@ class NotesButton {
     }
 
     async saveNote(noteText) {
-        console.log('Отправка заметки на сервер...');
+         // console.log('Отправка заметки на сервер...');
         
         const csrfToken = this.getCSRFToken();
         
@@ -114,7 +114,7 @@ class NotesButton {
             // user будет автоматически добавлен на сервере из request.user
         };
         
-        console.log('Отправляемые данные:', data);
+         // console.log('Отправляемые данные:', data);
         
         const response = await fetch('/notes/add_note/', {
             method: 'POST',
@@ -127,13 +127,13 @@ class NotesButton {
             credentials: 'same-origin'
         });
         
-        console.log('Ответ сервера:', response.status, response.statusText);
+         // console.log('Ответ сервера:', response.status, response.statusText);
         
         if (!response.ok) {
             let errorMessage = 'Ошибка сервера';
             try {
                 const errorData = await response.json();
-                console.log('Данные ошибки:', errorData);
+                 // console.log('Данные ошибки:', errorData);
                 errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
             } catch (e) {
                 errorMessage = `HTTP ошибка: ${response.status}`;
@@ -148,7 +148,7 @@ class NotesButton {
         // 1. Из скрытого поля Django
         const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
         if (csrfInput) {
-            console.log('CSRF найден в input');
+             // console.log('CSRF найден в input');
             return csrfInput.value;
         }
         
@@ -159,7 +159,7 @@ class NotesButton {
             ?.split('=')[1];
         
         if (cookieValue) {
-            console.log('CSRF найден в cookie');
+             // console.log('CSRF найден в cookie');
             return cookieValue;
         }
         
@@ -189,7 +189,7 @@ class NotesButton {
     }
 
     showNotification(message, type = 'info') {
-        console.log('Показ уведомления:', message, type);
+         // console.log('Показ уведомления:', message, type);
         
         // Определяем цвет в зависимости от типа
         const colors = {
@@ -251,22 +251,22 @@ class NotesButton {
 // Инициализация
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM загружен, ищем кнопку заметок');
+         // console.log('DOM загружен, ищем кнопку заметок');
         setTimeout(() => {
             const button = document.querySelector('.note_button button');
             if (button) {
                 window.notesButton = new NotesButton();
-                console.log('NotesButton создан');
+                 // console.log('NotesButton создан');
             }
         }, 100);
     });
 } else {
-    console.log('DOM уже загружен, ищем кнопку');
+     // console.log('DOM уже загружен, ищем кнопку');
     setTimeout(() => {
         const button = document.querySelector('.note_button button');
         if (button) {
             window.notesButton = new NotesButton();
-            console.log('NotesButton создан');
+             // console.log('NotesButton создан');
         }
     }, 100);
 }

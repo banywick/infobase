@@ -108,12 +108,43 @@
                                     <span class="close-btn">&times;</span>
                                 </div>
                                 <div class="content-area">
-                                    <h2 >Информация о позиции</h2>
-                                    <h3 >Наименование бухгалтерское:</h3>
-                                    <p id="position_name"></p>
-                                    <h3 >Артикул:</h3>
-                                    <p id="position_article"></p>
-
+                                    <p>⚠️ Внимание! Проверьте сопоставление</p>
+                                    
+                                    <h2>Бухгалтерская позиция</h2>
+                                    
+                                    <h3>Артикул:</h3>
+                                    <p id="position_article_comp"></p>
+                                    
+                                    <h3>Наименование бухгалтерское:</h3>
+                                    <p id="position_name_comp"></p>
+                                    
+                                    <!-- Зона визуализации сопоставления -->
+                                    <div class="comparison-path">
+                                        <div class="comparison-label">
+                                            <span>⬇️</span> Сопоставление позиций <span>⬇️</span>
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    <h2>Наименование КД</h2>
+                                    
+                                    <div class="kd-highlight">
+                                        <p id="kd_title">'Что бы получить наименование воспользуйтесь кнопкой <<АВТОПОИСК>>'</p>
+                                    </div>
+                                    
+                                    <!-- Форма для сохранения -->
+                                    <form id="save_comparison_form">
+                                        <div class="form-hint">
+                                            <span class="arrow-symbol">⬇️</span>
+                                            Убедитесь в правильности сопоставления
+                                            <span class="arrow-symbol">⬇️</span>
+                                        </div>
+                                        
+                                        {% csrf_token %}
+                                        <button type="submit" id="save_comparison_btn" disabled>
+                                            Сохранить сопоставление
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -339,10 +370,15 @@
                         <img class="arrow_img" src="{% static 'finder/icon/arrow.svg' %}" alt="Стрелка">
                     </div>
                     {% if user.is_authenticated %}
+                    {% with user_groups=user.groups.all|join:", " %}
+                    {% if "sklad" in user_groups or "comers" in user_groups %}
                     <div class="compare_button">
                         <button class="open-btn" data-popup="compare">Сопоставить</button>
                     </div>
                     {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                    
                     {% if user.is_authenticated %}
                     <div class="note_button">
                         <button>Добавить в заметки</button>
@@ -444,6 +480,13 @@
                 </div>
             </div>
         </div>
+        <!-- Добавьте в конец body или в подходящее место -->
+        <div id="successNotification" class="notification hidden">
+            <div class="notification-content">
+                <span class="notification-icon">✓</span>
+                <span class="notification-message">Сопоставление успешно сохранено!</span>
+            </div>
+        </div>
     <script>
         // Определяем пути к статическим файлам
         const staticUrls = {
@@ -473,6 +516,7 @@
     <script src='{% static "finder/js/copy.js"%}'></script> 
     <script src='{% static "finder/js/copy_all_pin.js"%}'></script> 
     <script src='{% static "finder/js/switch_manual_finger.js"%}'></script> 
+    <script src='{% static "finder/js/comprasion.js"%}'></script> 
     <script src="{% static 'sahr/js/main.js' %}"></script>
 </body>
 </html>

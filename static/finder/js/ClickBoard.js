@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     magicButton.addEventListener('click', async () => {
         try {
             const clipboardText = await navigator.clipboard.readText();
-            console.log('Исходное содержимое буфера обмена:', clipboardText);
+             // console.log('Исходное содержимое буфера обмена:', clipboardText);
 
              // --- ТЕСТОВОЕ ЗНАЧЕНИЕ ---
             // const clipboardText = "Штифт 4х30 Хим.Окс.прм ГОСТ 24296-93";
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const result = await response.json();
-            console.log('Обработанный результат с сервера:', result.processed_text);
+             // console.log('Обработанный результат с сервера:', result.processed_text);
             
             // Вставляем результат в поле поиска
             const searchInput = document.getElementById('search_input');
@@ -43,6 +43,16 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 console.error('Элемент search_input не найден');
                 return;
+            }
+
+            // Вставляем исходное значение из буфера в элемент kd_title
+            const kdTitleElement = document.getElementById('kd_title');
+            if (kdTitleElement) {
+                kdTitleElement.textContent = clipboardText;
+                 // console.log('Значение вставлено в kd_title:', clipboardText);
+            } else {
+                console.error('Элемент kd_title не найден');
+                // Не прерываем выполнение, так как это не критично для основного функционала
             }
             
             // Активируем чекбокс search_by_analog
@@ -63,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            console.log('Все действия выполнены успешно');
+             // console.log('Все действия выполнены успешно');
 
         } catch (err) {
             console.error('Ошибка:', err);

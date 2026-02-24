@@ -12,7 +12,7 @@ from .utils.add_session_data import SessionManager
 from .models import LinkAccess, Remains
 from django.views.generic import TemplateView
 from django.db.models import Sum
-from .serializers import ProjectListSerializer, RemainsSerializer
+from .serializers import AccountingDataSerializer, ProjectListSerializer, RemainsSerializer
 from .utils.project_utils import ProjectUtils
 from finder.tasks import data_save_db, ping 
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -761,3 +761,70 @@ class AutoFind(APIView):
                 'status': 'error',
                 'message': str(e),
             }, status=500)
+        
+
+class Comparison(APIView):
+    def post(self, request):
+        try:
+            # Получаем данные из запроса
+            data = request.data
+            
+            # Валидация данных
+            if not data.get('accounting_code'):
+                return Response(
+                    {'error': 'Не указан бухгалтерский код'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not data.get('nomenclature_kd'):
+                return Response(
+                    {'error': 'Не указана номенклатура КД'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not data.get('accounting_name'):
+                return Response(
+                    {'error': 'Не указано бухгалтерское наименование'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Проверяем, существует ли уже такая запись
+            existing_record = AccountingData.objects.filter(
+                accounting_code=data['accounting_code'],
+                accounting_name=data['accounting_name']
+            ).first()
+            
+            if existing_record:
+                # Обновляем существующую запись
+                serializer = AccountingDataSerializer(
+                    existing_record, 
+                    data=data, 
+                    partial=True
+                )
+            else:
+                # Создаем новую запись
+                serializer = AccountingDataSerializer(data=data)
+            
+            if serializer.is_valid():
+                serializer.save()
+                logger.info(f"Данные успешно сохранены: {data['accounting_code']}")
+                return Response(
+                    {
+                        'message': 'Данные успешно сохранены',
+                        'data': serializer.data
+                    }, 
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                logger.error(f"Ошибка валидации: {serializer.errors}")
+                return Response(
+                    {'error': serializer.errors}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        except Exception as e:
+            logger.error(f"Ошибка при сохранении данных: {str(e)}")
+            return Response(
+                {'error': f'Внутренняя ошибка сервера: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )      

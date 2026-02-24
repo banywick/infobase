@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedSupplierId.textContent = `ID: ${supplierId}`;
             selectedSupplierId.style.display = 'inline-block';
             supplierValidation.style.display = 'inline-flex';
-            console.log(`Выбран поставщик: ${supplierName} (ID: ${supplierId})`);
+             // console.log(`Выбран поставщик: ${supplierName} (ID: ${supplierId})`);
         } else {
             supplierHidden.value = '';
             selectedSupplierId.style.display = 'none';

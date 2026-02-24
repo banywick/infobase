@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Создаем временный fallback
         window.ComersApp = {
             showNotification: function(msg, type) {
-                console.log(`${type}: ${msg}`);
+                 // console.log(`${type}: ${msg}`);
             },
             loadAllData: async function() {
                 try {
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Загружаем все данные при старте
     try {
         await ComersApp.loadAllData();
-        console.log('Данные загружены успешно');
+         // console.log('Данные загружены успешно');
     } catch (error) {
         console.error('Ошибка загрузки данных:', error);
     }

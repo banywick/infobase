@@ -30,7 +30,9 @@ async function updateDetailsItem(data) {
         
         // 1. Сначала обновляем данные, которые уже есть
         document.getElementById('position_name').textContent = data['Наименование'] || '';
+        document.getElementById('position_name_comp').textContent = data['Наименование'] || '';
         document.getElementById('position_article').textContent = data['Артикул'] || '';
+        document.getElementById('position_article_comp').textContent = data['Артикул'] || '';
         document.getElementById('project_name').textContent = data['Проект'] || '';
         
         // 2. Очищаем список проектов

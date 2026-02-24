@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     deleteButton.addEventListener('click', async function() {
         const currentDeleteId = ComersApp.getCurrentDeleteId();
-        console.log('Попытка удаления ID:', currentDeleteId);
+         // console.log('Попытка удаления ID:', currentDeleteId);
         
         if (!currentDeleteId) {
             ComersApp.showNotification('ID для удаления не найден', 'error');
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const removed = ComersApp.removeRowFromTable(currentDeleteId);
                 
                 if (removed) {
-                    console.log('Строка удалена из DOM');
+                     // console.log('Строка удалена из DOM');
                     
                     // Закрываем попап
                     ComersApp.closeActivePopup();
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (invoiceId) {
                 ComersApp.setCurrentDeleteId(invoiceId);
-                console.log('ID для удаления установлен из таблицы:', invoiceId);
+                 // console.log('ID для удаления установлен из таблицы:', invoiceId);
             }
         }
     });

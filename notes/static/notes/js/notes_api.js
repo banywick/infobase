@@ -10,7 +10,7 @@ class NotesAPI {
     // Получить все заметки пользователя
     async getAllNotes() {
         try {
-            console.log('Загружаем заметки...');
+             // console.log('Загружаем заметки...');
             const response = await fetch(`${this.baseUrl}/all_notes/`, {
                 method: 'GET',
                 headers: {
@@ -25,7 +25,7 @@ class NotesAPI {
             }
             
             const data = await response.json();
-            console.log('Заметки загружены:', data);
+             // console.log('Заметки загружены:', data);
             return data;
         } catch (error) {
             console.error('Error fetching notes:', error);
@@ -36,7 +36,7 @@ class NotesAPI {
     // Создать новую заметку
     async createNote(text) {
         try {
-            console.log('Создаем заметку:', text);
+             // console.log('Создаем заметку:', text);
             const response = await fetch(`${this.baseUrl}/add_note/`, {
                 method: 'POST',
                 headers: {
@@ -66,7 +66,7 @@ class NotesAPI {
     // Обновить заметку
     async updateNote(noteId, text) {
         try {
-            console.log('Обновляем заметку:', noteId, text);
+             // console.log('Обновляем заметку:', noteId, text);
             const response = await fetch(`${this.baseUrl}/edit_note/${noteId}/`, {
                 method: 'PUT',
                 headers: {
@@ -96,7 +96,7 @@ class NotesAPI {
     // Удалить заметку
     async deleteNote(noteId) {
         try {
-            console.log('Удаляем заметку:', noteId);
+             // console.log('Удаляем заметку:', noteId);
             const response = await fetch(`${this.baseUrl}/remove_note/${noteId}/`, {
                 method: 'DELETE',
                 headers: {

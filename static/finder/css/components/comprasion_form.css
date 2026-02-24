@@ -1,0 +1,460 @@
+/* Основной контейнер */
+.content-area {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 35px 40px;
+    background: #ffffff;
+    border-radius: 30px;
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.15),
+        0 8px 20px -8px rgba(0, 40, 80, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.7);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    position: relative;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+/* Предупреждение */
+.content-area p:first-child {
+    color: #b45309;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 25px;
+    padding: 10px 0 10px 20px;
+    background: linear-gradient(90deg, #fffbeb 0%, #ffffff 90%);
+    border-left: 5px solid #f59e0b;
+    border-radius: 0 12px 12px 0;
+    display: inline-block;
+}
+
+/* Заголовки секций */
+.content-area h2 {
+    font-size: 20px;
+    font-weight: 650;
+    color: #0b1e33;
+    margin: 25px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #dee5ed;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+}
+
+.content-area h2:first-of-type::before {
+    content: '📦';
+    margin-right: 10px;
+    font-size: 22px;
+}
+
+.content-area h2:last-of-type::before {
+    content: '📄';
+    margin-right: 10px;
+    font-size: 22px;
+}
+
+/* Подзаголовки */
+.content-area h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b587c;
+    margin: 18px 0 6px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Значения полей */
+.content-area p:not(:first-child) {
+    background: #ffffff;
+    padding: 18px 22px;
+    border-radius: 18px;
+    margin: 6px 0 12px 0;
+    font-size: 16px;
+    color: #0f1829;
+    box-shadow: 0 4px 8px rgba(0, 10, 30, 0.04);
+    border: 1px solid #dfe6f0;
+    transition: all 0.2s ease;
+    line-height: 1.6;
+    position: relative;
+    z-index: 2;
+}
+
+/* Специальные стили для полей */
+#position_article_comp {
+    background: #f0f5ff;
+    border-left: 5px solid #2563eb;
+    font-weight: 500;
+    border-radius: 18px 18px 18px 18px;
+}
+
+#position_name_comp {
+    background: #f0f5ff;
+    border-left: 5px solid #2563eb;
+    font-weight: 500;
+    border-radius: 18px 18px 18px 18px;
+    margin-bottom: 30px;
+}
+
+#kd_title {
+    background: #f5f3ff;
+    border-left: 5px solid #7c3aed;
+    color: #1f1b3b;
+    font-style: normal;
+    font-weight: 600;
+    border-radius: 18px 18px 18px 18px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+/* ========== ОСНОВНОЙ ДИЗАЙН СО СТРЕЛКАМИ ========== */
+
+/* Создаем дорожку для стрелок */
+.comparison-path {
+    position: relative;
+    margin: 15px 0 25px 0;
+}
+
+/* Метка сверху */
+.comparison-label {
+    text-align: center;
+    margin: 10px 0 15px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #4f46e5;
+    background: #eef2ff;
+    padding: 10px 20px;
+    border-radius: 60px;
+    display: inline-block;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.15);
+    border: 1px solid #c7d2fe;
+    letter-spacing: 0.3px;
+}
+
+.comparison-label span {
+    margin: 0 12px;
+    font-size: 18px;
+}
+
+/* Контейнер для двух позиций */
+.position-pair {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.02) 0%, rgba(124, 58, 237, 0.02) 100%);
+    border-radius: 30px;
+    padding: 20px 20px 20px 50px;
+    margin: 20px 0 10px 0;
+    border: 1px dashed #a5b4fc;
+}
+
+/* Линия, соединяющая позиции */
+.position-pair::before {
+    content: '';
+    position: absolute;
+    left: 25px;
+    top: 30px;
+    bottom: 30px;
+    width: 4px;
+    background: linear-gradient(180deg, #2563eb, #7c3aed);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    z-index: 1;
+}
+
+/* Верхняя стрелка */
+.position-pair::after {
+    content: '◀▶';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: white;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    padding: 8px 6px;
+    border-radius: 30px;
+    box-shadow: 0 6px 14px rgba(79, 70, 229, 0.4);
+    z-index: 3;
+    letter-spacing: 2px;
+    animation: pulse-glow 2s infinite;
+    border: 2px solid white;
+}
+
+/* Индикаторы на линии */
+.position-pair .dot-top,
+.position-pair .dot-bottom {
+    position: absolute;
+    left: 21px;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 3px solid;
+    border-radius: 50%;
+    z-index: 2;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.position-pair .dot-top {
+    top: 25px;
+    border-color: #2563eb;
+}
+
+.position-pair .dot-bottom {
+    bottom: 25px;
+    border-color: #7c3aed;
+}
+
+.arrow-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.arrow-item .arrow-down {
+    font-size: 28px;
+    filter: drop-shadow(0 6px 8px rgba(37, 99, 235, 0.3));
+    animation: bounce-soft 1.8s infinite;
+}
+
+.arrow-item .arrow-up {
+    font-size: 28px;
+    filter: drop-shadow(0 6px 8px rgba(124, 58, 237, 0.3));
+    animation: bounce-soft 1.8s infinite reverse;
+}
+
+.arrow-item span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    background: white;
+    padding: 5px 12px;
+    border-radius: 40px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* Визуальный акцент для блока КД */
+.kd-highlight {
+    position: relative;
+    margin-top: 20px;
+}
+
+.kd-highlight .attention-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: #fef9c3;
+    color: #854d0e;
+    padding: 5px 15px;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid #facc15;
+    box-shadow: 0 4px 8px rgba(250, 204, 21, 0.2);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.kd-highlight .attention-badge::before {
+    content: '👆';
+    font-size: 14px;
+}
+
+/* Стили формы */
+#save_comparison_form {
+    margin-top: 40px;
+    padding-top: 25px;
+    border-top: 2px dashed #b9c8e0;
+    position: relative;
+}
+
+/* Подсказка перед кнопкой */
+.form-hint {
+    text-align: center;
+    color: #475569;
+    font-size: 14px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.form-hint .arrow-symbol {
+    color: #2563eb;
+    font-size: 18px;
+    animation: bounce-horizontal 1.5s infinite;
+}
+
+/* Кнопка сохранения */
+#save_comparison_btn {
+    background: linear-gradient(115deg, #1e293b 0%, #0f172a 100%);
+    color: white;
+    border: none;
+    padding: 18px 36px;
+    font-size: 17px;
+    font-weight: 600;
+    border-radius: 60px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.25s ease;
+    box-shadow: 
+        0 15px 30px -10px rgba(15, 23, 42, 0.3),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+#save_comparison_btn::before {
+    content: '✓';
+    font-size: 20px;
+    font-weight: bold;
+    background:rgb(93 255 0 / 36%);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+#save_comparison_btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 
+        0 22px 40px -12px #0f172a,
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+    background: linear-gradient(115deg, #2d3a4f 0%, #1e293b 100%);
+}
+
+#save_comparison_btn:disabled {
+    background: #94a3b8;
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+}
+
+#save_comparison_btn:disabled::before {
+    content: '⏳';
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Анимации */
+@keyframes bounce-soft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(6px); }
+}
+
+@keyframes bounce-horizontal {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { 
+        box-shadow: 0 6px 14px rgba(79, 70, 229, 0.4);
+        transform: translateY(-50%) scale(1);
+    }
+    50% { 
+        box-shadow: 0 10px 22px rgba(79, 70, 229, 0.7);
+        transform: translateY(-50%) scale(1.05);
+    }
+}
+
+/* Стили для уведомления */
+.notification {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 9999;
+    animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notification-content {
+    background: #10b981;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 60px;
+    box-shadow: 0 12px 28px -8px rgba(16, 185, 129, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 16px;
+    font-weight: 500;
+    min-width: 320px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+}
+
+.notification-icon {
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.notification.hidden {
+    display: none;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOutRight {
+    from {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+}
+
+.notification.fade-out {
+    animation: fadeOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Адаптивность */
+@media (max-width: 700px) {
+    .content-area {
+        padding: 25px 20px;
+        margin: 15px;
+    }
+    
+    .position-pair {
+        padding: 15px 15px 15px 45px;
+    }
+    
+    
+    .arrow-item {
+        flex-direction: row;
+        justify-content: center;
+    }
+}

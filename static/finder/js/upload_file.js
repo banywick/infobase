@@ -1,5 +1,5 @@
 const submit_button = document.querySelector('.upload-button');
-console.log(submit_button)
+ // console.log(submit_button)
 submit_button.addEventListener('click', (event) => {
     // Проверяем, был ли клик реальным (не автоматическим)
     if (event.isTrusted) {
@@ -25,8 +25,8 @@ function uploadDocumentAndCheckCelery() {
         fetch("/finder/celery_status/").then(response => response.json())
     ])
     .then(([uploadData, celeryData]) => {
-        console.log('Upload Data:', uploadData);
-        console.log('Celery Status:', celeryData);
+         // console.log('Upload Data:', uploadData);
+         // console.log('Celery Status:', celeryData);
         const not_file_info = document.querySelector('.not_file_info');
         not_file_info.innerHTML = '';
 
@@ -34,7 +34,7 @@ function uploadDocumentAndCheckCelery() {
             checkTaskStatus(uploadData.task_id);
         }
         if (uploadData.doc && uploadData.doc[0]) {
-            console.log('Данные существуют')
+             // console.log('Данные существуют')
             // load_errors.innerHTML = uploadData.doc[0];
             not_file_info.innerHTML = 'Не выбран файл!';
         }

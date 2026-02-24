@@ -57,7 +57,7 @@ document.getElementById('loginButton').addEventListener('click', function(e) {
     })
     .then(data => {
         // Успешная аутентификация
-        console.log('Успешный вход:', data);
+         // console.log('Успешный вход:', data);
         
         // Можно перенаправить пользователя или обновить интерфейс
         window.location.href = '/'; // Перенаправление на главную страницу

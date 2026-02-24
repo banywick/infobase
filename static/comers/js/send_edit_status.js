@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
                 
-                console.log('Отправка данных статуса:', data);
+                 // console.log('Отправка данных статуса:', data);
                 
                 // Отправляем запрос на обновление статуса
                 const response = await fetch(`/comers/edit_invoices/${currentEditId}/`, {
