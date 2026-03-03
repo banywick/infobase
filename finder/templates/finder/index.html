@@ -151,20 +151,26 @@
                     </div>   
                     <div class="info_window">
                         {% comment %} Авто заполнение {% endcomment %}
-                    </div>        
+                    </div>
             </div>
-            <div class="info_update">
-                <div>Пользователь:</div>
-                {% if user.is_authenticated %}
-                <div>{{user.username}}</div>
-                {% else %}
-                <div>Гость</div>
-                {% endif %}
+            <div class="add_button_whats">
+                <div class="whats_new">
+                    <button id="whats_button" class="open-btn" data-popup="window_what_new">Что нового?</button>
+                </div>    
+                <div class="info_update">
+                    <div>Пользователь:</div>
+                    {% if user.is_authenticated %}
+                    <div>{{user.username}}</div>
+                    {% else %}
+                    <div>Гость</div>
+                    {% endif %}
 
-                <br>
-                <div>База обновлена</div>
-                <div>{{file_name}}</div>
+                    <br>
+                    <div>База обновлена</div>
+                    <div>{{file_name}}</div>
+                </div>
             </div>
+
         </header>
         <div class="filter_project_container">
             <div class="button button--dark-blue" id="button_filter_projects">
@@ -480,6 +486,20 @@
                 </div>
             </div>
         </div>
+        <div id="window_what_new" class="my-popup">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h2>Обновления</h2>
+                    <span class="close-btn">&times;</span>
+                    
+                </div>
+                <div class="content-area">
+                    <div class="list_new_function"></div>
+                    
+                    
+                </div>
+            </div>
+        </div>
         <!-- Добавьте в конец body или в подходящее место -->
         <div id="successNotification" class="notification hidden">
             <div class="notification-content">
@@ -517,7 +537,8 @@
     <script src='{% static "finder/js/copy_all_pin.js"%}'></script> 
     <script src='{% static "finder/js/switch_manual_finger.js"%}'></script> 
     <script src='{% static "finder/js/comprasion.js"%}'></script> 
-    <script src="{% static 'sahr/js/main.js' %}"></script>
+    <script src="{% static "sahr/js/main.js" %}"></script>
+    <script src="{% static "notes/js/news.js" %}"></script>
 </body>
 </html>
 

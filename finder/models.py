@@ -158,3 +158,5 @@ class AccountingData(models.Model):
 
     def __str__(self):
         return f"{self.accounting_code} - {self.nomenclature_kd}"
+    
+

@@ -181,3 +181,9 @@
 .auto_and_address {
     gap: 20px;
 }
+
+.add_button_whats {
+    display: flex;
+    gap: 20px;
+    align-items: start;
+}

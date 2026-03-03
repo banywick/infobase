@@ -1,7 +1,9 @@
+from rest_framework import generics
 from django.views.generic import TemplateView
 from rest_framework.generics import CreateAPIView
 from finder.models import Review
-from .serializers import ReviewSerializer
+from reviews.models import NewsItem
+from .serializers import NewsItemSerializer, ReviewSerializer
 
 class ReviewsView(TemplateView):
     """
@@ -29,3 +31,8 @@ class AddReview(CreateAPIView):
     """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+
+
+class NewsItemList(generics.ListAPIView):
+    queryset = NewsItem.objects.all().order_by("-created_at")
+    serializer_class = NewsItemSerializer
