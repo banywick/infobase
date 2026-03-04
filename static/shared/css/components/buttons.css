@@ -48,6 +48,7 @@
 .button--dark-blue {
     background: var(--color-dark-blue);
     color: var(--text-color-white);
+    margin-top: 12px;
     
 }
 

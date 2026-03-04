@@ -14,7 +14,7 @@ async function loadNews() {
                 <div class="news_date">${formattedDate}</div>
                 <h3>${item.title}</h3>
                 <p>${item.description}</p>
-                ${item.link ? `<a href="${item.link}" class="news_link">Подробнее →</a>` : ""}
+                ${item.link ? `<a href="${item.link}" class="news_link">Перейти →</a>` : ""}
             </div>
         `;
     });

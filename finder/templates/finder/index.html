@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token }}" />
     <link rel="icon" href="{% static 'shared/img/favicon/favicon.ico' %}" type="image/x-icon">
     <link rel="stylesheet" href="{% static 'finder/css/finder.css' %}">
+    <link rel="stylesheet" href="{% static 'reviews/css/reviews.css' %}">
 
     <title>Infobase</title>
 </head>
@@ -451,13 +452,46 @@
                 <div class="menu_row_down">
                     <img src="{% static 'finder/icon/revievs.svg' %}" alt="Иконка отзывов">
                     <div class="menu_link">
-                        <a id='revievs_link' href="#">Отзывы и предложения</a>
+                        <div class="open-btn" data-popup="reviews">Отзывы</div>
                     </div>
                 </div>
                 <p>Ваш отзыв поможет <br> улучшить продукт</p>
             </div> 
         </div>
     </div>
+        <!--Окно отзывов -->
+        <div id="reviews" class="my-popup">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h2>Отзывы и предложения</h2>
+                    <span class="close-btn">&times;</span>
+                    
+                </div>
+                <div class="content-area">
+                    <p>Вы можете в этом окне оставить отзыв о сервисе</p>
+                    <form id="reviews_form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="user_name">Ваше имя (необязательно):</label>
+                            <input type="text" id="user_name" name="user" class="form-control" placeholder="Введите ваше имя">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="review_text">Ваш отзыв:</label>
+                            <textarea id="review_text" name="text" class="form-control" rows="5" placeholder="Напишите ваш отзыв" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn-submit" id="submit-btn">Отправить отзыв</button>
+                    </form>
+                    
+                    <!-- Контейнер для уведомления -->
+                    <div id="notification" class="notification" style="display: none;">
+                        Спасибо за отзыв!
+                    </div>
+                </div>
+            </div>
+        </div>
         <!--Окно авторизации -->
         <div id="popup_auth" class="my-popup">
             <div class="popup-content">
@@ -539,6 +573,7 @@
     <script src='{% static "finder/js/comprasion.js"%}'></script> 
     <script src="{% static "sahr/js/main.js" %}"></script>
     <script src="{% static "notes/js/news.js" %}"></script>
+    <script src="{% static "reviews/js/reviews.js" %}"></script>
 </body>
 </html>
 

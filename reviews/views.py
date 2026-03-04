@@ -4,6 +4,7 @@ from rest_framework.generics import CreateAPIView
 from finder.models import Review
 from reviews.models import NewsItem
 from .serializers import NewsItemSerializer, ReviewSerializer
+from rest_framework.permissions import AllowAny
 
 class ReviewsView(TemplateView):
     """
@@ -31,6 +32,7 @@ class AddReview(CreateAPIView):
     """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    permission_classes = [AllowAny]  # Разрешить доступ без аутентификации
 
 
 class NewsItemList(generics.ListAPIView):
