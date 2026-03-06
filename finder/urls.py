@@ -55,5 +55,7 @@ urlpatterns = [
 
     #Сохранение результатов сопоставления
     path('comparison/', Comparison.as_view(), name='comparison_product'),
+
+    path('comparison/auto-collect/', Comparison.as_view(), name='auto-collect'),
 ]
 

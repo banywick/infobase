@@ -177,7 +177,7 @@ function setupCopyIconListener() {
         event.stopPropagation();
         const row = iconColumn.closest('tr');
         
-        // Получаем данные из 4-го (code) и 6-го (quantity) столбцов
+        // Получаем данные из 4-го (code) и 6-го (title) столбцов
         const codeElement = row.querySelector('.data-column:nth-child(5)');
         const quantityElement = row.querySelector('.data-column:nth-child(6)');
         
