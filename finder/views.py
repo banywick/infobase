@@ -600,6 +600,25 @@ class RemoveFixPositionToSession(APIView):
             del current_projects[fixed_position_id_str]
             request.session['selected_instance'] = current_projects    
             return Response({"message": "Fix position remove successfully."}, status=status.HTTP_200_OK)  
+        
+
+    def delete(self, request):
+        """
+        Обрабатывает DELETE-запрос для удаления всех фиксированных позиций из сессии.
+        
+        Аргументы:
+            request (HttpRequest): Объект запроса Django.
+        
+        Возвращает:
+            Response: Объект ответа с сообщением об успешном удалении всех позиций.
+        """
+        # Очищаем словарь с фиксированными позициями
+        request.session['selected_instance'] = {}
+        
+        return Response(
+            {"message": "All fixed positions removed successfully."}, 
+            status=status.HTTP_200_OK
+        )  
 
 
 class GetFixPositionsToSession(APIView):

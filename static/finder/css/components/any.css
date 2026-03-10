@@ -310,3 +310,8 @@
     border-bottom: 1px dashed #ffcccc; /* Необязательно: легкая пунктирная граница */
 }
 
+
+#reset_all_pin {
+    width: 20px;
+}
+

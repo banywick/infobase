@@ -53,7 +53,7 @@ class ScrewBoltProcessor(FastenerProcessor):
         pattern_gost_m_decimal = r'[АаВв]?\.?[МM](\d+(?:[.,]\d+)?)[\-\s\w\d]*[XХxх](\d+)(?:[.,]\d+)?[\.\d\s]*(?:ГОСТ|гост)[\s\-]*(\d+)'
         match = re.search(pattern_gost_m_decimal, text, re.IGNORECASE)
         if match:
-            diameter = match.group(1).replace(',', '.')
+            diameter = match.group(1).replace('.', ',')
             length = match.group(2)
             standard = match.group(3)
             return f"{fastener_type} {diameter}*{length} {standard}"
