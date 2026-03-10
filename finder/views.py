@@ -800,15 +800,8 @@ class AutoFind(APIView):
             }, status=500)
         
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import AccountingData
-from .serializers import AccountingDataSerializer
-import logging
-import re
 
-logger = logging.getLogger(__name__)
+
 
 class Comparison(APIView):
     def post(self, request):
@@ -840,6 +833,32 @@ class Comparison(APIView):
                 return Response(
                     {'error': 'Не указано бухгалтерское наименование'}, 
                     status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Проверяем, не является ли nomenclature_kd служебной строкой (очищаем от пробелов)
+            skip_pattern = 'Что бы получить наименование воспользуйтесь кнопкой <<АВТОПОИСК>>'
+            nomenclature_kd = data.get('nomenclature_kd', '').strip()
+            
+            # Сравниваем очищенное значение
+            if nomenclature_kd == skip_pattern:
+                logger.info(f"Пропуск сохранения: nomenclature_kd содержит служебную строку")
+                return Response(
+                    {
+                        'message': 'Сохранение пропущено (служебная строка)',
+                        'skipped': True
+                    }, 
+                    status=status.HTTP_200_OK
+                )
+            
+            # Также проверяем, содержит ли строка паттерн (на случай частичного совпадения)
+            if skip_pattern in nomenclature_kd:
+                logger.info(f"Пропуск сохранения: nomenclature_kd содержит служебную строку (частичное совпадение)")
+                return Response(
+                    {
+                        'message': 'Сохранение пропущено (служебная строка)',
+                        'skipped': True
+                    }, 
+                    status=status.HTTP_200_OK
                 )
             
             # Проверяем, существует ли уже такая запись
@@ -906,6 +925,32 @@ class Comparison(APIView):
                 return Response(
                     {'error': 'Не указано бухгалтерское наименование'}, 
                     status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Проверяем, не является ли nomenclature_kd служебной строкой (очищаем от пробелов)
+            skip_pattern = 'Что бы получить наименование воспользуйтесь кнопкой <<АВТОПОИСК>>'
+            nomenclature_kd = data.get('nomenclature_kd', '').strip()
+            
+            # Сравниваем очищенное значение
+            if nomenclature_kd == skip_pattern:
+                logger.info(f"Автосбор: пропуск сохранения - nomenclature_kd содержит служебную строку")
+                return Response(
+                    {
+                        'message': 'Сохранение пропущено (служебная строка)',
+                        'skipped': True
+                    }, 
+                    status=status.HTTP_200_OK
+                )
+            
+            # Также проверяем, содержит ли строка паттерн (на случай частичного совпадения)
+            if skip_pattern in nomenclature_kd:
+                logger.info(f"Автосбор: пропуск сохранения - nomenclature_kd содержит служебную строку (частичное совпадение)")
+                return Response(
+                    {
+                        'message': 'Сохранение пропущено (служебная строка)',
+                        'skipped': True
+                    }, 
+                    status=status.HTTP_200_OK
                 )
             
             # Извлекаем бухгалтерский код из полного текста

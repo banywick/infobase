@@ -101,6 +101,12 @@ class AutoCollector {
 
             const result = await response.json();
             console.log('Данные успешно сохранены:', result);
+            
+            // !!! ОЧИЩАЕМ ЭЛЕМЕНТ kd_title ПОСЛЕ УСПЕШНОГО СОХРАНЕНИЯ !!!
+            if (kdTitleElement) {
+                kdTitleElement.textContent = '';
+                console.log('✅ Элемент kd_title очищен после успешного сохранения');
+            }
 
         } catch (error) {
             console.error('Ошибка в collectAndSend:', error);
