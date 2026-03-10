@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     magicButton.addEventListener('click', async () => {
         try {
             const clipboardText = await navigator.clipboard.readText();
-            console.log('Исходное содержимое буфера обмена:', clipboardText);
+             // console.log('Исходное содержимое буфера обмена:', clipboardText);
 
              // --- ТЕСТОВОЕ ЗНАЧЕНИЕ ---
             // const clipboardText = "Штифт 4х30 Хим.Окс.прм ГОСТ 24296-93";
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const result = await response.json();
-            console.log('Обработанный результат с сервера:', result.processed_text);
+             // console.log('Обработанный результат с сервера:', result.processed_text);
             
             // Вставляем результат в поле поиска
             const searchInput = document.getElementById('search_input');
@@ -44,14 +44,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Элемент search_input не найден');
                 return;
             }
-            
-            // Активируем чекбокс search_by_analog
-            const searchByAnalogCheckbox = document.getElementById('search_by_analog');
-            if (searchByAnalogCheckbox) {
-                searchByAnalogCheckbox.checked = true;
+
+            // Вставляем исходное значение из буфера в элемент kd_title
+            const kdTitleElement = document.getElementById('kd_title');
+            if (kdTitleElement) {
+                kdTitleElement.textContent = clipboardText;
+                 // console.log('Значение вставлено в kd_title:', clipboardText);
             } else {
-                console.error('Элемент search_by_analog не найден');
-                return;
+                console.error('Элемент kd_title не найден');
+                // Не прерываем выполнение, так как это не критично для основного функционала
+            }
+            
+            // Активируем 2 чекбокса
+            const searchByAnalogCheckbox = document.getElementById('search_by_analog');
+            const searchKdCheckbox = document.getElementById('search_by_kd');
+            
+            if (searchByAnalogCheckbox && searchKdCheckbox) {
+                searchByAnalogCheckbox.checked = true;
+                searchKdCheckbox.checked = true;
+                console.log('Оба чекбокса активированы');
+            } else {
+                console.error('Один или оба чекбокса не найдены:', {
+                    search_by_analog: !!searchByAnalogCheckbox,
+                    search_by_kd: !!searchKdCheckbox
+                });
             }
             
             // Нажимаем на кнопку search_icon
@@ -63,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            console.log('Все действия выполнены успешно');
+             // console.log('Все действия выполнены успешно');
 
         } catch (err) {
             console.error('Ошибка:', err);

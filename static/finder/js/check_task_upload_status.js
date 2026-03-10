@@ -13,10 +13,10 @@ function checkTaskStatus(taskId) {
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
+             // console.log(data);
             // Обработайте полученные данные
             if (data.status === 'PENDING') {
-                console.log('Обработка данных!');
+                 // console.log('Обработка данных!');
                 load_errors.innerHTML = ''
                 load_animation.style.display = 'flex'
 
@@ -24,7 +24,7 @@ function checkTaskStatus(taskId) {
 
             if (data.status === 'SUCCESS') {
                 clearInterval(intervalId); // Останавливаем интервал, если задача завершена
-                console.log('Task completed');
+                 // console.log('Task completed');
                 update_success.innerHTML = data.result;
             
                 // Задержка в 5 секунд перед перенаправлением

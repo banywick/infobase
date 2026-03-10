@@ -23,12 +23,12 @@ check_party.addEventListener('input', async function () {
             const response = await fetch(`/comers/get_party_info/${enteredParty}/`);
             
             // Сначала проверяем статус ответа
-            console.log('Статус ответа:', response.status);
+             // console.log('Статус ответа:', response.status);
             
             if (response.status === 404) {
                 // Партия не найдена
                 const errorData = await response.json();
-                console.log('Ошибка:', errorData);
+                 // console.log('Ошибка:', errorData);
                 views_title.value = errorData.error || 'Партия не найдена';
                 views_title.style.color = 'red';
                 
@@ -42,7 +42,7 @@ check_party.addEventListener('input', async function () {
             } else if (response.ok) {
                 // Партия найдена
                 const data = await response.json();
-                console.log('Успешный ответ:', data);
+                 // console.log('Успешный ответ:', data);
                 
                 // В зависимости от структуры ответа
                 if (data.type === "exact" && data.data) {

@@ -6,7 +6,7 @@ async function copyToClipboard(text) {
             await navigator.clipboard.writeText(text);
             return true;
         } catch (err) {
-            console.log('Clipboard API failed, trying fallback:', err);
+             // console.log('Clipboard API failed, trying fallback:', err);
         }
     }
     
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
         copyAllButton.addEventListener('click', copyAllPinnedRows);
     }
     
-    console.log('Copy functionality initialized - works on both HTTP and HTTPS');
+     // console.log('Copy functionality initialized - works on both HTTP and HTTPS');
 });
 
 // Экспорт функций для глобального использования (если нужно)

@@ -115,7 +115,7 @@ async function loadMoreData(isInitialLoad = false) {
         
     } catch (error) {
         if (error.name === 'AbortError') {
-            console.log('Запрос был прерван');
+             // console.log('Запрос был прерван');
             return;
         }
         

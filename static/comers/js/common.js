@@ -297,7 +297,7 @@ const ComersApp = (function() {
                 tableBody.appendChild(row);
             });
             
-            console.log(`Отображено ${renderData.length} строк`);
+             // console.log(`Отображено ${renderData.length} строк`);
         },
         
         // ===================== ФИЛЬТРЫ =====================
@@ -396,18 +396,18 @@ const ComersApp = (function() {
                 const invoiceId = actionButton.dataset.id;
                 if (!invoiceId) return;
                 
-                console.log('Клик по кнопке:', actionButton.classList, 'ID:', invoiceId);
+                 // console.log('Клик по кнопке:', actionButton.classList, 'ID:', invoiceId);
                 
                 // Устанавливаем ID в зависимости от типа кнопки
                 if (actionButton.classList.contains('delete_button')) {
                     this.setCurrentDeleteId(invoiceId);
-                    console.log('Установлен ID для удаления:', invoiceId);
+                     // console.log('Установлен ID для удаления:', invoiceId);
                 } else if (actionButton.classList.contains('edit_button')) {
                     this.setCurrentEditId(invoiceId);
-                    console.log('Установлен ID для редактирования:', invoiceId);
+                     // console.log('Установлен ID для редактирования:', invoiceId);
                 } else if (actionButton.classList.contains('edit_status_button')) {
                     this.setCurrentEditId(invoiceId);
-                    console.log('Установлен ID для статуса:', invoiceId);
+                     // console.log('Установлен ID для статуса:', invoiceId);
                 }
             });
         },

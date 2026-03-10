@@ -18,14 +18,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (button && button.dataset.id) {
                 const invoiceId = button.dataset.id;
-                console.log('Загрузка данных для редактирования ID:', invoiceId);
+                 // console.log('Загрузка данных для редактирования ID:', invoiceId);
                 
                 ComersApp.setCurrentEditId(invoiceId);
                 
                 try {
                     // Загружаем данные с сервера через правильный эндпоинт
                     const data = await ComersApp.fetchData(`/comers/edit_invoices/${invoiceId}/`);
-                    console.log('Получены данные для редактирования:', data);
+                     // console.log('Получены данные для редактирования:', data);
                     
                     // Заполняем форму редактирования
                     const form = document.getElementById('editInvoiceForm');
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (button && button.dataset.id) {
                 const invoiceId = button.dataset.id;
-                console.log('Загрузка данных для статуса ID:', invoiceId);
+                 // console.log('Загрузка данных для статуса ID:', invoiceId);
                 
                 ComersApp.setCurrentEditId(invoiceId);
                 

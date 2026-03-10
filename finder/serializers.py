@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Remains
+from .models import AccountingData, Remains
 
 
 class RemainsSerializer(serializers.ModelSerializer):
@@ -19,5 +19,12 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
 class FileUploadSerializer(serializers.Serializer):
     doc = serializers.FileField()
+
+
+
+class AccountingDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AccountingData
+        fields = ['accounting_code', 'nomenclature_kd', 'accounting_name']
 
 

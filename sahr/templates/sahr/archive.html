@@ -1,48 +1,89 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- Пример мета-тега с CSRF-токеном -->
-    <title>АРХИВ</title>
-    <h1>ТЕСТОВАЯ СТРАНИЦА ПОИСКА УДАЛЕННЫХ СТРОК АРХИВ</h1>
-</head> 
+    <link rel="icon" href="{% static 'shared/img/favicon/favicon.ico' %}" type="image/x-icon">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Архив САХР</title>
+    <link rel="stylesheet" href="{% static 'sahr/css/style.css' %}">
+</head>
 <body>
-    <form id="searchForm">
-        <input type="text" name="query" placeholder="Введите запрос" required>
-        <button type="submit">Отправить</button>
-    </form>
+    <div class="app-container">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <i class="fas fa-archive"></i>
+                    <h1>Архив САХР</h1>
+                </div>
+                <div class="nav-menu">
+                    <a href="{% url 'sahr_main' %}" class="nav-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Назад к основной таблице</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
 
-    <script>
-        // Функция для получения CSRF-токена из мета-тега
-        function getCSRFToken() {
-            const metaTag = document.querySelector('meta[name="csrf-token"]');
-            return metaTag ? metaTag.getAttribute('content') : '';
-        }
+        <main class="main-content" style="padding: 2rem;">
+            <div class="content-area">
+                <div class="content-header">
+                    <h2>Архив удаленных позиций</h2>
+                    <div class="search-container" style="max-width: 500px;">
+                        <input type="text" 
+                               id="archiveSearch" 
+                               class="search-input" 
+                               placeholder="Поиск по артикулу, партии или адресу...">
+                        <button id="archiveSearchBtn" class="btn btn-primary">
+                            <img id="search_icon" src="{% static '/finder/icon/lupa_input.png' %}" alt="Иконка поиска">
+                        </button>
+                    </div>
+                </div>
 
-        document.getElementById('searchForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Предотвращаем отправку формы
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Артикул</th>
+                                <th>Номенклатура</th>
+                                <th>Партия</th>
+                                <th>Адрес</th>
+                                <th>Дата удаления</th>
+                                <th>Примечание</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archiveTableBody">
+                            <!-- Данные будут загружены через JS -->
+                        </tbody>
+                    </table>
+                </div>
 
-            const query = document.querySelector('input[name="query"]').value;
-            const csrfToken = getCSRFToken();
+                <div class="table-footer">
+                    <div class="pagination-info" id="paginationInfo">
+                        Показано 0 из 0 записей
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="pagination-btn" id="firstPage" disabled>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button class="pagination-btn" id="prevPage" disabled>
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+                        <span class="page-numbers" id="pageNumbers">1</span>
+                        <button class="pagination-btn" id="nextPage" disabled>
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button class="pagination-btn" id="lastPage" disabled>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
-            fetch('/sahr/find_archive_position/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken // Отправляем CSRF-токен в заголовке
-                },
-                body: JSON.stringify({ query: query })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                // Здесь вы можете обработать ответ от сервера
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        });
-    </script>
+    <script src="{% static 'sahr/js/archive.js' %}"></script>
 </body>
 </html>
