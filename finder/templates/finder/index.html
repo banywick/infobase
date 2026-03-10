@@ -311,7 +311,12 @@
                 <table>
                     <thead>
                         <tr class="table-header">
-                            <th class="icon-column"></th>
+                            <th class="icon-column">
+                                <img id="reset_all_pin"
+                                src="{% static 'finder/icon/reset.png' %}"
+                                alt="Сбросить"
+                                title='Сбросить закрепленные позиции'> 
+                            </th>
                             <th class="icon-column"></th>
                             <th class="header-cell">Партия</th>
                             <th class="header-cell">Артикул</th>
@@ -568,7 +573,9 @@
     <script src='{% static "finder/js/check_task_upload_status.js"%}'></script> 
     <script src='{% static "finder/js/link_permissions.js"%}'></script> 
     <script src='{% static "finder/js/copy.js"%}'></script> 
+    <script src='{% static "finder/js/delete_all_pin.js"%}'></script> 
     <script src='{% static "finder/js/copy_all_pin.js"%}'></script> 
+    <script src='{% static "finder/js/auto_collect.js"%}'></script> 
     <script src='{% static "finder/js/switch_manual_finger.js"%}'></script> 
     <script src='{% static "finder/js/comprasion.js"%}'></script> 
     <script src="{% static "sahr/js/main.js" %}"></script>

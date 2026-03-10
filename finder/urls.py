@@ -25,6 +25,10 @@ urlpatterns = [
     path('remove_fix_positions_to_session/<int:fixed_position_id>/',
         RemoveFixPositionToSession.as_view(), name='remove_fixed_positions'),
 
+        # Новый URL для удаления всех позиций
+    path('remove-all-fix-positions/', 
+        RemoveFixPositionToSession.as_view(), name='remove-all-fix-positions'),    
+
     # Получение всех закрепленных позиции    
     path('get_fixed_positions/',
         GetFixPositionsToSession.as_view(), name='get_fixed_positions'),
@@ -55,5 +59,7 @@ urlpatterns = [
 
     #Сохранение результатов сопоставления
     path('comparison/', Comparison.as_view(), name='comparison_product'),
+
+    path('comparison/auto-collect/', Comparison.as_view(), name='auto-collect'),
 ]
 

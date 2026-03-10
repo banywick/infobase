@@ -600,6 +600,25 @@ class RemoveFixPositionToSession(APIView):
             del current_projects[fixed_position_id_str]
             request.session['selected_instance'] = current_projects    
             return Response({"message": "Fix position remove successfully."}, status=status.HTTP_200_OK)  
+        
+
+    def delete(self, request):
+        """
+        Обрабатывает DELETE-запрос для удаления всех фиксированных позиций из сессии.
+        
+        Аргументы:
+            request (HttpRequest): Объект запроса Django.
+        
+        Возвращает:
+            Response: Объект ответа с сообщением об успешном удалении всех позиций.
+        """
+        # Очищаем словарь с фиксированными позициями
+        request.session['selected_instance'] = {}
+        
+        return Response(
+            {"message": "All fixed positions removed successfully."}, 
+            status=status.HTTP_200_OK
+        )  
 
 
 class GetFixPositionsToSession(APIView):
@@ -781,10 +800,27 @@ class AutoFind(APIView):
             }, status=500)
         
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import AccountingData
+from .serializers import AccountingDataSerializer
+import logging
+import re
+
+logger = logging.getLogger(__name__)
+
 class Comparison(APIView):
     def post(self, request):
+        # Определяем, какой метод вызывать на основе URL или параметров
+        if request.path.endswith('auto-collect/') or request.data.get('action') == 'auto_collect':
+            return self.post_auto_collect(request)
+        else:
+            return self.post_regular(request)
+    
+    def post_regular(self, request):
+        """Обычное сохранение"""
         try:
-            # Получаем данные из запроса
             data = request.data
             
             # Валидация данных
@@ -845,4 +881,98 @@ class Comparison(APIView):
             return Response(
                 {'error': f'Внутренняя ошибка сервера: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )      
+            )
+    
+    def post_auto_collect(self, request):
+        """Метод для автоматического сбора данных"""
+        try:
+            data = request.data
+            logger.info(f"Получены данные для автосбора: {data}")
+            
+            # Проверяем наличие всех необходимых полей
+            if not data.get('clipboard_text'):
+                return Response(
+                    {'error': 'Не указан текст из буфера обмена'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not data.get('nomenclature_kd'):
+                return Response(
+                    {'error': 'Не указана номенклатура КД'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not data.get('accounting_name'):
+                return Response(
+                    {'error': 'Не указано бухгалтерское наименование'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Извлекаем бухгалтерский код из полного текста
+            clipboard_text = data['clipboard_text']
+            
+            # Пытаемся найти бухгалтерский код в тексте
+            # Ищем код в начале строки (цифры, буквы, дефисы, точки, слеши)
+            code_pattern = r'^([A-Za-z0-9\-_\.\/]+)'
+            code_match = re.match(code_pattern, clipboard_text.strip())
+            
+            if code_match:
+                accounting_code = code_match.group(1)
+            else:
+                # Если не нашли по шаблону, берем первую часть до пробела или табуляции
+                parts = clipboard_text.strip().split()
+                accounting_code = parts[0] if parts else "UNKNOWN"
+            
+            logger.info(f"Извлечен бухгалтерский код: {accounting_code}")
+            
+            # Подготавливаем данные для сохранения
+            save_data = {
+                'accounting_code': accounting_code,
+                'nomenclature_kd': data['nomenclature_kd'],
+                'accounting_name': data['accounting_name']
+            }
+            
+            # Проверяем, существует ли уже такая запись
+            existing_record = AccountingData.objects.filter(
+                accounting_code=accounting_code,
+                accounting_name=data['accounting_name']
+            ).first()
+            
+            if existing_record:
+                # Обновляем существующую запись
+                serializer = AccountingDataSerializer(
+                    existing_record, 
+                    data=save_data, 
+                    partial=True
+                )
+                message = 'Данные успешно обновлены'
+            else:
+                # Создаем новую запись
+                serializer = AccountingDataSerializer(data=save_data)
+                message = 'Данные успешно сохранены'
+            
+            if serializer.is_valid():
+                serializer.save()
+                logger.info(f"Автосбор: данные сохранены для кода {accounting_code}")
+                
+                return Response(
+                    {
+                        'message': message,
+                        'data': serializer.data,
+                        'accounting_code': accounting_code
+                    }, 
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                logger.error(f"Ошибка валидации: {serializer.errors}")
+                return Response(
+                    {'error': serializer.errors}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+        except Exception as e:
+            logger.error(f"Ошибка при автосборе данных: {str(e)}", exc_info=True)
+            return Response(
+                {'error': f'Внутренняя ошибка сервера: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
