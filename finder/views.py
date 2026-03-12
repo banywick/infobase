@@ -815,6 +815,7 @@ class Comparison(APIView):
         """Обычное сохранение"""
         try:
             data = request.data
+            print(data, 'ручное')
             
             # Валидация данных
             if not data.get('accounting_code'):
@@ -861,39 +862,48 @@ class Comparison(APIView):
                     status=status.HTTP_200_OK
                 )
             
-            # Проверяем, существует ли уже такая запись
+            # ИЗМЕНЕНО: Проверяем существование записи по ВСЕМ ТРЕМ ПОЛЯМ
             existing_record = AccountingData.objects.filter(
                 accounting_code=data['accounting_code'],
+                nomenclature_kd=data['nomenclature_kd'],
                 accounting_name=data['accounting_name']
             ).first()
             
             if existing_record:
-                # Обновляем существующую запись
-                serializer = AccountingDataSerializer(
-                    existing_record, 
-                    data=data, 
-                    partial=True
+                # Если запись существует - возвращаем информацию, но не обновляем
+                logger.info(f"Запись уже существует: {data['accounting_code']} - {data['nomenclature_kd']}")
+                return Response(
+                    {
+                        'message': 'Запись уже существует',
+                        'data': {
+                            'accounting_code': existing_record.accounting_code,
+                            'nomenclature_kd': existing_record.nomenclature_kd,
+                            'accounting_name': existing_record.accounting_name
+                        },
+                        'exists': True
+                    }, 
+                    status=status.HTTP_200_OK
                 )
             else:
                 # Создаем новую запись
                 serializer = AccountingDataSerializer(data=data)
-            
-            if serializer.is_valid():
-                serializer.save()
-                logger.info(f"Данные успешно сохранены: {data['accounting_code']}")
-                return Response(
-                    {
-                        'message': 'Данные успешно сохранены',
-                        'data': serializer.data
-                    }, 
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                logger.error(f"Ошибка валидации: {serializer.errors}")
-                return Response(
-                    {'error': serializer.errors}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                
+                if serializer.is_valid():
+                    serializer.save()
+                    logger.info(f"Данные успешно сохранены: {data['accounting_code']}")
+                    return Response(
+                        {
+                            'message': 'Данные успешно сохранены',
+                            'data': serializer.data
+                        }, 
+                        status=status.HTTP_201_CREATED
+                    )
+                else:
+                    logger.error(f"Ошибка валидации: {serializer.errors}")
+                    return Response(
+                        {'error': serializer.errors}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 
         except Exception as e:
             logger.error(f"Ошибка при сохранении данных: {str(e)}")
@@ -906,6 +916,7 @@ class Comparison(APIView):
         """Метод для автоматического сбора данных"""
         try:
             data = request.data
+            print(data, 'Авто')
             logger.info(f"Получены данные для автосбора: {data}")
             
             # Проверяем наличие всех необходимых полей
@@ -977,43 +988,50 @@ class Comparison(APIView):
                 'accounting_name': data['accounting_name']
             }
             
-            # Проверяем, существует ли уже такая запись
+            # ИЗМЕНЕНО: Проверяем существование записи по ВСЕМ ТРЕМ ПОЛЯМ
             existing_record = AccountingData.objects.filter(
                 accounting_code=accounting_code,
+                nomenclature_kd=data['nomenclature_kd'],
                 accounting_name=data['accounting_name']
             ).first()
             
             if existing_record:
-                # Обновляем существующую запись
-                serializer = AccountingDataSerializer(
-                    existing_record, 
-                    data=save_data, 
-                    partial=True
+                # Если запись существует - возвращаем информацию, но не обновляем
+                logger.info(f"Автосбор: запись уже существует: {accounting_code} - {data['nomenclature_kd']}")
+                return Response(
+                    {
+                        'message': 'Запись уже существует',
+                        'data': {
+                            'accounting_code': existing_record.accounting_code,
+                            'nomenclature_kd': existing_record.nomenclature_kd,
+                            'accounting_name': existing_record.accounting_name
+                        },
+                        'exists': True
+                    }, 
+                    status=status.HTTP_200_OK
                 )
-                message = 'Данные успешно обновлены'
             else:
                 # Создаем новую запись
                 serializer = AccountingDataSerializer(data=save_data)
-                message = 'Данные успешно сохранены'
-            
-            if serializer.is_valid():
-                serializer.save()
-                logger.info(f"Автосбор: данные сохранены для кода {accounting_code}")
                 
-                return Response(
-                    {
-                        'message': message,
-                        'data': serializer.data,
-                        'accounting_code': accounting_code
-                    }, 
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                logger.error(f"Ошибка валидации: {serializer.errors}")
-                return Response(
-                    {'error': serializer.errors}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                if serializer.is_valid():
+                    serializer.save()
+                    logger.info(f"Автосбор: данные сохранены для кода {accounting_code}")
+                    
+                    return Response(
+                        {
+                            'message': 'Данные успешно сохранены',
+                            'data': serializer.data,
+                            'accounting_code': accounting_code
+                        }, 
+                        status=status.HTTP_201_CREATED
+                    )
+                else:
+                    logger.error(f"Ошибка валидации: {serializer.errors}")
+                    return Response(
+                        {'error': serializer.errors}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             
         except Exception as e:
             logger.error(f"Ошибка при автосборе данных: {str(e)}", exc_info=True)
