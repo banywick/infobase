@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'reviews',
     'sahr',
     'comers',
+    'statement',
 ]
 
 MIDDLEWARE = [

@@ -57,9 +57,11 @@ urlpatterns = [
     #Алгортм разбора позиции на составляющие для автопоиска
     path('auto_find/', AutoFind.as_view(), name='auto_find'),
 
-    #Сохранение результатов сопоставления
+    #Сохранение результатов сопоставления вручную
     path('comparison/', Comparison.as_view(), name='comparison_product'),
 
+    # Автоматические сопоставление из запросов пользователей
     path('comparison/auto-collect/', Comparison.as_view(), name='auto-collect'),
+
 ]
 

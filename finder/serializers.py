@@ -28,3 +28,4 @@ class AccountingDataSerializer(serializers.ModelSerializer):
         fields = ['accounting_code', 'nomenclature_kd', 'accounting_name']
 
 
+

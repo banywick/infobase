@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ВК · Ведомости комплектации</title>
+    <!-- Fonts & icons (Google Material Icons + Inter) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+    <!-- lightweight autocomplete styles (minimal custom) -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f2f5 0%, #e9ecf0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            margin: 0;
+        }
+
+        /* main card */
+        .card {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 40px;
+            box-shadow: 0 20px 40px -10px rgba(0,20,40,0.25), 0 8px 20px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.6);
+            padding: 2rem 2rem 2.5rem;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.2s ease;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #1e2b3c, #2c3e50);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subhead {
+            font-size: 0.95rem;
+            color: #4f5b68;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+            background: rgba(59,130,246,0.04);
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* поисковый блок */
+        .search-section {
+            margin-bottom: 2rem;
+        }
+
+        .label-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1e293b;
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .label-row .material-icons {
+            font-size: 1.4rem;
+            color: #3b82f6;
+        }
+
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 60px;
+            padding: 0 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
+            transition: all 0.15s;
+        }
+        .search-wrapper:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+        }
+
+        .search-wrapper .material-icons {
+            color: #94a3b8;
+        }
+
+        #vkSearchInput {
+            width: 100%;
+            padding: 16px 12px;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 500;
+            outline: none;
+        }
+
+        #vkSearchInput::placeholder {
+            color: #a0afbe;
+            font-weight: 400;
+        }
+
+        /* выпадающий список вариантов ВК */
+        .dropdown-suggest {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -8px rgba(0,0,0,0.2), 0 5px 12px rgba(0,0,0,0.08);
+            max-height: 260px;
+            overflow-y: auto;
+            z-index: 20;
+            padding: 8px 0;
+            list-style: none;
+            display: none;
+            border: 1px solid rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .dropdown-suggest li {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.1s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .dropdown-suggest li:last-child { border-bottom: none; }
+        .dropdown-suggest li:hover {
+            background: #eef2ff;
+        }
+        .dropdown-suggest li .material-icons {
+            color: #64748b;
+            font-size: 1.2rem;
+        }
+
+        .selected-vk-chip {
+            background: #e9eff9;
+            border-radius: 30px;
+            padding: 8px 16px 8px 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: #1e293b;
+            border: 1px solid #bdd3f0;
+            margin-top: 12px;
+        }
+        .selected-vk-chip .material-icons {
+            color: #2563eb;
+            font-size: 1.2rem;
+        }
+
+        /* дополнительное поле (проекты) – изначально скрыто */
+        .projects-panel {
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+            padding: 1.6rem 1.8rem;
+            margin: 24px 0 28px;
+            border: 1px solid rgba(255,255,255,0.9);
+            box-shadow: inset 0 1px 3px white, 0 8px 18px -10px rgba(0,32,64,0.2);
+            display: none;
+        }
+
+        .projects-panel.visible {
+            display: block;
+        }
+
+        .projects-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0b1e33;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 16px;
+        }
+
+        .projects-header .material-icons {
+            color: #3b82f6;
+        }
+
+        /* мультиселект с поиском (custom) */
+        .multiselect-container {
+            background: white;
+            border-radius: 28px;
+            padding: 6px 16px;
+            border: 1px solid #dce3ec;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-height: 58px;
+            transition: border 0.15s;
+        }
+        .multiselect-container:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+
+        .selected-project-tag {
+            background: #e6edfa;
+            border-radius: 40px;
+            padding: 6px 12px 6px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #16437e;
+            border: 1px solid #b9cef0;
+        }
+        .selected-project-tag .material-icons {
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #4b6589;
+            border-radius: 50%;
+        }
+        .selected-project-tag .material-icons:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        #projectSearchInput {
+            border: none;
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 0;
+            font-size: 0.95rem;
+            outline: none;
+            background: transparent;
+        }
+
+        .project-suggest-list {
+            position: absolute;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 30px -10px rgba(0,20,40,0.3);
+            max-height: 200px;
+            overflow-y: auto;
+            list-style: none;
+            width: 100%;
+            left: 0;
+            top: calc(100% + 6px);
+            z-index: 25;
+            display: none;
+            border: 1px solid #dee9f2;
+        }
+        .project-suggest-list li {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #f0f4fc;
+        }
+        .project-suggest-list li:hover {
+            background: #eef4ff;
+        }
+        .project-suggest-list li .material-icons {
+            color: #6c7f9c;
+        }
+
+        .multiselect-relative {
+            position: relative;
+            width: 100%;
+        }
+
+        /* кнопка заполнения */
+        .fill-button {
+            background: #1f2a3f;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 18px 36px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 12px 24px -10px #1e293b70;
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-top: 12px;
+        }
+        .fill-button:not(:disabled):hover {
+            background: #111a2a;
+            transform: scale(1.01);
+            box-shadow: 0 20px 28px -10px #0f172a;
+        }
+        .fill-button:disabled {
+            background: #b7c2d4;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .result-link {
+            margin-top: 24px;
+            background: #e1e9f5;
+            border-radius: 60px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 1rem;
+            border: 1px solid #aac3e0;
+            word-break: break-all;
+        }
+        .result-link .material-icons {
+            color: #1f3a6b;
+        }
+        .result-link a {
+            color: #0f2b51;
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 2px dotted #2563eb;
+        }
+        .result-link a:hover {
+            border-bottom: 2px solid #2563eb;
+        }
+
+        .info-note {
+            font-size: 0.8rem;
+            color: #5f6f84;
+            margin-top: 6px;
+        }
+
+        .material-icons.outlined {
+            font-variation-settings: 'FILL' 0;
+        }
+
+        /* скролл */
+        .dropdown-suggest::-webkit-scrollbar, .project-suggest-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .dropdown-suggest::-webkit-scrollbar-thumb {
+            background: #b9cbee;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>
+            <span class="material-icons">inventory_2</span> Ведомости комплектации
+        </h1>
+        <div class="subhead">поиск, выбор проектов, заполнение через Excel</div>
+
+        <!-- Окно поиска ВК -->
+        <div class="search-section">
+            <div class="label-row">
+                <span class="material-icons">search</span>
+                <span>Поиск ведомости (ВК)</span>
+            </div>
+            <div class="search-wrapper" style="position: relative;">
+                <span class="material-icons">description</span>
+                <input type="text" id="vkSearchInput" placeholder="Например: ВК-24-101, ВК-СМ-9..." autocomplete="off">
+                <!-- подсказки ВК -->
+                <ul class="dropdown-suggest" id="vkSuggestList"></ul>
+            </div>
+            <!-- выбранный ВК (chip) -->
+            <div id="selectedVKChip" class="selected-vk-chip" style="display: none;">
+                <span class="material-icons">check_circle</span>
+                <span id="selectedVKName"></span>
+            </div>
+        </div>
+
+        <!-- Дополнительное поле: выбор проектов (появляется после выбора ВК) -->
+        <div id="projectsPanel" class="projects-panel">
+            <div class="projects-header">
+                <span class="material-icons">folder_copy</span>
+                <span>С каких проектов брать позиции?</span>
+            </div>
+
+            <!-- мультиселект с поиском проектов -->
+            <div class="multiselect-relative">
+                <div class="multiselect-container" id="multiselectContainer">
+                    <!-- выбранные проекты будут вставляться сюда в виде тегов -->
+                    <input type="text" id="projectSearchInput" placeholder="Введите название проекта...">
+                </div>
+                <!-- выпадающий список проектов (фильтр) -->
+                <ul class="project-suggest-list" id="projectSuggestList"></ul>
+            </div>
+            <div class="info-note">можно выбрать несколько, используя поиск</div>
+        </div>
+
+        <!-- Кнопка заполнить -->
+        <button class="fill-button" id="fillBtn" disabled>
+            <span class="material-icons">auto_awesome</span>
+            Заполнить ведомость
+        </button>
+
+        <!-- Ссылка на Excel документ (появляется после успеха) -->
+        <div id="resultLinkContainer" class="result-link" style="display: none;">
+            <span class="material-icons">insert_drive_file</span>
+            <span>📎 Файл готов: <a href="#" id="excelLink" target="_blank">Открыть Excel по сети</a></span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // --- мок данные: варианты ВК
+            const vkMockList = [
+                'ВК-24-101 (Жилой комплекс)',
+                'ВК-24-102 (Паркинг)',
+                'ВК-СМ-9 (Офисный центр)',
+                'ВК-ТР-5 (Торговый ряд)',
+                'ВК-ОЗ-12 (Озеленение)',
+                'ВК-Э-7 (Эстакада)',
+                'ВК-ПС-3 (Подземные сети)',
+                'ВК-М-22 (Магистраль)'
+            ];
+
+            // --- мок данные: проекты (для мультиселекта)
+            const projectsMockList = [
+                'Проект Альфа (жилой дом)',
+                'Проект Бета (благоустройство)',
+                'Проект Гамма (квартал Сити)',
+                'Проект Дельта (инфраструктура)',
+                'Проект Эпсилон (набережная)',
+                'Проект Зета (парк)',
+                'Проект Эта (логистика)',
+                'Проект Каппа (теплотрасса)'
+            ];
+
+            // DOM elements
+            const vkInput = document.getElementById('vkSearchInput');
+            const vkSuggest = document.getElementById('vkSuggestList');
+            const selectedChip = document.getElementById('selectedVKChip');
+            const selectedVKNameSpan = document.getElementById('selectedVKName');
+            const projectsPanel = document.getElementById('projectsPanel');
+            const fillBtn = document.getElementById('fillBtn');
+            const resultContainer = document.getElementById('resultLinkContainer');
+            const excelLink = document.getElementById('excelLink');
+
+            // мультиселект проекты
+            const projectSearchInput = document.getElementById('projectSearchInput');
+            const projectSuggestList = document.getElementById('projectSuggestList');
+            const multiselectContainer = document.getElementById('multiselectContainer');
+
+            // Состояния
+            let selectedVK = null;                      // выбранный ВК (строка)
+            let selectedProjects = [];                   // массив выбранных проектов (строки)
+            let filteredProjects = [...projectsMockList]; // текущий фильтр для выпадающего списка
+
+            // --- helpers: скрыть все дропдауны
+            function hideAllDropdowns() {
+                vkSuggest.style.display = 'none';
+                projectSuggestList.style.display = 'none';
+            }
+
+            // --- обновить отображение выбранных проектов (чипы внутри мультиселекта)
+            function renderSelectedProjects() {
+                // очистим контейнер, но оставим input
+                const inputEl = projectSearchInput;
+                multiselectContainer.innerHTML = ''; 
+                // добавить chip'ы для каждого выбранного проекта
+                selectedProjects.forEach(proj => {
+                    const chip = document.createElement('span');
+                    chip.className = 'selected-project-tag';
+                    chip.innerHTML = `${proj} <span class="material-icons" data-remove-project="${proj}">close</span>`;
+                    multiselectContainer.appendChild(chip);
+                });
+                // добавить обратно input
+                multiselectContainer.appendChild(inputEl);
+                // навесить обработчики на кнопки удаления
+                document.querySelectorAll('[data-remove-project]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const projectToRemove = btn.getAttribute('data-remove-project');
+                        selectedProjects = selectedProjects.filter(p => p !== projectToRemove);
+                        renderSelectedProjects(); 
+                        filterProjectList(); // обновить выпадающий список
+                        updateFillButtonState();
+                        e.stopPropagation();
+                    });
+                });
+                // подрегулировать отображение плейсхолдера
+                inputEl.placeholder = selectedProjects.length ? '' : 'Введите название проекта...';
+            }
+
+            // --- фильтрация проектов на основе ввода и исключение уже выбранных
+            function filterProjectList() {
+                const searchTerm = projectSearchInput.value.toLowerCase();
+                // из исходного списка исключаем выбранные, и фильтруем по вводу
+                filteredProjects = projectsMockList.filter(p => 
+                    !selectedProjects.includes(p) && p.toLowerCase().includes(searchTerm)
+                );
+                renderProjectSuggestions();
+            }
+
+            // --- отобразить подсказки проектов
+            function renderProjectSuggestions() {
+                projectSuggestList.innerHTML = '';
+                if (filteredProjects.length === 0) {
+                    projectSuggestList.style.display = 'none';
+                    return;
+                }
+                filteredProjects.forEach(proj => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="material-icons">folder</span>${proj}`;
+                    li.addEventListener('click', () => {
+                        // добавить проект, если ещё не выбран
+                        if (!selectedProjects.includes(proj)) {
+                            selectedProjects.push(proj);
+                            renderSelectedProjects();
+                            projectSearchInput.value = '';  // очистить поиск
+                            filterProjectList();            // обновить список, исключив выбранные
+                            updateFillButtonState();
+                        }
+                        projectSuggestList.style.display = 'none';
+                    });
+                    projectSuggestList.appendChild(li);
+                });
+                projectSuggestList.style.display = 'block';
+            }
+
+            // --- управление кнопкой "Заполнить ведомость"
+            function updateFillButtonState() {
+                if (selectedVK && selectedProjects.length > 0) {
+                    fillBtn.disabled = false;
+                } else {
+                    fillBtn.disabled = true;
+                }
+            }
+
+            // --- сброс состояния проектов при смене ВК (можно оставить старую логику, но чистим)
+            function resetProjectsAndLink() {
+                selectedProjects = [];
+                renderSelectedProjects();
+                projectSearchInput.value = '';
+                filterProjectList();
+                resultContainer.style.display = 'none';
+                updateFillButtonState();
+            }
+
+            // --- обработчики поиска ВК (живой поиск)
+            vkInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                if (query.length === 0) {
+                    vkSuggest.style.display = 'none';
+                    return;
+                }
+                const filtered = vkMockList.filter(vk => vk.toLowerCase().includes(query));
+                vkSuggest.innerHTML = '';
+                if (filtered.length === 0) {
+                    vkSuggest.style.display = 'none';
+                    return;
+                }
+                filtered.forEach(vk => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="material-icons">feed</span>${vk}`;
+                    li.addEventListener('click', () => {
+                        // выбираем ВК
+                        selectedVK = vk;
+                        selectedVKNameSpan.textContent = vk;
+                        selectedChip.style.display = 'inline-flex';
+                        vkInput.value = ''; // можно очистить поле
+                        vkSuggest.style.display = 'none';
+                        // показываем панель проектов
+                        projectsPanel.classList.add('visible');
+                        // сбрасываем проекты и ссылку
+                        resetProjectsAndLink();
+                    });
+                    vkSuggest.appendChild(li);
+                });
+                vkSuggest.style.display = 'block';
+            });
+
+            // скрыть выпадающий список ВК при клике вне
+            document.addEventListener('click', function(e) {
+                if (!vkInput.contains(e.target) && !vkSuggest.contains(e.target)) {
+                    vkSuggest.style.display = 'none';
+                }
+                if (!multiselectContainer.contains(e.target) && !projectSuggestList.contains(e.target)) {
+                    projectSuggestList.style.display = 'none';
+                }
+            });
+
+            // --- работа с поиском проектов
+            projectSearchInput.addEventListener('input', filterProjectList);
+
+            // при фокусе на поле проектов показываем список, если есть что показать
+            projectSearchInput.addEventListener('focus', () => {
+                filterProjectList(); // обновить фильтр с учётом исключённых
+                if (filteredProjects.length > 0) {
+                    projectSuggestList.style.display = 'block';
+                }
+            });
+
+            // запрещаем скрытие при клике внутри списка
+            projectSuggestList.addEventListener('click', (e) => e.stopPropagation());
+
+            // --- кнопка "Заполнить ведомость"
+            fillBtn.addEventListener('click', function() {
+                // симулируем успешное заполнение и создаём ссылку на сетевой Excel
+                // генерируем случайный путь (в реальности здесь был бы fetch)
+                const timestamp = Date.now();
+                const fakeNetworkPath = `\\\\server\\excel_reports\\ВК_${selectedVK.replace(/[^a-zA-Z0-9-]/g,'_')}_${timestamp}.xlsx`;
+                // также можно преобразовать в файловую ссылку file:// (но браузеры блокируют, используем file:// или unc)
+                // для демонстрации используем file:// + заменим слэши
+                const networkLink = `file://${fakeNetworkPath.replace(/\\/g,'/')}`;
+                excelLink.href = networkLink;
+                excelLink.textContent = fakeNetworkPath; // покажем UNC путь
+                resultContainer.style.display = 'flex';
+
+                // можно показать сообщение (опционально)
+                setTimeout(() => {
+                    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 50);
+            });
+
+            // инициализация: рендер чипов проектов (пусто)
+            renderSelectedProjects();
+            filterProjectList(); // начальный список проектов (все, кроме выбранных, но их нет)
+
+            // доп. если кликнули на крестик уже выбранного ВК (можно добавить)
+            // но по задаче после клика по варианту открывается доп.поле — уже работает
+
+            // для красоты: скрывать дропдаун при потере фокуса
+            window.addEventListener('click', function(e) {
+                if (!e.target.closest('.multiselect-relative')) {
+                    projectSuggestList.style.display = 'none';
+                }
+            });
+
+            // также обработка удаления выбранного ВК (по желанию не требуется, но можно скрыть)
+            // в текущем дизайне не предусмотрено, но можно через крестик позже
+        })();
+    </script>
+</body>
+</html>
