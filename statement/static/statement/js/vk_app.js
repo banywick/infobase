@@ -23,6 +23,59 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedProjects = [];
     
     // ============================================
+    // СОЗДАЕМ ПОЛЯ ДЛЯ ДИАПАЗОНА СТРОК
+    // ============================================
+    
+    // Контейнер для диапазона строк (добавим после выбора ВК)
+    const rangeContainer = document.createElement('div');
+    rangeContainer.id = 'rangeContainer';
+    rangeContainer.className = 'range-container';
+    rangeContainer.style.cssText = `
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(8px);
+        border-radius: 32px;
+        padding: 1.6rem 1.8rem;
+        margin: 24px 0 28px;
+        border: 1px solid rgba(255,255,255,0.9);
+        box-shadow: inset 0 1px 3px white, 0 8px 18px -10px rgba(0,32,64,0.2);
+        display: none;
+    `;
+    
+    rangeContainer.innerHTML = `
+        <div class="range-header" style="display: flex; align-items: center; gap: 8px; color: #0b1e33; font-weight: 600; font-size: 1rem; margin-bottom: 16px;">
+            <span class="material-icons">format_list_numbered</span>
+            <span>Диапазон строк для обработки</span>
+        </div>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; font-size: 0.9rem; color: #4b6589; margin-bottom: 6px;">
+                    Начать со строки:
+                </label>
+                <input type="number" id="startRow" min="1" value="2" 
+                    style="padding: 12px 16px; border: 1px solid #dce3ec; border-radius: 20px; font-size: 1rem; outline: none; transition: all 0.15s;">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; font-size: 0.9rem; color: #4b6589; margin-bottom: 6px;">
+                    Закончить на строке:
+                </label>
+                <input type="number" id="endRow" min="1" value="50"
+                    style="padding: 12px 16px; border: 1px solid #dce3ec; border-radius: 20px; font-size: 1rem; outline: none; transition: all 0.15s;">
+            </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 0.85rem; color: #f57c00; display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 1.1rem;">info</span>
+            <span>Укажите диапазон строк. Первая строка обычно заголовок.</span>
+        </div>
+    `;
+    
+    // Вставляем после панели проектов
+    projectsPanel.parentNode.insertBefore(rangeContainer, projectsPanel.nextSibling);
+    
+    // Получаем ссылки на поля диапазона
+    const startRowInput = document.getElementById('startRow');
+    const endRowInput = document.getElementById('endRow');
+    
+    // ============================================
     // ЗАГРУЗКА ДАННЫХ
     // ============================================
     
@@ -121,11 +174,18 @@ document.addEventListener('DOMContentLoaded', function() {
         vkInput.value = '';
         vkList.style.display = 'none';
         
+        // Показываем панель проектов и диапазон строк
         projectsPanel.classList.add('visible');
+        rangeContainer.style.display = 'block';
         
         // Сбрасываем выбранные проекты
         selectedProjects = [];
         renderSelectedProjects();
+        
+        // Сбрасываем диапазон на значения по умолчанию
+        startRowInput.value = '11';
+        endRowInput.value = '50';
+        
         updateFillButton();
         
         console.log('✅ Выбран ВК:', file);
@@ -234,15 +294,62 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ============================================
+    // ВАЛИДАЦИЯ ДИАПАЗОНА СТРОК
+    // ============================================
+    
+    function validateRowRange() {
+        const start = parseInt(startRowInput.value);
+        const end = parseInt(endRowInput.value);
+        
+        if (isNaN(start) || start < 1) {
+            startRowInput.style.borderColor = '#f44336';
+            return { valid: false, error: 'Начальная строка должна быть >= 1' };
+        } else {
+            startRowInput.style.borderColor = '#dce3ec';
+        }
+        
+        if (isNaN(end) || end < 1) {
+            endRowInput.style.borderColor = '#f44336';
+            return { valid: false, error: 'Конечная строка должна быть >= 1' };
+        } else {
+            endRowInput.style.borderColor = '#dce3ec';
+        }
+        
+        if (start > end) {
+            startRowInput.style.borderColor = '#f44336';
+            endRowInput.style.borderColor = '#f44336';
+            return { valid: false, error: 'Начальная строка не может быть больше конечной' };
+        }
+        
+        return { valid: true, start, end };
+    }
+    
+    // ============================================
     // ОТПРАВКА ДАННЫХ (JOB_VK)
     // ============================================
     
-    // В обработчике кнопки "Заполнить ведомость" - исправленная часть
     fillBtn.addEventListener('click', async function() {
-        if (!selectedVK || !selectedProjects.length) {
-            showNotification('❌ Выберите ВК и проекты', 'error');
+        // Валидация
+        if (!selectedVK) {
+            showNotification('❌ Выберите файл ВК', 'error');
             return;
         }
+        
+        if (!selectedProjects.length) {
+            showNotification('❌ Выберите хотя бы один проект', 'error');
+            return;
+        }
+        
+        const rangeValidation = validateRowRange();
+        if (!rangeValidation.valid) {
+            showNotification(`❌ ${rangeValidation.error}`, 'error');
+            return;
+        }
+        
+        console.log('selectedVK:', selectedVK);
+        console.log('selectedProjects:', selectedProjects);
+        console.log('startRow:', rangeValidation.start);
+        console.log('endRow:', rangeValidation.end);
         
         fillBtn.disabled = true;
         fillBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Заполнение...';
@@ -254,7 +361,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 projects: selectedProjects.map(p => ({
                     id: p.id,
                     project: p.project
-                }))
+                })),
+                start_row: rangeValidation.start,
+                end_row: rangeValidation.end
             };
             
             console.log('📤 Отправляем данные:', requestData);
@@ -273,9 +382,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('📥 Ответ сервера:', result);
             
             if (result.success) {
-                // Показываем успех
-                showNotification(`✅ Обработано строк: ${result.rows_processed}`);
-                
                 // Очищаем контейнер результата
                 resultContainer.innerHTML = '';
                 resultContainer.style.display = 'flex';
@@ -353,11 +459,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     display: flex;
                     gap: 20px;
                     flex-wrap: wrap;
+                    margin-bottom: 8px;
                 `;
                 infoLine.innerHTML = `
-                    <span>📊 Строк обработано: <strong>${result.rows_processed}</strong></span>
+                    <span>📊 Строк обработано: <strong>${result.rows_processed || 0}</strong></span>
+                    <span>📄 Диапазон: <strong>${result.row_range || `${rangeValidation.start}-${rangeValidation.end}`}</strong></span>
                 `;
                 resultContainer.appendChild(infoLine);
+                
+                // Информация об удалении временной папки
+                if (result.temp_folder_deleted) {
+                    const cleanInfo = document.createElement('div');
+                    cleanInfo.style.cssText = `
+                        font-size: 0.85rem;
+                        color: #4CAF50;
+                        margin-top: 4px;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                    `;
+                    cleanInfo.innerHTML = '<span class="material-icons" style="font-size: 16px;">delete</span> Временные файлы очищены';
+                    resultContainer.appendChild(cleanInfo);
+                }
+                
+                showNotification(`✅ Обработано строк: ${result.rows_processed || 0}`);
                 
             } else {
                 throw new Error(result.error || 'Ошибка при обработке');
@@ -376,7 +501,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
     // ============================================
     
-    // Функция для получения CSRF токена
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -392,7 +516,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return cookieValue;
     }
     
-    // Функция для уведомлений
     function showNotification(message, type = 'success') {
         const notification = document.createElement('div');
         notification.style.cssText = `
@@ -461,6 +584,10 @@ document.addEventListener('DOMContentLoaded', function() {
             color: #16437e;
             border: 1px solid #b9cef0;
             margin: 2px;
+        }
+        .range-container input[type="number"]:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
         }
     `;
     document.head.appendChild(style);

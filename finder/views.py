@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from finder.utils.auto_replace import TransformationString
 from finder.utils.filters_q import *
+from finder.utils.services.details_service import RemainsDetailService
 from .utils.add_session_data import SessionManager
 from .models import LinkAccess, Remains
 from django.views.generic import TemplateView
@@ -204,97 +205,16 @@ class RemainsDetailView(APIView):
     def get(self, request, identifier):
         """
         Обрабатывает GET-запрос для получения детальной информации о товаре
-        по артикулу и id
-
-        Параметры:
-        - request: Запрос от клиента.
-        - identifier: ID или артикул товара.
-
-        Возвращает:
-        - 200 OK с детализированной информацией о товаре, если товар найден.
-        - 404 Not Found, если товар с указанным артикулом не найден.
         """
-        try:
-            # Попробуем преобразовать identifier в число
-            id = int(identifier)
-            positions = Remains.objects.filter(id=id).first()
-        except ValueError:
-            # Если преобразование не удалось, значит это артикул
-            positions = Remains.objects.filter(article=identifier).first()
-
-        if not positions:
-            return Response({"error": "Позиция не найдена"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Получаем QuerySet с аннотированными остатками (уже содержит status_color)
-        queryset = ProjectUtils.get_annotated_remains()
-
-        # Получаем все позиции с таким же артикулом
-        all_positions_by_article = Remains.objects.filter(article=positions.article)
+        data = RemainsDetailService.get_remains_detail_data(identifier)
         
-        # Создаем словарь цветов статусов для всех проектов
-        project_colors = {
-            proj.project: proj.status_color 
-            for proj in queryset.filter(
-                project__in=all_positions_by_article.values_list('project', flat=True).distinct()
+        if not data:
+            return Response(
+                {"error": "Позиция не найдена"}, 
+                status=status.HTTP_404_NOT_FOUND
             )
-        }
-
-        # Формируем детали по проектам с цветами статусов
-        details_any_projects = []
-        for p in all_positions_by_article:
-            project_details = {
-                'project': p.project,
-                'quantity': p.quantity,
-                'base_unit': p.base_unit,
-                'status_color': project_colors.get(p.project, 'gray')
-            }
-            details_any_projects.append(project_details)
-
-        # Вычисление суммы всех проектов
-        total_sum_any_projects = sum(item['quantity'] for item in details_any_projects)
-
-        # Извлекаем основные данные позиции
-        id = positions.id if positions else None
-        article = positions.article if positions else None
-        title = positions.title if positions else None
-        base_unit = positions.base_unit if positions else None
-        project = positions.project if positions.project else None
-
-        # Суммируем количество по одинаковым артикулам
-        total_quantity = all_positions_by_article.aggregate(total_quantity=Sum('quantity'))['total_quantity']
         
-        # Суммируем количество по одинаковым артикулам на конкретном проекте
-        total_quantity_by_project = all_positions_by_article.filter(
-            project=project
-        ).aggregate(total_quantity=Sum('quantity'))['total_quantity']
-
-        if total_quantity is None:
-            return Response({"error": "Position not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Получаем все проекты и партии, связанные с этим артикулом
-        project_list = all_positions_by_article.values_list('project', flat=True).distinct()
-        partys = all_positions_by_article.values_list('party', flat=True).distinct()
-
-
-        # Статус проекта в левой колонке по которому кликнули
-        status_color_obj = queryset.filter(project=project).first().status_color if project else 'gray'
-
-        # Создаем словарь с данными для ответа
-        data = {
-            'id': id,
-            'article': article,
-            'title': title,
-            'base_unit': base_unit,
-            'one_project': project,
-            'status_one_project': status_color_obj,
-            'total_quantity': total_quantity,
-            'total_quantity_by_project': total_quantity_by_project,
-            'party': list(partys),
-            'details_any_projects': details_any_projects,
-            'total_sum_any_projects': total_sum_any_projects
-        }
-        
-        return Response(data, status=status.HTTP_200_OK)    
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class ProjectListView(APIView):

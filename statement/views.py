@@ -12,6 +12,7 @@ from finder.models import AccountingData
 from finder.serializers import AccountingDataSerializer
 from rest_framework.decorators import api_view
 
+from statement.utils.comparison_search_service import SearchService
 from statement.utils.excel_processor import ExcelProcessor
 from statement.utils.smb import SmbFolderVk
 
@@ -34,30 +35,15 @@ class Statement(APIView):
     """
     
     def post(self, request, search_string=None):
-        # Приоритет: тело запроса > URL параметр
-        if request.data and 'search_string' in request.data:
-            search_term = request.data['search_string']
-        elif search_string:
-            # Декодируем URL-закодированную строку
-            search_term = unquote(search_string)
-        else:
-            return Response(
-                {'error': 'Не передана строка для поиска'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Поиск в базе
-        results = AccountingData.objects.filter(
-            nomenclature_kd__icontains=search_term
+        results, error, status_code = SearchService.process_search_request(
+            request, 
+            search_string
         )
         
-        serializer = AccountingDataSerializer(results, many=True)
+        if error:
+            return Response({'error': error}, status=status_code)
         
-        return Response({
-            'search_string': search_term,
-            'matches_found': results.count(),
-            'data': serializer.data
-        })
+        return Response(results, status=status_code)
     
 
 @api_view(['GET'])
@@ -86,7 +72,8 @@ def get_vk_files(request):
 
 
 
-# views.py - обновленный ответ
+# views.py - обновленная часть с диапазоном строк
+
 @api_view(['POST'])
 def job_vk(request):
     """
@@ -101,15 +88,25 @@ def job_vk(request):
         data = request.data
         vk_file = data.get('vk_file')
         projects = data.get('projects', [])
+        start_row = data.get('start_row', 2)  # По умолчанию со 2 строки
+        end_row = data.get('end_row')  # Может быть None (до конца)
         
         print(f"📦 Получены данные:")
         print(f"   Файл: {vk_file}")
         print(f"   Проекты: {json.dumps(projects, indent=2, ensure_ascii=False)}")
+        print(f"   Начальная строка: {start_row}")
+        print(f"   Конечная строка: {end_row if end_row else 'до конца'}")
         
         if not vk_file:
             return Response({
                 'success': False,
                 'error': 'Не указан файл ВК'
+            }, status=400)
+        
+        if not start_row or start_row < 1:
+            return Response({
+                'success': False,
+                'error': 'Укажите корректную начальную строку (>= 1)'
             }, status=400)
         
         # Создаем папку job если её нет
@@ -145,10 +142,12 @@ def job_vk(request):
         
         print(f"✅ Файл скопирован: {dest_path}")
         
-        # Сохраняем информацию о проектах
+        # Сохраняем информацию о проектах и диапазоне
         info = {
             'vk_file': vk_file,
             'projects': projects,
+            'start_row': start_row,
+            'end_row': end_row,
             'copied_at': datetime.now().isoformat(),
             'source': source_path,
             'destination': dest_path,
@@ -160,9 +159,10 @@ def job_vk(request):
             json.dump(info, f, ensure_ascii=False, indent=2)
         
         print(f"📝 Информация сохранена: {info_path}")
+        print(f"   Диапазон строк: {start_row} - {end_row if end_row else 'до конца'}")
         
         # ============================================
-        # ТУТ ЖЕ ЗАПУСКАЕМ ОБРАБОТКУ EXCEL
+        # ЗАПУСКАЕМ ОБРАБОТКУ EXCEL С ДИАПАЗОНОМ
         # ============================================
         print("🔄 Начинаем обработку Excel файла...")
         
@@ -173,14 +173,18 @@ def job_vk(request):
         # Создаем экземпляр процессора
         processor = ExcelProcessor()
         
-        # Обрабатываем файл - читаем столбец B (индекс 2)
-        result_file = processor.process_column_b(
+        # Обрабатываем файл с указанным диапазоном строк и проектами
+        result_file = processor.process_with_projects(
             input_file=dest_path,
-            column_index=2,  # Столбец B
+            projects=projects,  # Передаем проекты
+            start_row=start_row,
+            end_row=end_row if end_row else None,
             output_folder=result_folder
         )
         
         print(f"✅ Excel обработан: {result_file}")
+        print(f"📊 Обработано строк с данными: {processor.last_row_count}")
+        print(f"📊 Диапазон обработки: {processor.processed_range}")
         
         # ============================================
         # КОПИРУЕМ РЕЗУЛЬТАТ В SMB ПАПКУ "результат"
@@ -190,7 +194,6 @@ def job_vk(request):
         # Загружаем результат в SMB
         result_filename = os.path.basename(result_file)
         
-        # Убеждаемся что папка "результат" существует
         try:
             target_path = f"\\\\{smb.server}\\{smb.share}\\результат\\{result_filename}"
             
@@ -203,27 +206,19 @@ def job_vk(request):
             # Формируем понятный пользователю путь
             user_smb_path = f"\\\\{smb.server}\\{smb.share}\\результат\\{result_filename}"
             
-            # ============================================
-            # УДАЛЯЕМ ВРЕМЕННУЮ ПАПКУ ПОСЛЕ УСПЕШНОЙ ЗАГРУЗКИ
-            # ============================================
-            print("🧹 Удаляем временную папку...")
-            
-            # Проверяем что файл действительно существует в SMB перед удалением
+            # Проверяем что файл существует в SMB
             try:
-                # Пробуем открыть файл в SMB чтобы убедиться что он там есть
                 with open_file(target_path, mode='rb') as verify_file:
-                    # Просто проверяем что файл существует
                     pass
                 
                 # Удаляем временную папку
-                shutil.rmtree(job_path)
-                print(f"✅ Временная папка удалена: {job_path}")
-                
+                # print("🧹 Удаляем временную папку...")
+                # shutil.rmtree(job_path)
+                # print(f"✅ Временная папка удалена: {job_path}")
                 deletion_status = "deleted"
                 
             except Exception as e:
-                print(f"⚠️ Не удалось проверить файл в SMB перед удалением: {e}")
-                print(f"⚠️ Временная папка НЕ УДАЛЕНА: {job_path}")
+                print(f"⚠️ Не удалось проверить файл в SMB: {e}")
                 deletion_status = "not_deleted_verification_failed"
             
         except Exception as e:
@@ -241,15 +236,16 @@ def job_vk(request):
             'smb_result_path': user_smb_path,
             'job_folder': f"job/{job_subfolder}",
             'projects': [p.get('project') for p in projects],
-            'rows_processed': processor.last_row_count if hasattr(processor, 'last_row_count') else 0,
+            'rows_processed': processor.last_row_count,
+            'row_range': processor.processed_range,
             'result_filename': result_filename,
             'temp_folder_deleted': deletion_status == 'deleted'
         }
         
         print(f"📤 Ответ пользователю:")
         print(f"   SMB путь: {user_smb_path}")
-        print(f"   Строк обработано: {response_data['rows_processed']}")
-        print(f"   Временная папка удалена: {response_data['temp_folder_deleted']}")
+        print(f"   Диапазон: {processor.processed_range}")
+        print(f"   Строк обработано: {processor.last_row_count}")
         
         return Response(response_data)
         
@@ -258,7 +254,6 @@ def job_vk(request):
         import traceback
         traceback.print_exc()
         
-        # В случае ошибки НЕ удаляем папку, чтобы можно было посмотреть логи
         return Response({
             'success': False,
             'error': str(e)
