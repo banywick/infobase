@@ -23,8 +23,6 @@ from .utils.connect_redis_bd import connect_redis
 from .utils.file_name_document import get_file_name
 from celery.result import AsyncResult
 from rest_framework.pagination import PageNumberPagination
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +190,8 @@ class AllProdSelectedFilter(APIView):
 
 class RemainsDetailView(APIView):
     """
-    Представление для детализации информации о позиции товара по артикулу.
+    Представление для детализации информации 
+    о позиции товара по артикулу или id экземпляра.
 
     Предоставляет информацию о:
     - Названии товара.
@@ -200,7 +199,7 @@ class RemainsDetailView(APIView):
     - Общем количестве товара по артикулам.
     - Списке проектов, связанных с этим артикулом.
     - Списке партий, связанных с этим атрикулом.
-    - Общем количестве товара по артикулу и выбранному проекту.
+    - Общем количестве товара по артикулу и выбранному проекту. (по ID)
     """
     def get(self, request, identifier):
         """
@@ -215,6 +214,69 @@ class RemainsDetailView(APIView):
             )
         
         return Response(data, status=status.HTTP_200_OK)
+    
+
+class RemainsTotalByProjectView(APIView):
+    """
+    View для получения общего количества по артикулу и проекту через POST
+    """
+    
+    def post(self, request):
+        """
+        Ожидает JSON:
+        {
+            "article": "ABC123",
+            "project": "310-10/ПАМ"
+        }
+        """
+        try:
+            # Получаем данные из тела запроса
+            # Для rest_framework request.data уже распарсен
+            article = request.data.get('article')
+            project = request.data.get('project')
+            
+            # Валидация
+            if not article:
+                return Response(
+                    {'error': 'Не указан артикул (article)'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not project:
+                return Response(
+                    {'error': 'Не указан проект (project)'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Дополнительная валидация типов
+            if not isinstance(article, str) or not isinstance(project, str):
+                return Response(
+                    {'error': 'article и project должны быть строками'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Вызываем сервис
+            result = RemainsDetailService.get_total_quantity_by_article_and_project(
+                article=article,
+                project_name=project
+            )
+            
+            # Добавляем статус успеха
+            result['status'] = 'success'
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except json.JSONDecodeError:
+            return Response(
+                {'error': 'Неверный формат JSON'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Внутренняя ошибка сервера: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
 
 
 class ProjectListView(APIView):
@@ -236,7 +298,7 @@ class ProjectListView(APIView):
         - 200 OK с сериализованным списком уникальных проектов.
         """
 
-           # Получаем аннотированные остатки с полем status_color
+        # Получаем аннотированные остатки с полем status_color
         queryset = ProjectUtils.get_annotated_remains()
         
         # Применяем distinct к аннотированному QuerySet
@@ -246,6 +308,9 @@ class ProjectListView(APIView):
         serializer = ProjectListSerializer(unique_projects, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+    
     
 
 class AddProjectsToSessionView(APIView):

@@ -54,55 +54,52 @@ class ExcelProcessor:
                 'error': 'Отсутствует accounting_code'
             }
         
-        # Получаем детальную информацию по коду
-        detail_data = RemainsDetailService.get_remains_detail_data(accounting_code)
-        
-        if not detail_data:
-            return {
-                'found': False,
-                'name': name,
-                'required': required,
-                'error': 'Не удалось получить детальную информацию'
-            }
-        
         # Ищем по приоритетным проектам
         for project_name in projects:
-            for project_detail in detail_data['details_any_projects']:
-                if project_detail['project'] == project_name:
-                    quantity = project_detail['quantity']
-                    
-                    return {
-                        'found': True,
-                        'name': name,
-                        'nomenclature_kd': first_result.nomenclature_kd,
-                        'article': detail_data['article'],
-                        'title': detail_data['title'],
-                        'required': required,
-                        'quantity': quantity,
-                        'project': project_name,
-                        'status_color': project_detail['status_color'],
-                        'base_unit': project_detail['base_unit'],
-                        'total_available': detail_data['total_quantity'],
-                        'sufficient': quantity >= required,
-                        'party': detail_data.get('party', [])
-                    }
+            # Используем новый метод для получения количества по артикулу и проекту
+            result = RemainsDetailService.get_total_quantity_by_article_and_project(
+                article=accounting_code,
+                project_name=project_name
+            )
+            
+            if result and result.get('total_quantity', 0) > 0:
+                quantity = result['total_quantity']
+                
+                return {
+                    'found': True,
+                    'name': name,
+                    'nomenclature_kd': first_result.nomenclature_kd,
+                    'article': result['article'],
+                    'title': result.get('title', name),  # Если нет title, используем исходное имя
+                    'required': required,
+                    'quantity': quantity,
+                    'project': result['project'],
+                    'status_color': result.get('status_color', 'gray'),
+                    'base_unit': result.get('base_unit', 'шт'),
+                    'total_available': result.get('total_quantity', 0),  # Общее количество по проекту
+                    'sufficient': quantity >= required,
+                    'party': [p['party'] for p in result.get('positions_details', [])] if result.get('positions_details') else []
+                }
         
-        # Если ни один проект не подошел
+        # Если ни один проект не подошел, но материал существует где-то
+        # Получаем общую информацию о материале
+        detail_data = RemainsDetailService.get_remains_detail_data(accounting_code)
+        
         return {
             'found': True,
             'name': name,
             'nomenclature_kd': first_result.nomenclature_kd,
-            'article': detail_data['article'],
-            'title': detail_data['title'],
+            'article': accounting_code,
+            'title': getattr(first_result, 'name', name),
             'required': required,
             'quantity': 0,
             'project': None,
             'status_color': 'gray',
-            'base_unit': detail_data['base_unit'],
-            'total_available': detail_data['total_quantity'],
+            'base_unit': detail_data.get('base_unit', 'шт') if detail_data else 'шт',
+            'total_available': detail_data.get('total_quantity', 0) if detail_data else 0,
             'sufficient': False,
             'error': f'Материал не найден на проектах: {projects}',
-            'available_projects': [p['project'] for p in detail_data['details_any_projects']]
+            'available_projects': [p['project'] for p in detail_data.get('details_any_projects', [])] if detail_data else []
         }
     
     def process_with_projects(self, input_file, projects, start_row=2, end_row=None, output_folder=None):
@@ -259,7 +256,7 @@ class ExcelProcessor:
             "№", "Строка", "Наименование (исходное)", "Требуется",
             "Статус", "Артикул", "Наименование (найденное)",
             "Проект", "Доступно", "Ед. изм.", "Достаточно",
-            "Всего на всех проектах", "Партии"
+            "Всего на проекте", "Партии"
         ]
         
         for col, header in enumerate(headers, 1):
@@ -295,7 +292,7 @@ class ExcelProcessor:
                 result.get('quantity', 0),  # Доступно
                 result.get('base_unit', ''),  # Ед. изм.
                 "Да" if result.get('sufficient', False) else "Нет",  # Достаточно
-                result.get('total_available', 0),  # Всего на всех проектах
+                result.get('total_available', 0),  # Всего на проекте
                 ", ".join(result.get('party', [])) if result.get('party') else ""  # Партии
             ]
             
@@ -323,7 +320,7 @@ class ExcelProcessor:
             f"✅ Найдено с достаточным количеством: {self.materials_found}",
             f"⚠️ Найдено с недостаточным количеством: {self.materials_insufficient}",
             f"❌ Не найдено в базе: {self.materials_not_found}",
-            f"📋 Проекты для проверки: {', '.join(project_names)}",  # Исправлено здесь
+            f"📋 Проекты для проверки: {', '.join(project_names)}",
             f"🕒 Дата обработки: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         ]
         

@@ -39,6 +39,9 @@ urlpatterns = [
     # Детализация позиции по артикулу и id
     path('get_details/article_id/<str:identifier>/', RemainsDetailView.as_view(), name='position-detail_article_id'),
 
+    # Детализация для получения количества по артикулу и проекту
+    path('get_total/by-article-project/', RemainsTotalByProjectView.as_view(), name='total-by-article-project-post'),
+
     # Получить  все проекты
     path('get_all_projects/', ProjectListView.as_view(), name='project-list'),
 

@@ -14,6 +14,63 @@ class RemainsDetailService:
             return Remains.objects.filter(id=id).first()
         except ValueError:
             return Remains.objects.filter(article=identifier).first()
+        
+    @classmethod
+    def get_total_quantity_by_article_and_project(cls, article, project_name):
+        """
+        Получение общего количества по артикулу для конкретного проекта
+        (для ведомостей)
+        
+        Args:
+            article: артикул товара
+            project_name: название проекта
+            
+        Returns:
+            dict: информация о количестве или None если позиции не найдены
+        """
+        # Получаем все позиции с указанным артикулом
+        all_positions = cls.get_all_positions_by_article(article)
+        
+        if not all_positions.exists():
+            return {
+                'article': article,
+                'project': project_name,
+                'total_quantity': 0,
+                'message': 'Позиции с указанным артикулом не найдены'
+            }
+        
+        # Фильтруем позиции по проекту и суммируем количество
+        project_positions = all_positions.filter(project=project_name)
+        total_quantity = project_positions.aggregate(
+            total=Sum('quantity')
+        )['total'] or 0
+        
+        # Получаем дополнительную информацию (опционально)
+        positions_details = []
+        for position in project_positions:
+            positions_details.append({
+                'id': position.id,
+                'party': position.party,
+                'quantity': position.quantity,
+                'base_unit': position.base_unit
+            })
+        
+        # Получаем цвет статуса для проекта (если нужно)
+        queryset = ProjectUtils.get_annotated_remains()
+        status_color_obj = queryset.filter(
+            project=project_name
+        ).first()
+        status_color = status_color_obj.status_color if status_color_obj else 'gray'
+        
+        return {
+            'article': article,
+            'project': project_name,
+            'status_color': status_color,
+            'total_quantity': total_quantity,
+            'positions_count': project_positions.count(),
+            'positions_details': positions_details,
+            'base_unit': project_positions.first().base_unit if project_positions.exists() else None
+        }    
     
     @staticmethod
     def get_all_positions_by_article(article):
@@ -52,6 +109,7 @@ class RemainsDetailService:
         
         total_by_project = None
         if project:
+            print(project, '******')
             total_by_project = positions_queryset.filter(
                 project=project
             ).aggregate(total_quantity=Sum('quantity'))['total_quantity']
