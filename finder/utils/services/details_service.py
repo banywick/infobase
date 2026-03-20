@@ -39,6 +39,9 @@ class RemainsDetailService:
                 'message': 'Позиции с указанным артикулом не найдены'
             }
         
+        # Получаем title из первой позиции (он одинаков для всех позиций с одним артикулом)
+        title = all_positions.first().title
+        
         # Фильтруем позиции по проекту и суммируем количество
         project_positions = all_positions.filter(project=project_name)
         total_quantity = project_positions.aggregate(
@@ -64,13 +67,14 @@ class RemainsDetailService:
         
         return {
             'article': article,
+            'title': title,  # Добавлено поле title
             'project': project_name,
             'status_color': status_color,
             'total_quantity': total_quantity,
             'positions_count': project_positions.count(),
             'positions_details': positions_details,
             'base_unit': project_positions.first().base_unit if project_positions.exists() else None
-        }    
+    }    
     
     @staticmethod
     def get_all_positions_by_article(article):

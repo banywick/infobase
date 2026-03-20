@@ -7,6 +7,7 @@ from typing import List, Dict, Optional, Union
 from finder.utils.services.details_service import RemainsDetailService
 from statement.utils.comparison_search_service import SearchService
 
+
 class ExcelProcessor:
     """
     Обработчик Excel файлов с проверкой доступности материалов на проектах
@@ -21,7 +22,7 @@ class ExcelProcessor:
     
     def check_material_availability(self, name: str, required: Union[int, float], projects: List[str]) -> Optional[Dict]:
         """
-        Проверяет доступность материала на проектах
+        Проверяет доступность материала на проектах с учетом приоритета
         
         Args:
             name: Наименование материала для поиска
@@ -42,64 +43,60 @@ class ExcelProcessor:
                 'error': 'Материал не найден в базе'
             }
         
-        # Берем первый результат поиска
-        first_result = search_results.first()
-        accounting_code = getattr(first_result, 'accounting_code', None)
+        # Получаем ВСЕ результаты поиска
+        all_matches = list(search_results)
         
-        if not accounting_code:
-            return {
-                'found': False,
-                'name': name,
-                'required': required,
-                'error': 'Отсутствует accounting_code'
-            }
-        
-        # Ищем по приоритетным проектам
+        # Перебираем проекты по приоритету (сначала важные)
         for project_name in projects:
-            # Используем новый метод для получения количества по артикулу и проекту
-            result = RemainsDetailService.get_total_quantity_by_article_and_project(
-                article=accounting_code,
-                project_name=project_name
-            )
-            
-            if result and result.get('total_quantity', 0) > 0:
-                quantity = result['total_quantity']
+            # Перебираем все найденные артикулы
+            for match in all_matches:
+                accounting_code = getattr(match, 'accounting_code', None)
+                if not accounting_code:
+                    continue
                 
-                return {
-                    'found': True,
-                    'name': name,
-                    'nomenclature_kd': first_result.nomenclature_kd,
-                    'article': result['article'],
-                    'title': result.get('title', name),  # Если нет title, используем исходное имя
-                    'required': required,
-                    'quantity': quantity,
-                    'project': result['project'],
-                    'status_color': result.get('status_color', 'gray'),
-                    'base_unit': result.get('base_unit', 'шт'),
-                    'total_available': result.get('total_quantity', 0),  # Общее количество по проекту
-                    'sufficient': quantity >= required,
-                    'party': [p['party'] for p in result.get('positions_details', [])] if result.get('positions_details') else []
-                }
+                # Проверяем этот артикул на текущем проекте
+                result = RemainsDetailService.get_total_quantity_by_article_and_project(
+                    article=accounting_code,
+                    project_name=project_name
+                )
+                
+                # Если артикул есть на этом проекте
+                if result and result.get('total_quantity', 0) > 0:
+                    quantity = result['total_quantity']
+                    
+                    return {
+                        'found': True,
+                        'name': name,
+                        'nomenclature_kd': getattr(match, 'nomenclature_kd', ''),
+                        'article': result['article'],
+                        'title': result.get('title', getattr(match, 'name', name)),
+                        'required': required,
+                        'quantity': quantity,
+                        'project': result['project'],
+                        'status_color': result.get('status_color', 'gray'),
+                        'base_unit': result.get('base_unit', 'шт'),
+                        'total_available': result.get('total_quantity', 0),
+                        'sufficient': quantity >= required,
+                        'positions_details': result.get('positions_details', [])
+                    }
         
-        # Если ни один проект не подошел, но материал существует где-то
-        # Получаем общую информацию о материале
-        detail_data = RemainsDetailService.get_remains_detail_data(accounting_code)
-        
+        # Если ни один артикул не найден ни на одном проекте
+        first_match = all_matches[0]
         return {
             'found': True,
             'name': name,
-            'nomenclature_kd': first_result.nomenclature_kd,
-            'article': accounting_code,
-            'title': getattr(first_result, 'name', name),
+            'nomenclature_kd': getattr(first_match, 'nomenclature_kd', ''),
+            'article': getattr(first_match, 'accounting_code', ''),
+            'title': getattr(first_match, 'name', name),
             'required': required,
             'quantity': 0,
             'project': None,
             'status_color': 'gray',
-            'base_unit': detail_data.get('base_unit', 'шт') if detail_data else 'шт',
-            'total_available': detail_data.get('total_quantity', 0) if detail_data else 0,
+            'base_unit': 'шт',
+            'total_available': 0,
             'sufficient': False,
-            'error': f'Материал не найден на проектах: {projects}',
-            'available_projects': [p['project'] for p in detail_data.get('details_any_projects', [])] if detail_data else []
+            'positions_details': [],
+            'error': f'Материал не найден на проектах: {projects}'
         }
     
     def process_with_projects(self, input_file, projects, start_row=2, end_row=None, output_folder=None):
@@ -132,7 +129,7 @@ class ExcelProcessor:
                 # Если уже строки, используем как есть
                 project_names = [str(p) for p in projects]
         
-        print(f"📋 Проекты для проверки: {project_names}")
+        print(f"📋 Проекты для проверки (по приоритету): {project_names}")
         
         # Сбрасываем счетчики
         self.materials_found = 0
@@ -223,7 +220,7 @@ class ExcelProcessor:
             result = self.check_material_availability(
                 name=material['name'],
                 required=material['required'],
-                projects=project_names  # Используем список названий проектов
+                projects=project_names
             )
             
             if result:
@@ -250,23 +247,30 @@ class ExcelProcessor:
         result_sheet.title = "Результаты проверки"
         
         # ============================================
-        # ЗАГОЛОВКИ ТАБЛИЦЫ РЕЗУЛЬТАТОВ
+        # ЗАГОЛОВКИ ТАБЛИЦЫ РЕЗУЛЬТАТОВ (БЕЗ СТОЛБЦА "№")
         # ============================================
         headers = [
-            "№", "Строка", "Наименование (исходное)", "Требуется",
-            "Статус", "Артикул", "Наименование (найденное)",
-            "Проект", "Доступно", "Ед. изм.", "Достаточно",
-            "Всего на проекте", "Партии"
+            "Строка",                      # 1. Номер строки в исходном файле
+            "Наименование (исходное)",     # 2. Исходное наименование из файла
+            "Код",                         # 3. Артикул (код материала)
+            "Наименование (найденное)",    # 4. Найденное наименование из базы
+            "Ед. изм.",                    # 5. Единица измерения
+            "Требуется",                   # 6. Требуемое количество
+            "Всего на проекте",            # 7. Доступное количество на проекте
+            "Проект",                      # 8. Проект, с которого берем
+            "Статус",                      # 9. Статус (Достаточно/Недостаточно/Не найден)
+            "Партии"                       # 10. Список партий (только номера)
         ]
-        
+
+        # Создаем заголовки
         for col, header in enumerate(headers, 1):
             cell = result_sheet.cell(row=1, column=col, value=header)
             cell.font = openpyxl.styles.Font(bold=True)
             cell.fill = openpyxl.styles.PatternFill(start_color="366092", end_color="366092", fill_type="solid")
             cell.font = openpyxl.styles.Font(color="FFFFFF", bold=True)
-        
+
         # ============================================
-        # ЗАПОЛНЯЕМ РЕЗУЛЬТАТЫ
+        # ЗАПОЛНЯЕМ РЕЗУЛЬТАТЫ (БЕЗ СТОЛБЦА "№")
         # ============================================
         for i, result in enumerate(results, 1):
             # Определяем статус и цвет
@@ -280,29 +284,51 @@ class ExcelProcessor:
                 status = "⚠️ Недостаточно"
                 status_color = "FFFF00"  # Желтый
             
+            # Формируем строку с партиями (только номера, без количества)
+            parties_str = ""
+            if result.get('positions_details'):
+                parties_list = [p['party'] for p in result['positions_details']]
+                parties_str = ", ".join(parties_list)
+            
             row_data = [
-                i,  # №
-                result.get('row', ''),  # Строка
-                result.get('original_name', ''),  # Наименование (исходное)
-                result.get('required', ''),  # Требуется
-                status,  # Статус
-                result.get('article', ''),  # Артикул
-                result.get('title', ''),  # Наименование (найденное)
-                result.get('project', 'Не найден'),  # Проект
-                result.get('quantity', 0),  # Доступно
-                result.get('base_unit', ''),  # Ед. изм.
-                "Да" if result.get('sufficient', False) else "Нет",  # Достаточно
-                result.get('total_available', 0),  # Всего на проекте
-                ", ".join(result.get('party', [])) if result.get('party') else ""  # Партии
+                result.get('row', ''),                      # 1. Строка
+                result.get('original_name', ''),            # 2. Наименование (исходное)
+                result.get('article', ''),                  # 3. Код
+                result.get('title', ''),                    # 4. Наименование (найденное)
+                result.get('base_unit', ''),                # 5. Ед. изм.
+                result.get('required', ''),                 # 6. Требуется
+                result.get('quantity', 0),                  # 7. Всего на проекте
+                result.get('project', 'Не найден'),         # 8. Проект
+                status,                                     # 9. Статус
+                parties_str                                 # 10. Партии
             ]
             
             for col, value in enumerate(row_data, 1):
                 cell = result_sheet.cell(row=i+1, column=col, value=value)
                 
                 # Красим строку в зависимости от статуса
-                if col == 5:  # Столбец со статусом
+                if col == 9:  # Столбец со статусом (теперь 9-й)
                     cell.fill = openpyxl.styles.PatternFill(start_color=status_color, end_color=status_color, fill_type="solid")
-        
+
+        # ============================================
+        # НАСТРАИВАЕМ ШИРИНУ КОЛОНОК
+        # ============================================
+        column_widths = {
+            1: 8,   # Строка
+            2: 35,  # Наименование (исходное)
+            3: 15,  # Код
+            4: 35,  # Наименование (найденное)
+            5: 8,   # Ед. изм.
+            6: 12,  # Требуется
+            7: 15,  # Всего на проекте
+            8: 20,  # Проект
+            9: 15,  # Статус
+            10: 35  # Партии
+        }
+
+        for col, width in column_widths.items():
+            result_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
+                
         # ============================================
         # ИНФОРМАЦИЯ ОБ ОБРАБОТКЕ
         # ============================================
@@ -320,7 +346,7 @@ class ExcelProcessor:
             f"✅ Найдено с достаточным количеством: {self.materials_found}",
             f"⚠️ Найдено с недостаточным количеством: {self.materials_insufficient}",
             f"❌ Не найдено в базе: {self.materials_not_found}",
-            f"📋 Проекты для проверки: {', '.join(project_names)}",
+            f"📋 Проекты для проверки (по приоритету): {', '.join(project_names)}",
             f"🕒 Дата обработки: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         ]
         
@@ -335,36 +361,29 @@ class ExcelProcessor:
         
         projects_sheet.cell(row=1, column=1, value="№")
         projects_sheet.cell(row=1, column=2, value="Проект")
+        projects_sheet.cell(row=1, column=3, value="Приоритет")
         
         for i, project in enumerate(project_names, 1):
             projects_sheet.cell(row=i+1, column=1, value=i)
             projects_sheet.cell(row=i+1, column=2, value=project)
+            projects_sheet.cell(row=i+1, column=3, value=i)
         
         # Если проекты пришли как словари, добавляем дополнительную информацию
         if projects and len(projects) > 0 and isinstance(projects[0], dict):
             # Добавляем колонки для дополнительных данных
-            projects_sheet.cell(row=1, column=3, value="ID")
-            projects_sheet.cell(row=1, column=4, value="Статус")
+            projects_sheet.cell(row=1, column=4, value="ID")
+            projects_sheet.cell(row=1, column=5, value="Статус")
             
             for i, project in enumerate(projects, 1):
-                projects_sheet.cell(row=i+1, column=3, value=project.get('id', ''))
-                projects_sheet.cell(row=i+1, column=4, value=project.get('status_color', 'gray'))
+                projects_sheet.cell(row=i+1, column=4, value=project.get('id', ''))
+                projects_sheet.cell(row=i+1, column=5, value=project.get('status_color', 'gray'))
         
-        # ============================================
-        # НАСТРАИВАЕМ ШИРИНУ КОЛОНОК
-        # ============================================
-        for sheet in [result_sheet, projects_sheet]:
-            for col in sheet.columns:
-                max_length = 0
-                column = col[0].column_letter
-                for cell in col:
-                    try:
-                        if len(str(cell.value)) > max_length:
-                            max_length = len(str(cell.value))
-                    except:
-                        pass
-                adjusted_width = min(max_length + 2, 50)
-                sheet.column_dimensions[column].width = adjusted_width
+        # Настраиваем ширину колонок для листа проектов
+        projects_sheet.column_dimensions['A'].width = 5
+        projects_sheet.column_dimensions['B'].width = 25
+        projects_sheet.column_dimensions['C'].width = 10
+        projects_sheet.column_dimensions['D'].width = 10
+        projects_sheet.column_dimensions['E'].width = 10
         
         # ============================================
         # СОХРАНЯЕМ ФАЙЛ
