@@ -1,5 +1,5 @@
 // ============================================
-// ЕДИНЫЙ ФАЙЛ: vk_app.js
+// ЕДИНЫЙ ФАЙЛ: vk_app.js (ПОЛНАЯ ВЕРСИЯ С ПОДДЕРЖКОЙ ВЛОЖЕННЫХ ПАПОК)
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -11,22 +11,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const projectsPanel = document.getElementById('projectsPanel');
     const fillBtn = document.getElementById('fillBtn');
     const resultContainer = document.getElementById('resultLinkContainer');
-    const excelLink = document.getElementById('excelLink');
     const projectSearchInput = document.getElementById('projectSearchInput');
     const projectSuggestList = document.getElementById('projectSuggestList');
     const multiselectContainer = document.getElementById('multiselectContainer');
     
     // Состояние
-    let vkFiles = [];
+    let vkFiles = [];           // Массив объектов {name, path, relative_path}
     let projects = [];
-    let selectedVK = null;
+    let selectedVK = null;      // Объект {name, path, relative_path}
     let selectedProjects = [];
+    let searchTimeout = null;
+    let isLoading = false;
     
     // ============================================
     // СОЗДАЕМ ПОЛЯ ДЛЯ ДИАПАЗОНА СТРОК
     // ============================================
     
-    // Контейнер для диапазона строк (добавим после выбора ВК)
     const rangeContainer = document.createElement('div');
     rangeContainer.id = 'rangeContainer';
     rangeContainer.className = 'range-container';
@@ -68,18 +68,99 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     `;
     
-    // Вставляем после панели проектов
-    projectsPanel.parentNode.insertBefore(rangeContainer, projectsPanel.nextSibling);
+    if (projectsPanel && projectsPanel.parentNode) {
+        projectsPanel.parentNode.insertBefore(rangeContainer, projectsPanel.nextSibling);
+    }
     
-    // Получаем ссылки на поля диапазона
     const startRowInput = document.getElementById('startRow');
     const endRowInput = document.getElementById('endRow');
+    
+    // ============================================
+    // СОЗДАЕМ ЭЛЕМЕНТЫ УПРАВЛЕНИЯ ДЛЯ ПОИСКА ВК
+    // ============================================
+    
+    if (vkInput && vkInput.parentElement) {
+        const vkSearchContainer = vkInput.parentElement;
+        
+        // Индикатор загрузки
+        const loadingIndicator = document.createElement('span');
+        loadingIndicator.id = 'vkLoadingIndicator';
+        loadingIndicator.style.cssText = `
+            font-size: 0.8rem;
+            color: #2196F3;
+            margin-left: 8px;
+            display: none;
+        `;
+        loadingIndicator.innerHTML = '<span class="material-icons" style="font-size: 14px;">sync</span> загрузка...';
+        vkSearchContainer.appendChild(loadingIndicator);
+        
+        // Счетчик файлов
+        const fileCounter = document.createElement('span');
+        fileCounter.id = 'vkFileCounter';
+        fileCounter.style.cssText = `
+            font-size: 0.8rem;
+            color: #666;
+            margin-left: 8px;
+            white-space: nowrap;
+        `;
+        fileCounter.textContent = '(загрузка...)';
+        vkSearchContainer.appendChild(fileCounter);
+        
+        // Кнопка "Все файлы"
+        const showAllBtn = document.createElement('button');
+        showAllBtn.innerHTML = '<span class="material-icons" style="font-size: 18px;">list</span> Все файлы';
+        showAllBtn.style.cssText = `
+            background: #f0f5ff;
+            border: 1px solid #b9cef0;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            color: #16437e;
+            margin-left: 12px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        `;
+        
+        showAllBtn.addEventListener('mouseenter', () => {
+            showAllBtn.style.background = '#e6edfa';
+            showAllBtn.style.transform = 'scale(1.02)';
+        });
+        
+        showAllBtn.addEventListener('mouseleave', () => {
+            showAllBtn.style.background = '#f0f5ff';
+            showAllBtn.style.transform = 'scale(1)';
+        });
+        
+        showAllBtn.addEventListener('click', () => {
+            if (vkFiles.length > 0) {
+                showVkSuggestions(vkFiles.slice(0, 100));
+                vkInput.focus();
+            } else {
+                showNotification('Файлы еще загружаются...', 'info');
+            }
+        });
+        
+        vkSearchContainer.appendChild(showAllBtn);
+        
+        // Сохраняем ссылки для доступа из других функций
+        window.vkLoadingIndicator = loadingIndicator;
+        window.vkFileCounter = fileCounter;
+    }
     
     // ============================================
     // ЗАГРУЗКА ДАННЫХ
     // ============================================
     
     async function loadVkFiles() {
+        if (isLoading) return;
+        
+        isLoading = true;
+        if (window.vkLoadingIndicator) window.vkLoadingIndicator.style.display = 'inline-block';
+        
         try {
             console.log('🔄 Загружаем ВК файлы...');
             const response = await fetch('/statement/get-vk-files/');
@@ -87,12 +168,36 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
                 vkFiles = data.files || [];
-                console.log('✅ ВК файлы загружены:', vkFiles.length, vkFiles);
+                console.log(`✅ Загружено ${vkFiles.length} файлов`);
+                
+                // Обновляем счетчик
+                if (window.vkFileCounter) {
+                    window.vkFileCounter.textContent = `(${vkFiles.length.toLocaleString()} файлов)`;
+                }
+                
+                // Для отладки - показать примеры
+                if (vkFiles.length > 0) {
+                    console.log('📋 Примеры файлов:');
+                    vkFiles.slice(0, 5).forEach(file => {
+                        console.log(`  ${file.name} -> ${file.relative_path || 'корень'}`);
+                    });
+                }
             } else {
                 console.error('❌ Ошибка загрузки ВК:', data.error);
+                vkFiles = [];
+                if (window.vkFileCounter) {
+                    window.vkFileCounter.textContent = '(ошибка загрузки)';
+                }
             }
         } catch (error) {
             console.error('❌ Ошибка загрузки ВК:', error);
+            vkFiles = [];
+            if (window.vkFileCounter) {
+                window.vkFileCounter.textContent = '(ошибка загрузки)';
+            }
+        } finally {
+            isLoading = false;
+            if (window.vkLoadingIndicator) window.vkLoadingIndicator.style.display = 'none';
         }
     }
     
@@ -102,21 +207,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/finder/get_all_projects/');
             const data = await response.json();
             
-            console.log('📦 Данные проектов:', data);
-            
             if (Array.isArray(data)) {
                 projects = data;
-                console.log('✅ Проекты загружены:', projects.length);
             } else if (data.results && Array.isArray(data.results)) {
                 projects = data.results;
-                console.log('✅ Проекты загружены:', projects.length);
             } else if (data.data && Array.isArray(data.data)) {
                 projects = data.data;
-                console.log('✅ Проекты загружены:', projects.length);
             } else {
-                console.error('❌ Неизвестная структура данных:', data);
                 projects = [];
             }
+            
+            console.log(`✅ Загружено ${projects.length} проектов`);
         } catch (error) {
             console.error('❌ Ошибка загрузки проектов:', error);
             projects = [];
@@ -124,109 +225,240 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ============================================
-    // ПОИСК И ВЫБОР ВК
+    // ОПТИМИЗИРОВАННЫЙ ПОИСК С DEBOUNCE
     // ============================================
     
-    vkInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
+    if (vkInput) {
+        vkInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            
+            if (searchTimeout) clearTimeout(searchTimeout);
+            
+            searchTimeout = setTimeout(() => {
+                if (query.length === 0) {
+                    showVkSuggestions(vkFiles.slice(0, 50));
+                } else {
+                    performSearch(query);
+                }
+            }, 300);
+        });
         
-        if (query.length === 0) {
-            showVkSuggestions(vkFiles);
-        } else {
-            const filtered = vkFiles.filter(file => 
-                file.toLowerCase().includes(query)
-            );
-            showVkSuggestions(filtered);
-        }
-    });
+        vkInput.addEventListener('focus', function() {
+            if (vkFiles.length > 0) {
+                showVkSuggestions(vkFiles.slice(0, 50));
+            }
+        });
+    }
     
-    vkInput.addEventListener('focus', function() {
-        if (vkFiles.length > 0) {
-            showVkSuggestions(vkFiles);
+    function performSearch(query) {
+        if (!vkFiles.length) return;
+        
+        const lowerQuery = query.toLowerCase();
+        const results = [];
+        
+        // Ищем по имени файла
+        for (let i = 0; i < vkFiles.length; i++) {
+            const file = vkFiles[i];
+            if (file.name.toLowerCase().includes(lowerQuery)) {
+                results.push(file);
+                if (results.length >= 200) break;
+            }
         }
-    });
+        
+        showVkSuggestions(results);
+    }
     
     function showVkSuggestions(files) {
+        if (!vkList) return;
+        
         vkList.innerHTML = '';
         
-        if (files.length === 0) {
+        if (!files || files.length === 0) {
             vkList.style.display = 'none';
+            const noResults = document.createElement('div');
+            noResults.style.cssText = `
+                padding: 12px;
+                text-align: center;
+                color: #999;
+                font-style: italic;
+            `;
+            noResults.textContent = 'Ничего не найдено';
+            vkList.appendChild(noResults);
+            vkList.style.display = 'block';
             return;
         }
         
-        files.forEach(file => {
+        const displayFiles = files.slice(0, 100);
+        const fragment = document.createDocumentFragment();
+        
+        displayFiles.forEach(file => {
             const li = document.createElement('li');
+            
+            const query = vkInput ? vkInput.value.toLowerCase().trim() : '';
+            let displayName = file.name;
+            
+            if (query) {
+                const regex = new RegExp(`(${query})`, 'gi');
+                displayName = file.name.replace(regex, '<mark>$1</mark>');
+            }
+            
+            // Показываем путь к файлу, если он в подпапке
+            const pathInfo = file.relative_path && file.relative_path !== file.name 
+                ? `<span style="font-size: 0.7rem; color: #999; margin-left: 8px;">📁 ${file.relative_path}</span>`
+                : '';
+            
             li.innerHTML = `
                 <span class="material-icons">description</span>
-                <span>${file}</span>
+                <span style="flex: 1;">${displayName}</span>
+                ${pathInfo}
             `;
+            
+            li.dataset.path = file.path;
+            li.dataset.name = file.name;
+            li.dataset.relativePath = file.relative_path || '';
+            
             li.addEventListener('click', () => selectVK(file));
-            vkList.appendChild(li);
+            fragment.appendChild(li);
         });
+        
+        vkList.appendChild(fragment);
+        
+        if (files.length > 100) {
+            const info = document.createElement('li');
+            info.style.cssText = `
+                text-align: center;
+                color: #666;
+                font-size: 0.85rem;
+                padding: 8px;
+                border-top: 1px solid #eee;
+                background: #f9f9f9;
+            `;
+            info.textContent = `Показано 100 из ${files.length} результатов. Уточните поиск для лучших результатов.`;
+            vkList.appendChild(info);
+        }
         
         vkList.style.display = 'block';
     }
     
     function selectVK(file) {
-        selectedVK = file;
-        selectedVKName.textContent = file;
-        selectedVKChip.style.display = 'inline-flex';
-        vkInput.value = '';
-        vkList.style.display = 'none';
+        // Сохраняем полную информацию о файле
+        selectedVK = {
+            name: file.name,
+            path: file.path,
+            relative_path: file.relative_path || ''
+        };
+        
+        if (selectedVKName) {
+            selectedVKName.textContent = file.name;
+        }
+        
+        if (selectedVKChip) {
+            selectedVKChip.style.display = 'inline-flex';
+        }
+        
+        if (vkInput) {
+            vkInput.value = '';
+        }
+        
+        if (vkList) {
+            vkList.style.display = 'none';
+        }
+        
+        // Показываем дополнительную информацию о пути
+        if (file.relative_path && file.relative_path !== file.name) {
+            const existingInfo = document.getElementById('selectedVKPathInfo');
+            if (existingInfo) existingInfo.remove();
+            
+            const pathInfo = document.createElement('div');
+            pathInfo.id = 'selectedVKPathInfo';
+            pathInfo.style.cssText = `
+                font-size: 0.75rem;
+                color: #666;
+                margin-top: 6px;
+                padding: 4px 8px;
+                background: #f5f7fa;
+                border-radius: 6px;
+                display: inline-block;
+            `;
+            pathInfo.innerHTML = `📁 ${file.relative_path}`;
+            
+            if (selectedVKName && selectedVKName.parentElement) {
+                selectedVKName.parentElement.appendChild(pathInfo);
+                setTimeout(() => pathInfo.remove(), 5000);
+            }
+        }
         
         // Показываем панель проектов и диапазон строк
-        projectsPanel.classList.add('visible');
-        rangeContainer.style.display = 'block';
+        if (projectsPanel) {
+            projectsPanel.classList.add('visible');
+        }
+        
+        if (rangeContainer) {
+            rangeContainer.style.display = 'block';
+        }
         
         // Сбрасываем выбранные проекты
         selectedProjects = [];
         renderSelectedProjects();
         
         // Сбрасываем диапазон на значения по умолчанию
-        startRowInput.value = '11';
-        endRowInput.value = '50';
+        if (startRowInput) startRowInput.value = '11';
+        if (endRowInput) endRowInput.value = '50';
         
         updateFillButton();
         
-        console.log('✅ Выбран ВК:', file);
+        console.log('✅ Выбран ВК файл:', selectedVK);
+        showNotification(`Выбран файл: ${file.name}`, 'success');
     }
     
     // ============================================
     // ПОИСК И ВЫБОР ПРОЕКТОВ
     // ============================================
     
-    projectSearchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
-        
-        if (projects.length === 0) return;
-        
-        const filtered = projects.filter(projectObj => {
-            if (selectedProjects.some(p => p.id === projectObj.id)) {
-                return false;
-            }
-            const projectNumber = String(projectObj.project || '').toLowerCase();
-            return projectNumber.includes(query);
+    let projectSearchTimeout = null;
+    
+    if (projectSearchInput) {
+        projectSearchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            
+            if (projectSearchTimeout) clearTimeout(projectSearchTimeout);
+            
+            projectSearchTimeout = setTimeout(() => {
+                if (projects.length === 0) return;
+                
+                const filtered = projects.filter(projectObj => {
+                    if (selectedProjects.some(p => p.id === projectObj.id)) {
+                        return false;
+                    }
+                    const projectNumber = String(projectObj.project || '').toLowerCase();
+                    return projectNumber.includes(query);
+                });
+                
+                showProjectSuggestions(filtered.slice(0, 50));
+            }, 200);
         });
         
-        showProjectSuggestions(filtered);
-    });
-    
-    projectSearchInput.addEventListener('focus', function() {
-        if (projects.length > 0) {
-            const filtered = projects.filter(p => !selectedProjects.some(sp => sp.id === p.id));
-            showProjectSuggestions(filtered);
-        } else {
-            loadProjects();
-        }
-    });
+        projectSearchInput.addEventListener('focus', function() {
+            if (projects.length > 0) {
+                const filtered = projects.filter(p => !selectedProjects.some(sp => sp.id === p.id));
+                showProjectSuggestions(filtered.slice(0, 50));
+            } else {
+                loadProjects();
+            }
+        });
+    }
     
     function showProjectSuggestions(projectsList) {
+        if (!projectSuggestList) return;
+        
         projectSuggestList.innerHTML = '';
         
         if (projectsList.length === 0) {
             projectSuggestList.style.display = 'none';
             return;
         }
+        
+        const fragment = document.createDocumentFragment();
         
         projectsList.forEach(projectObj => {
             const li = document.createElement('li');
@@ -241,9 +473,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 </span>
             `;
             li.addEventListener('click', () => addProject(projectObj));
-            projectSuggestList.appendChild(li);
+            fragment.appendChild(li);
         });
         
+        projectSuggestList.appendChild(fragment);
         projectSuggestList.style.display = 'block';
     }
     
@@ -251,8 +484,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectedProjects.some(p => p.id === projectObj.id)) {
             selectedProjects.push(projectObj);
             renderSelectedProjects();
-            projectSearchInput.value = '';
-            projectSearchInput.focus();
+            if (projectSearchInput) {
+                projectSearchInput.value = '';
+                projectSearchInput.focus();
+            }
             updateFillButton();
             console.log('✅ Добавлен проект:', projectObj.project);
         }
@@ -266,6 +501,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function renderSelectedProjects() {
+        if (!multiselectContainer) return;
+        
         multiselectContainer.innerHTML = '';
         
         selectedProjects.forEach(projectObj => {
@@ -288,9 +525,11 @@ document.addEventListener('DOMContentLoaded', function() {
             multiselectContainer.appendChild(chip);
         });
         
-        multiselectContainer.appendChild(projectSearchInput);
-        projectSearchInput.placeholder = selectedProjects.length ? '' : 'Введите номер проекта...';
-        projectSearchInput.style.flex = '1';
+        if (projectSearchInput) {
+            multiselectContainer.appendChild(projectSearchInput);
+            projectSearchInput.placeholder = selectedProjects.length ? '' : 'Введите номер проекта...';
+            projectSearchInput.style.flex = '1';
+        }
     }
     
     // ============================================
@@ -298,26 +537,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function validateRowRange() {
-        const start = parseInt(startRowInput.value);
-        const end = parseInt(endRowInput.value);
+        const start = parseInt(startRowInput ? startRowInput.value : 2);
+        const end = parseInt(endRowInput ? endRowInput.value : 50);
         
         if (isNaN(start) || start < 1) {
-            startRowInput.style.borderColor = '#f44336';
+            if (startRowInput) startRowInput.style.borderColor = '#f44336';
             return { valid: false, error: 'Начальная строка должна быть >= 1' };
         } else {
-            startRowInput.style.borderColor = '#dce3ec';
+            if (startRowInput) startRowInput.style.borderColor = '#dce3ec';
         }
         
         if (isNaN(end) || end < 1) {
-            endRowInput.style.borderColor = '#f44336';
+            if (endRowInput) endRowInput.style.borderColor = '#f44336';
             return { valid: false, error: 'Конечная строка должна быть >= 1' };
         } else {
-            endRowInput.style.borderColor = '#dce3ec';
+            if (endRowInput) endRowInput.style.borderColor = '#dce3ec';
         }
         
         if (start > end) {
-            startRowInput.style.borderColor = '#f44336';
-            endRowInput.style.borderColor = '#f44336';
+            if (startRowInput) startRowInput.style.borderColor = '#f44336';
+            if (endRowInput) endRowInput.style.borderColor = '#f44336';
             return { valid: false, error: 'Начальная строка не может быть больше конечной' };
         }
         
@@ -325,177 +564,198 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ============================================
-    // ОТПРАВКА ДАННЫХ (JOB_VK)
+    // ОТПРАВКА ДАННЫХ
     // ============================================
     
-    fillBtn.addEventListener('click', async function() {
-        // Валидация
-        if (!selectedVK) {
-            showNotification('❌ Выберите файл ВК', 'error');
-            return;
-        }
-        
-        if (!selectedProjects.length) {
-            showNotification('❌ Выберите хотя бы один проект', 'error');
-            return;
-        }
-        
-        const rangeValidation = validateRowRange();
-        if (!rangeValidation.valid) {
-            showNotification(`❌ ${rangeValidation.error}`, 'error');
-            return;
-        }
-        
-        console.log('selectedVK:', selectedVK);
-        console.log('selectedProjects:', selectedProjects);
-        console.log('startRow:', rangeValidation.start);
-        console.log('endRow:', rangeValidation.end);
-        
-        fillBtn.disabled = true;
-        fillBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Заполнение...';
-        
-        try {
-            // Подготавливаем данные для отправки
-            const requestData = {
-                vk_file: selectedVK,
-                projects: selectedProjects.map(p => ({
-                    id: p.id,
-                    project: p.project
-                })),
-                start_row: rangeValidation.start,
-                end_row: rangeValidation.end
-            };
-            
-            console.log('📤 Отправляем данные:', requestData);
-            
-            // Отправляем запрос
-            const response = await fetch('/statement/job_vk_statement/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(requestData)
-            });
-            
-            const result = await response.json();
-            console.log('📥 Ответ сервера:', result);
-            
-            if (result.success) {
-                // Очищаем контейнер результата
-                resultContainer.innerHTML = '';
-                resultContainer.style.display = 'flex';
-                resultContainer.style.flexDirection = 'column';
-                resultContainer.style.alignItems = 'flex-start';
-                
-                // Заголовок
-                const title = document.createElement('div');
-                title.style.cssText = `
-                    font-weight: 600;
-                    color: #16437e;
-                    margin-bottom: 10px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                `;
-                title.innerHTML = '<span class="material-icons">check_circle</span> Файл успешно обработан';
-                resultContainer.appendChild(title);
-                
-                // Блок с путем для копирования
-                const pathBlock = document.createElement('div');
-                pathBlock.style.cssText = `
-                    background: #f0f5ff;
-                    border: 1px solid #b9cef0;
-                    border-radius: 8px;
-                    padding: 12px;
-                    width: 100%;
-                    word-break: break-all;
-                    font-family: monospace;
-                    font-size: 0.9rem;
-                    margin-bottom: 10px;
-                `;
-                pathBlock.textContent = result.smb_result_path;
-                resultContainer.appendChild(pathBlock);
-                
-                // Кнопка копирования
-                const copyBtn = document.createElement('button');
-                copyBtn.style.cssText = `
-                    background: #e6edfa;
-                    border: 1px solid #b9cef0;
-                    border-radius: 6px;
-                    padding: 8px 16px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 0.9rem;
-                    color: #16437e;
-                    margin-bottom: 10px;
-                `;
-                copyBtn.innerHTML = '<span class="material-icons" style="font-size: 18px;">content_copy</span> Копировать путь';
-                
-                copyBtn.addEventListener('click', () => {
-                    navigator.clipboard.writeText(result.smb_result_path).then(() => {
-                        const originalText = copyBtn.innerHTML;
-                        copyBtn.innerHTML = '<span class="material-icons" style="font-size: 18px;">check</span> Скопировано!';
-                        copyBtn.style.background = '#4CAF50';
-                        copyBtn.style.color = 'white';
-                        
-                        setTimeout(() => {
-                            copyBtn.innerHTML = originalText;
-                            copyBtn.style.background = '#e6edfa';
-                            copyBtn.style.color = '#16437e';
-                        }, 2000);
-                    });
-                });
-                
-                resultContainer.appendChild(copyBtn);
-                
-                // Информация о результате
-                const infoLine = document.createElement('div');
-                infoLine.style.cssText = `
-                    font-size: 0.9rem;
-                    color: #4b6589;
-                    display: flex;
-                    gap: 20px;
-                    flex-wrap: wrap;
-                    margin-bottom: 8px;
-                `;
-                infoLine.innerHTML = `
-                    <span>📊 Строк обработано: <strong>${result.rows_processed || 0}</strong></span>
-                    <span>📄 Диапазон: <strong>${result.row_range || `${rangeValidation.start}-${rangeValidation.end}`}</strong></span>
-                `;
-                resultContainer.appendChild(infoLine);
-                
-                // Информация об удалении временной папки
-                if (result.temp_folder_deleted) {
-                    const cleanInfo = document.createElement('div');
-                    cleanInfo.style.cssText = `
-                        font-size: 0.85rem;
-                        color: #4CAF50;
-                        margin-top: 4px;
-                        display: flex;
-                        align-items: center;
-                        gap: 4px;
-                    `;
-                    cleanInfo.innerHTML = '<span class="material-icons" style="font-size: 16px;">delete</span> Временные файлы очищены';
-                    resultContainer.appendChild(cleanInfo);
-                }
-                
-                showNotification(`✅ Обработано строк: ${result.rows_processed || 0}`);
-                
-            } else {
-                throw new Error(result.error || 'Ошибка при обработке');
+    if (fillBtn) {
+        fillBtn.addEventListener('click', async function() {
+            // Валидация
+            if (!selectedVK) {
+                showNotification('❌ Выберите файл ВК', 'error');
+                return;
             }
             
-        } catch (error) {
-            console.error('❌ Ошибка:', error);
-            showNotification(`❌ ${error.message}`, 'error');
-        } finally {
-            fillBtn.disabled = false;
-            fillBtn.innerHTML = '<span class="material-icons">auto_awesome</span> Заполнить ведомость';
-        }
-    });
+            if (!selectedProjects.length) {
+                showNotification('❌ Выберите хотя бы один проект', 'error');
+                return;
+            }
+            
+            const rangeValidation = validateRowRange();
+            if (!rangeValidation.valid) {
+                showNotification(`❌ ${rangeValidation.error}`, 'error');
+                return;
+            }
+            
+            console.log('📤 Отправка данных:');
+            console.log('   Файл:', selectedVK);
+            console.log('   Проекты:', selectedProjects);
+            console.log('   Диапазон:', rangeValidation.start, '-', rangeValidation.end);
+            
+            fillBtn.disabled = true;
+            fillBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Заполнение...';
+            
+            try {
+                const requestData = {
+                    vk_file: selectedVK.name,
+                    vk_file_path: selectedVK.path,  // Передаем полный путь для точного поиска
+                    projects: selectedProjects.map(p => ({
+                        id: p.id,
+                        project: p.project
+                    })),
+                    start_row: rangeValidation.start,
+                    end_row: rangeValidation.end
+                };
+                
+                const response = await fetch('/statement/job_vk_statement/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const result = await response.json();
+                console.log('📥 Ответ сервера:', result);
+                
+                if (result.success) {
+                    // Показываем результат
+                    if (resultContainer) {
+                        resultContainer.innerHTML = '';
+                        resultContainer.style.display = 'flex';
+                        resultContainer.style.flexDirection = 'column';
+                        resultContainer.style.alignItems = 'flex-start';
+                        
+                        // Заголовок
+                        const title = document.createElement('div');
+                        title.style.cssText = `
+                            font-weight: 600;
+                            color: #16437e;
+                            margin-bottom: 10px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        `;
+                        title.innerHTML = '<span class="material-icons">check_circle</span> Файл успешно обработан';
+                        resultContainer.appendChild(title);
+                        
+                        // Информация о файле
+                        const fileInfo = document.createElement('div');
+                        fileInfo.style.cssText = `
+                            font-size: 0.85rem;
+                            color: #4b6589;
+                            margin-bottom: 8px;
+                            padding: 6px 10px;
+                            background: #f0f5ff;
+                            border-radius: 6px;
+                        `;
+                        fileInfo.innerHTML = `
+                            📄 Исходный файл: <strong>${selectedVK.name}</strong>
+                            ${selectedVK.relative_path ? `<br>📁 Папка: ${selectedVK.relative_path}` : ''}
+                        `;
+                        resultContainer.appendChild(fileInfo);
+                        
+                        // Блок с путем для копирования
+                        const pathBlock = document.createElement('div');
+                        pathBlock.style.cssText = `
+                            background: #f0f5ff;
+                            border: 1px solid #b9cef0;
+                            border-radius: 8px;
+                            padding: 12px;
+                            width: 100%;
+                            word-break: break-all;
+                            font-family: monospace;
+                            font-size: 0.9rem;
+                            margin-bottom: 10px;
+                        `;
+                        pathBlock.textContent = result.smb_result_path;
+                        resultContainer.appendChild(pathBlock);
+                        
+                        // Кнопка копирования
+                        const copyBtn = document.createElement('button');
+                        copyBtn.style.cssText = `
+                            background: #e6edfa;
+                            border: 1px solid #b9cef0;
+                            border-radius: 6px;
+                            padding: 8px 16px;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            font-size: 0.9rem;
+                            color: #16437e;
+                            margin-bottom: 10px;
+                        `;
+                        copyBtn.innerHTML = '<span class="material-icons" style="font-size: 18px;">content_copy</span> Копировать путь';
+                        
+                        copyBtn.addEventListener('click', () => {
+                            navigator.clipboard.writeText(result.smb_result_path).then(() => {
+                                const originalText = copyBtn.innerHTML;
+                                copyBtn.innerHTML = '<span class="material-icons" style="font-size: 18px;">check</span> Скопировано!';
+                                copyBtn.style.background = '#4CAF50';
+                                copyBtn.style.color = 'white';
+                                
+                                setTimeout(() => {
+                                    copyBtn.innerHTML = originalText;
+                                    copyBtn.style.background = '#e6edfa';
+                                    copyBtn.style.color = '#16437e';
+                                }, 2000);
+                            });
+                        });
+                        
+                        resultContainer.appendChild(copyBtn);
+                        
+                        // Информация о результате
+                        const infoLine = document.createElement('div');
+                        infoLine.style.cssText = `
+                            font-size: 0.9rem;
+                            color: #4b6589;
+                            display: flex;
+                            gap: 20px;
+                            flex-wrap: wrap;
+                            margin-bottom: 8px;
+                        `;
+                        infoLine.innerHTML = `
+                            <span>📊 Строк обработано: <strong>${result.rows_processed || 0}</strong></span>
+                            <span>📄 Диапазон: <strong>${result.row_range || `${rangeValidation.start}-${rangeValidation.end}`}</strong></span>
+                            ${result.source_folder ? `<span>📁 Исходная папка: <strong>${result.source_folder}</strong></span>` : ''}
+                        `;
+                        resultContainer.appendChild(infoLine);
+                        
+                        // Информация об удалении временной папки
+                        if (result.temp_folder_deleted) {
+                            const cleanInfo = document.createElement('div');
+                            cleanInfo.style.cssText = `
+                                font-size: 0.85rem;
+                                color: #4CAF50;
+                                margin-top: 4px;
+                                display: flex;
+                                align-items: center;
+                                gap: 4px;
+                            `;
+                            cleanInfo.innerHTML = '<span class="material-icons" style="font-size: 16px;">delete</span> Временные файлы очищены';
+                            resultContainer.appendChild(cleanInfo);
+                        }
+                    }
+                    
+                    showNotification(`✅ Обработано строк: ${result.rows_processed || 0}`);
+                    
+                    // Сбрасываем выбор после успешной обработки (опционально)
+                    // resetSelection();
+                    
+                } else {
+                    throw new Error(result.error || 'Ошибка при обработке');
+                }
+                
+            } catch (error) {
+                console.error('❌ Ошибка:', error);
+                showNotification(`❌ ${error.message}`, 'error');
+            } finally {
+                fillBtn.disabled = false;
+                fillBtn.innerHTML = '<span class="material-icons">auto_awesome</span> Заполнить ведомость';
+            }
+        });
+    }
     
     // ============================================
     // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -518,11 +778,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function showNotification(message, type = 'success') {
         const notification = document.createElement('div');
+        const bgColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3';
+        
         notification.style.cssText = `
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+            background: ${bgColor};
             color: white;
             padding: 12px 24px;
             border-radius: 8px;
@@ -531,8 +793,15 @@ document.addEventListener('DOMContentLoaded', function() {
             animation: slideIn 0.3s ease;
             max-width: 400px;
             word-break: break-word;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         `;
-        notification.textContent = message;
+        
+        const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+        notification.innerHTML = `<span style="font-weight: bold;">${icon}</span> ${message}`;
+        
         document.body.appendChild(notification);
         
         setTimeout(() => {
@@ -542,7 +811,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateFillButton() {
-        fillBtn.disabled = !(selectedVK && selectedProjects.length > 0);
+        if (fillBtn) {
+            fillBtn.disabled = !(selectedVK && selectedProjects.length > 0);
+        }
+    }
+    
+    function resetSelection() {
+        selectedVK = null;
+        selectedProjects = [];
+        if (selectedVKName) selectedVKName.textContent = '';
+        if (selectedVKChip) selectedVKChip.style.display = 'none';
+        if (projectsPanel) projectsPanel.classList.remove('visible');
+        if (rangeContainer) rangeContainer.style.display = 'none';
+        renderSelectedProjects();
+        updateFillButton();
     }
     
     // ============================================
@@ -550,16 +832,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     document.addEventListener('click', function(e) {
-        if (!vkInput.contains(e.target) && !vkList.contains(e.target)) {
-            vkList.style.display = 'none';
+        if (vkInput && !vkInput.contains(e.target) && vkList && !vkList.contains(e.target)) {
+            if (vkList) vkList.style.display = 'none';
         }
-        if (!projectSearchInput.contains(e.target) && !projectSuggestList.contains(e.target) && !multiselectContainer.contains(e.target)) {
-            projectSuggestList.style.display = 'none';
+        if (projectSearchInput && !projectSearchInput.contains(e.target) && 
+            projectSuggestList && !projectSuggestList.contains(e.target) && 
+            multiselectContainer && !multiselectContainer.contains(e.target)) {
+            if (projectSuggestList) projectSuggestList.style.display = 'none';
         }
     });
     
     // ============================================
-    // ДОБАВЛЯЕМ СТИЛИ ДЛЯ АНИМАЦИЙ
+    // СТИЛИ
     // ============================================
     
     const style = document.createElement('style');
@@ -588,6 +872,49 @@ document.addEventListener('DOMContentLoaded', function() {
         .range-container input[type="number"]:focus {
             border-color: #3b82f6 !important;
             box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        #vkSuggestList mark {
+            background: #ffeb3b;
+            padding: 0 2px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+        #vkSuggestList li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #vkSuggestList li:hover {
+            background: #f5f7fa;
+        }
+        #vkSuggestList .material-icons {
+            color: #667eea;
+            font-size: 20px;
+        }
+        #projectSuggestList li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #projectSuggestList li:hover {
+            background: #f5f7fa;
+        }
+        #selectedVKPathInfo {
+            animation: fadeInOut 5s ease;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-5px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-5px); }
         }
     `;
     document.head.appendChild(style);
