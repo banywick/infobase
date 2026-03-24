@@ -797,6 +797,29 @@ class Comparison(APIView):
         else:
             return self.post_regular(request)
     
+    def _should_skip_nomenclature(self, nomenclature_kd):
+        """
+        Проверяет, нужно ли пропустить номенклатуру КД
+        Возвращает True, если номенклатура начинается с паттернов:
+        Б00, Б000, С00, С000 (в любом регистре)
+        """
+        if not nomenclature_kd:
+            return False
+        
+        # Приводим к верхнему регистру для сравнения
+        nomenclature_upper = nomenclature_kd.strip().upper()
+        
+        # Паттерны для исключения
+        skip_patterns = ['Б00', 'Б000', 'Б000', 'C00', 'C000','C00','C000','C0000']
+        
+        # Проверяем, начинается ли строка с любого из паттернов
+        for pattern in skip_patterns:
+            if nomenclature_upper.startswith(pattern):
+                logger.info(f"Пропуск сохранения: номенклатура КД '{nomenclature_kd}' начинается с '{pattern}'")
+                return True
+        
+        return False
+    
     def post_regular(self, request):
         """Обычное сохранение"""
         try:
@@ -844,6 +867,17 @@ class Comparison(APIView):
                     {
                         'message': 'Сохранение пропущено (служебная строка)',
                         'skipped': True
+                    }, 
+                    status=status.HTTP_200_OK
+                )
+            
+            # НОВОЕ: Проверяем паттерны исключения для номенклатуры КД
+            if self._should_skip_nomenclature(nomenclature_kd):
+                return Response(
+                    {
+                        'message': 'Сохранение пропущено (номенклатура КД соответствует паттерну исключения)',
+                        'skipped': True,
+                        'pattern_matched': True
                     }, 
                     status=status.HTTP_200_OK
                 )
@@ -946,6 +980,17 @@ class Comparison(APIView):
                     {
                         'message': 'Сохранение пропущено (служебная строка)',
                         'skipped': True
+                    }, 
+                    status=status.HTTP_200_OK
+                )
+            
+            # НОВОЕ: Проверяем паттерны исключения для номенклатуры КД
+            if self._should_skip_nomenclature(nomenclature_kd):
+                return Response(
+                    {
+                        'message': 'Сохранение пропущено (номенклатура КД соответствует паттерну исключения)',
+                        'skipped': True,
+                        'pattern_matched': True
                     }, 
                     status=status.HTTP_200_OK
                 )
