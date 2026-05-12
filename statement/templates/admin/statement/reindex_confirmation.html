@@ -1,0 +1,65 @@
+<!-- statement/templates/admin/statement/run_index_now.html -->
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .confirmation-box {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+    }
+    .warning {
+        color: #856404;
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 15px 0;
+    }
+    .submit-row {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='statement' %}">Statement</a>
+    &rsaquo; <a href="{% url 'admin:statement_smbindexschedule_changelist' %}">SMB Index Schedules</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module">
+        <h2>Запуск индексации SMB</h2>
+        
+        <div class="confirmation-box">
+            <p>Вы уверены, что хотите запустить индексацию прямо сейчас?</p>
+            
+            <div class="warning">
+                ⚠️ <strong>Внимание!</strong><br>
+                Индексация будет выполнена в фоновом режиме через Celery.
+                Вы можете продолжить работу, не дожидаясь завершения.
+            </div>
+            
+            <div class="submit-row">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="submit" value="✅ Да, запустить индексацию" class="button default">
+                    <a href="{% url 'admin:statement_smbindexschedule_changelist' %}" class="button">
+                        ❌ Отмена
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

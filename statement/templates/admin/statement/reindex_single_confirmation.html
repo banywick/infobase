@@ -1,0 +1,198 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .confirmation-container {
+    max-width: 800px;
+    margin: 20px auto;
+  }
+  .configs-list {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+  }
+  .config-item {
+    padding: 10px;
+    border-bottom: 1px solid #dee2e6;
+  }
+  .config-item:last-child {
+    border-bottom: none;
+  }
+  .config-name {
+    font-weight: bold;
+    color: #17a2b8;
+  }
+  .config-path {
+    font-family: monospace;
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+  }
+  .warning-box {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 15px 0;
+  }
+  .submit-row {
+    margin-top: 20px;
+  }
+  .progress-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    display: none;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 30px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+  .progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #28a745;
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirmation-container">
+  <h1>{% trans 'Массовая индексация SMB файлов' %}</h1>
+  
+  <div class="configs-list">
+    <h3>Будут проиндексированы следующие конфигурации:</h3>
+    {% for config in configs %}
+      <div class="config-item">
+        <div class="config-name">📁 {{ config.name }}</div>
+        <div class="config-path">{{ config.search_path }}</div>
+      </div>
+    {% empty %}
+      <div class="warning-box">
+        ⚠️ Нет активных конфигураций для индексации
+      </div>
+    {% endfor %}
+  </div>
+  
+  <div class="warning-box">
+    ⚠️ <strong>Внимание!</strong><br>
+    Индексация всех конфигураций может занять продолжительное время.
+    Процесс выполняется в фоновом режиме.
+  </div>
+  
+  <div class="submit-row">
+    <button type="button" onclick="startIndexing()" class="button default" id="startBtn" {% if not configs %}disabled{% endif %}>
+      🔄 Начать массовую индексацию
+    </button>
+    <a href="{% url 'admin:statement_smbpathconfig_changelist' %}" class="button" style="margin-left: 10px;">
+      Отмена
+    </a>
+  </div>
+  
+  <div class="progress-container" id="progressContainer">
+    <h3>Статус индексации:</h3>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill">0%</div>
+    </div>
+    <div id="statusMessage" class="task-status"></div>
+  </div>
+</div>
+
+<script>
+  let taskCheckInterval = null;
+  
+  async function startIndexing() {
+    const startBtn = document.getElementById('startBtn');
+    startBtn.disabled = true;
+    startBtn.textContent = 'Запуск...';
+    
+    try {
+      const response = await fetch('{% url "admin:smbpathconfig_reindex_all" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ force: false })
+      });
+      
+      const data = await response.json();
+      
+      if (data.task_id) {
+        document.getElementById('progressContainer').style.display = 'block';
+        startBtn.textContent = 'Массовая индексация запущена';
+        checkTaskStatus(data.task_id);
+      } else {
+        throw new Error('Не получен ID задачи');
+      }
+    } catch (error) {
+      console.error('Ошибка:', error);
+      document.getElementById('statusMessage').innerHTML = '❌ Ошибка при запуске индексации: ' + error.message;
+      document.getElementById('statusMessage').style.color = 'red';
+      startBtn.disabled = false;
+      startBtn.textContent = '🔄 Повторить';
+    }
+  }
+  
+  async function checkTaskStatus(taskId) {
+    const progressFill = document.getElementById('progressFill');
+    const statusMessage = document.getElementById('statusMessage');
+    
+    try {
+      const response = await fetch(`/admin/statement/smbpathconfig/check-status/${taskId}/`);
+      const data = await response.json();
+      
+      if (data.status === 'SUCCESS' && data.ready) {
+        progressFill.style.width = '100%';
+        progressFill.textContent = '100%';
+        progressFill.style.background = '#28a745';
+        statusMessage.innerHTML = '✅ Массовая индексация успешно завершена!';
+        statusMessage.style.color = 'green';
+        
+        if (taskCheckInterval) {
+          clearInterval(taskCheckInterval);
+        }
+        
+        setTimeout(() => {
+          window.location.href = '{% url "admin:statement_smbpathconfig_changelist" %}';
+        }, 2000);
+        
+      } else if (data.status === 'FAILURE') {
+        statusMessage.innerHTML = '❌ Ошибка при индексации: ' + (data.result?.error || 'Неизвестная ошибка');
+        statusMessage.style.color = 'red';
+        
+        if (taskCheckInterval) {
+          clearInterval(taskCheckInterval);
+        }
+        
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('startBtn').textContent = '🔄 Повторить';
+        
+      } else {
+        statusMessage.innerHTML = '🔄 Индексация выполняется... (Task ID: ' + taskId + ')';
+      }
+    } catch (error) {
+      console.error('Ошибка проверки статуса:', error);
+    }
+    
+    if (!taskCheckInterval) {
+      taskCheckInterval = setInterval(() => checkTaskStatus(taskId), 2000);
+    }
+  }
+</script>
+{% endblock %}

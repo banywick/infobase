@@ -12,21 +12,19 @@ from finder.models import AccountingData
 from finder.serializers import AccountingDataSerializer
 from rest_framework.decorators import api_view
 
-from statement.models import SMBPathConfig
+from statement.models import SMBPathConfig, SMBFileIndex
 from statement.utils.comparison_search_service import SearchService
 from statement.utils.excel_processor import ExcelProcessor
 from statement.utils.smb import SmbFolderVk
-from statement.utils.smb_config import get_active_smb_config
+from smbclient import open_file, mkdir
 
-
+# Импортируем Celery задачи
+from statement.tasks import index_smb_files, check_smb_files_availability
 
 
 class StatementHome(TemplateView):
     """Главная страница ВК"""
-
     template_name = 'statement/statement.html'
-
-
 
 
 class Statement(APIView):
@@ -46,92 +44,6 @@ class Statement(APIView):
             return Response({'error': error}, status=status_code)
         
         return Response(results, status=status_code)
-    
-
-
-@api_view(['GET', 'POST'])  # Добавляем поддержку GET
-def get_vk_files(request):
-    """
-    Получение всех Excel файлов из SMB рекурсивно
-    Поддерживает GET и POST запросы
-    """
-    try:
-        # Получаем search_path из GET или POST
-        if request.method == 'GET':
-            search_path = request.GET.get('search_path')
-        else:  # POST
-            data = request.data
-            search_path = data.get('search_path')
-        
-        # Если search_path не передан, берем из активной конфигурации
-        if not search_path:
-            from .models import SMBPathConfig
-            config = SMBPathConfig.objects.filter(is_active=True).first()
-            if not config:
-                return Response({
-                    'success': False,
-                    'error': 'Активная конфигурация не найдена. Укажите search_path или создайте конфигурацию в админке.'
-                }, status=400)
-            search_path = config.search_path
-            print(f"🔍 Используем путь из конфигурации: {search_path}")
-        
-        print(f"🔍 Поиск файлов в: {search_path}")
-        
-        # Парсим путь
-        path_parts = search_path.strip('\\').split('\\')
-        if len(path_parts) >= 2:
-            server = path_parts[0]
-            share = path_parts[1]
-            subfolder = '\\'.join(path_parts[2:]) if len(path_parts) > 2 else ''
-        else:
-            return Response({
-                'success': False,
-                'error': f'Некорректный путь: {search_path}'
-            }, status=400)
-        
-        # Создаем SMB клиент
-        smb = SmbFolderVk(server=server, share=share)
-        
-        # Формируем полный путь для поиска
-        if subfolder:
-            full_search_path = f"\\\\{server}\\{share}\\{subfolder}"
-        else:
-            full_search_path = f"\\\\{server}\\{share}"
-        
-        # Получаем все файлы рекурсивно
-        all_items = smb.get_all_files_and_folders_recursive(full_search_path)
-        
-        # Фильтруем Excel файлы
-        files = []
-        for item in all_items:
-            if not item['is_directory']:
-                filename = item['name']
-                if filename.endswith(('.xlsx', '.xls', '.xlsm')):
-                    files.append({
-                        'name': filename,
-                        'path': item['path'],
-                        'relative_path': item['relative_path']
-                    })
-        
-        print(f"✅ Найдено Excel файлов: {len(files)}")
-        
-        return Response({
-            'success': True,
-            'files': files,
-            'count': len(files),
-            'search_path': search_path
-        })
-        
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
-        import traceback
-        traceback.print_exc()
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-    
-
 
 
 @api_view(['GET'])
@@ -161,13 +73,12 @@ def get_smb_config(request):
             'error': str(e)
         }, status=500)
 
-# views.py - обновленная часть с диапазоном строк
 
 @api_view(['POST'])
 def job_vk(request):
     """
     Копирование файла из SMB в папку job и его обработка
-    URL: /job_vk_statement/
+    Поддерживает file_id из индекса
     """
     print("=" * 50)
     print("🚀 Начало job_vk")
@@ -176,22 +87,22 @@ def job_vk(request):
         # Получаем данные из запроса
         data = request.data
         vk_file = data.get('vk_file')
-        vk_file_path = data.get('vk_file_path')
+        file_id = data.get('file_id')
         projects = data.get('projects', [])
         start_row = data.get('start_row', 2)
         end_row = data.get('end_row')
         
         print(f"📦 Получены данные:")
         print(f"   Файл: {vk_file}")
-        print(f"   Путь к файлу: {vk_file_path}")
+        print(f"   File ID: {file_id}")
         print(f"   Проекты: {json.dumps(projects, indent=2, ensure_ascii=False)}")
         print(f"   Начальная строка: {start_row}")
         print(f"   Конечная строка: {end_row if end_row else 'до конца'}")
         
-        if not vk_file:
+        if not vk_file and not file_id:
             return Response({
                 'success': False,
-                'error': 'Не указан файл ВК'
+                'error': 'Не указан файл ВК или ID файла'
             }, status=400)
         
         if not start_row or start_row < 1:
@@ -201,18 +112,35 @@ def job_vk(request):
             }, status=400)
         
         # ============================================
-        # ПОЛУЧАЕМ КОНФИГУРАЦИЮ ИЗ БД
+        # ПОЛУЧАЕМ КОНФИГУРАЦИЮ ИЗ ИНДЕКСА ИЛИ БД
         # ============================================
-        from .models import SMBPathConfig
         
-        # Получаем активную конфигурацию
-        config = SMBPathConfig.objects.filter(is_active=True).first()
-        
-        if not config:
-            return Response({
-                'success': False,
-                'error': 'Активная конфигурация SMB путей не найдена. Создайте конфигурацию в админке.'
-            }, status=404)
+        # Если передан file_id, получаем путь из индекса
+        if file_id:
+            file_index = SMBFileIndex.objects.filter(id=file_id, is_available=True).first()
+            if not file_index:
+                return Response({
+                    'success': False,
+                    'error': f'Файл с ID {file_id} не найден в индексе или недоступен'
+                }, status=404)
+            
+            config = file_index.config
+            vk_file = file_index.filename
+            vk_file_path = file_index.file_path
+            
+            print(f"✅ Найден файл в индексе:")
+            print(f"   Конфигурация: {config.name}")
+            print(f"   Путь: {vk_file_path}")
+        else:
+            # Старая логика - поиск по имени файла (на случай если индекс не используется)
+            config = SMBPathConfig.objects.filter(is_active=True).first()
+            if not config:
+                return Response({
+                    'success': False,
+                    'error': 'Активная конфигурация SMB путей не найдена. Создайте конфигурацию в админке.'
+                }, status=404)
+            
+            vk_file_path = None
         
         print(f"✅ Используем конфигурацию: {config.name}")
         print(f"   Поиск в: {config.search_path}")
@@ -236,17 +164,11 @@ def job_vk(request):
                 'error': f'Некорректный путь поиска: {search_root}'
             }, status=400)
         
-        print(f"📁 Параметры SMB:")
-        print(f"   Сервер: {smb_server}")
-        print(f"   Шара: {smb_share}")
-        print(f"   Подпапка поиска: {search_subfolder if search_subfolder else 'корень'}")
-        
-        # Создаем папку job если её нет
+        # Создаем папку job
         job_root = os.path.join(settings.BASE_DIR, 'job')
         os.makedirs(job_root, exist_ok=True)
-        print(f"📁 Папка job: {job_root}")
         
-        # Создаем уникальную подпапку для этой задачи
+        # Создаем уникальную подпапку
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         safe_filename = vk_file.replace('.xlsx', '').replace('.xls', '').replace(' ', '_')
         job_subfolder = f"vk_{safe_filename}_{timestamp}"
@@ -256,63 +178,45 @@ def job_vk(request):
         print(f"📁 Создана подпапка: {job_path}")
         
         # ============================================
-        # НАХОДИМ ФАЙЛ В SMB (рекурсивно по указанному пути)
+        # НАХОДИМ ФАЙЛ В SMB
         # ============================================
-        from smbclient import open_file, mkdir
-        
-        # Создаем SMB клиент с параметрами из конфигурации
         smb = SmbFolderVk(server=smb_server, share=smb_share)
         
-        # Формируем полный путь для поиска
-        if search_subfolder:
-            full_search_path = f"\\\\{smb_server}\\{smb_share}\\{search_subfolder}"
-        else:
+        # Если у нас нет точного пути, ищем по имени
+        if not vk_file_path:
             full_search_path = f"\\\\{smb_server}\\{smb_share}"
-        
-        print(f"🔍 Поиск файлов в: {full_search_path}")
-        
-        # Получаем все файлы рекурсивно из указанной папки
-        all_items = smb.get_all_files_and_folders_recursive(full_search_path)
-        
-        # Ищем файл по имени или по пути
-        source_path = None
-        found_file_info = None
-        
-        for item in all_items:
-            if not item['is_directory']:
-                if item['name'] == vk_file:
+            if search_subfolder:
+                full_search_path = f"{full_search_path}\\{search_subfolder}"
+            
+            print(f"🔍 Поиск файла '{vk_file}' в: {full_search_path}")
+            
+            all_items = smb.get_all_files_and_folders_recursive(full_search_path)
+            source_path = None
+            
+            for item in all_items:
+                if not item['is_directory'] and item['name'] == vk_file:
                     source_path = item['path']
-                    found_file_info = item
                     print(f"✅ Найден файл по имени: {source_path}")
                     break
-                elif vk_file_path and item['path'] == vk_file_path:
-                    source_path = item['path']
-                    found_file_info = item
-                    print(f"✅ Найден файл по пути: {source_path}")
-                    break
-        
-        if not source_path:
-            available_files = [item['name'] for item in all_items if not item['is_directory']]
-            print(f"❌ Файл '{vk_file}' не найден!")
-            print(f"📋 Доступные файлы (первые 20): {available_files[:20]}")
             
-            return Response({
-                'success': False,
-                'error': f'Файл "{vk_file}" не найден в папке {full_search_path}',
-                'available_files': available_files[:50],
-                'search_path': full_search_path
-            }, status=404)
+            if not source_path:
+                return Response({
+                    'success': False,
+                    'error': f'Файл "{vk_file}" не найден'
+                }, status=404)
+            
+            vk_file_path = source_path
         
         # Формируем путь назначения
-        dest_path = os.path.join(job_path, found_file_info['name'])
+        dest_path = os.path.join(job_path, vk_file)
         
         print(f"📋 Копирование:")
-        print(f"   Из: {source_path}")
+        print(f"   Из: {vk_file_path}")
         print(f"   В: {dest_path}")
         
         # Копируем файл
         try:
-            with open_file(source_path, mode='rb') as smb_file:
+            with open_file(vk_file_path, mode='rb') as smb_file:
                 with open(dest_path, 'wb') as local_file:
                     local_file.write(smb_file.read())
             
@@ -329,13 +233,12 @@ def job_vk(request):
         info = {
             'config_name': config.name,
             'vk_file': vk_file,
-            'vk_file_path': source_path,
-            'vk_file_relative_path': found_file_info.get('relative_path', ''),
+            'vk_file_path': vk_file_path,
+            'file_id': file_id if file_id else None,
             'projects': projects,
             'start_row': start_row,
             'end_row': end_row,
             'copied_at': datetime.now().isoformat(),
-            'source': source_path,
             'destination': dest_path,
             'search_root': search_root,
             'result_root': result_root,
@@ -503,13 +406,11 @@ def job_vk(request):
             }
         }
         
-        if not upload_success:
-            response_data['local_file_path'] = result_file
-        
-        print(f"\n📤 Ответ пользователю:")
-        print(f"   Конфигурация: {config.name}")
-        print(f"   SMB путь: {user_smb_path}")
-        print(f"   Загрузка успешна: {upload_success}")
+        # Обновляем информацию об успешной обработке в индексе
+        if file_id:
+            SMBFileIndex.objects.filter(id=file_id).update(
+                last_checked=datetime.now()
+            )
         
         return Response(response_data)
         
@@ -522,3 +423,179 @@ def job_vk(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+
+# ============================================
+# НОВЫЕ ЭНДПОЙНТЫ ДЛЯ РАБОТЫ С ИНДЕКСОМ
+# ============================================
+
+@api_view(['GET'])
+def get_index_status(request):
+    """
+    Получить статус индексации (использует кэш)
+    """
+    from django.core.cache import cache
+    
+    configs = SMBPathConfig.objects.filter(is_active=True)
+    stats = {}
+    
+    for config in configs:
+        file_count = SMBFileIndex.objects.filter(
+            config=config,
+            is_available=True
+        ).count()
+        
+        # Получаем последнюю задачу индексации для этой конфигурации
+        last_indexed = SMBFileIndex.objects.filter(
+            config=config
+        ).order_by('-last_checked').first()
+        
+        stats[config.name] = {
+            'total_files': file_count,
+            'last_indexed': last_indexed.last_checked if last_indexed else None,
+            'is_indexed': file_count > 0
+        }
+    
+    return Response({
+        'success': True,
+        'stats': stats
+    })
+
+
+@api_view(['POST'])
+def start_indexing(request):
+    """
+    Запустить индексацию через Celery
+    """
+    config_id = request.data.get('config_id')
+    force = request.data.get('force', False)
+    
+    # Запускаем задачу
+    task = index_smb_files.delay(config_id=config_id, force=force)
+    
+    return Response({
+        'success': True,
+        'task_id': task.id,
+        'message': 'Индексация запущена в фоновом режиме'
+    }, status=202)
+
+
+@api_view(['GET'])
+def get_indexing_task_status(request, task_id):
+    """
+    Получить статус задачи индексации
+    """
+    from celery.result import AsyncResult
+    
+    task = AsyncResult(task_id)
+    
+    response = {
+        'task_id': task_id,
+        'status': task.status,
+        'ready': task.ready()
+    }
+    
+    if task.ready():
+        if task.successful():
+            response['result'] = task.result
+        else:
+            response['error'] = str(task.info)
+    
+    return Response(response)
+
+
+@api_view(['GET'])
+def get_indexed_files(request):
+    """
+    Получить список индексированных файлов
+    Параметры:
+    - search: поиск по имени файла
+    - page: номер страницы
+    - page_size: размер страницы
+    """
+    # Получаем активную конфигурацию
+    config = SMBPathConfig.objects.filter(is_active=True).first()
+    if not config:
+        return Response({
+            'success': False,
+            'error': 'Нет активных конфигураций'
+        }, status=404)
+    
+    # Базовый запрос
+    queryset = SMBFileIndex.objects.filter(
+        config=config,
+        is_available=True
+    ).order_by('filename')
+    
+    # Поиск по имени файла
+    search_query = request.GET.get('search', '')
+    if search_query:
+        queryset = queryset.filter(filename__icontains=search_query)
+    
+    # Пагинация
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 50))
+    
+    total = queryset.count()
+    start = (page - 1) * page_size
+    end = start + page_size
+    
+    files = queryset[start:end]
+    
+    return Response({
+        'success': True,
+        'files': [{
+            'id': f.id,
+            'filename': f.filename,
+            'path': f.file_path,
+            'relative_path': f.relative_path,
+            'size': f.file_size,
+            'modified': f.modified_time,
+            'type': f.file_extension,
+        } for f in files],
+        'total': total,
+        'page': page,
+        'page_size': page_size,
+        'total_pages': (total + page_size - 1) // page_size,
+        'config': {
+            'name': config.name,
+            'search_path': config.search_path,
+            'result_path': config.result_path
+        }
+    })
+
+
+@api_view(['POST'])
+def get_file_info(request):
+    """
+    Получить информацию о файле по ID
+    """
+    file_id = request.data.get('file_id')
+    
+    if not file_id:
+        return Response({
+            'success': False,
+            'error': 'Укажите file_id'
+        }, status=400)
+    
+    try:
+        file_index = SMBFileIndex.objects.select_related('config').get(id=file_id, is_available=True)
+        
+        return Response({
+            'success': True,
+            'file': {
+                'id': file_index.id,
+                'filename': file_index.filename,
+                'path': file_index.file_path,
+                'relative_path': file_index.relative_path,
+                'size': file_index.file_size,
+                'modified': file_index.modified_time,
+                'type': file_index.file_extension,
+                'config_name': file_index.config.name
+            }
+        })
+    except SMBFileIndex.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': 'Файл не найден в индексе'
+        }, status=404)
