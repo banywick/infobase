@@ -4,6 +4,7 @@ from celery.schedules import crontab
 from django.conf import settings
 from .models import SMBIndexSchedule
 import logging
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,10 @@ def update_smb_indexing_schedule():
         
         if not schedule_config or not schedule_config.is_enabled:
             # Удаляем задачу если она есть
-            current_app.conf.beat_schedule.pop('scheduled_smb_indexing', None)
+            beat_schedule = current_app.conf.beat_schedule
+            if 'scheduled_smb_indexing' in beat_schedule:
+                del beat_schedule['scheduled_smb_indexing']
+                current_app.conf.beat_schedule = beat_schedule
             logger.info("Расписание индексации SMB отключено")
             return
         
@@ -44,7 +48,6 @@ def update_smb_indexing_schedule():
                 day_of_month=schedule_config.custom_day_of_month
             )
         elif schedule_config.schedule_type == 'custom':
-            # Используем кастомные настройки
             schedule = crontab(
                 hour=schedule_config.custom_hour,
                 minute=schedule_config.custom_minute,
@@ -64,9 +67,8 @@ def update_smb_indexing_schedule():
             logger.info(f"Расписание индексации SMB обновлено: {schedule_config}")
             
             # Обновляем next_run (приблизительно)
-            from django.utils import timezone
-            schedule_config.next_run = timezone.now() + schedule.run_every if hasattr(schedule, 'run_every') else None
-            schedule_config.save(update_fields=['next_run'])
+            # Не обновляем здесь, чтобы избежать проблем с транзакциями
+            # Это будет сделано отдельно
             
     except Exception as e:
         logger.error(f"Ошибка при обновлении расписания: {e}")
@@ -75,14 +77,17 @@ def update_smb_indexing_schedule():
 # Функция для инициализации расписания при старте
 def init_smb_scheduler():
     """Инициализирует планировщик SMB при запуске"""
-    if not SMBIndexSchedule.objects.exists():
-        # Создаем настройки по умолчанию
-        SMBIndexSchedule.objects.create(
-            is_enabled=True,
-            schedule_type='daily',
-            custom_hour=2,
-            custom_minute=0
-        )
-        logger.info("Созданы настройки индексации SMB по умолчанию")
-    
-    update_smb_indexing_schedule()
+    try:
+        if not SMBIndexSchedule.objects.exists():
+            # Создаем настройки по умолчанию
+            SMBIndexSchedule.objects.create(
+                is_enabled=True,
+                schedule_type='daily',
+                custom_hour=2,
+                custom_minute=0
+            )
+            logger.info("Созданы настройки индексации SMB по умолчанию")
+        
+        update_smb_indexing_schedule()
+    except Exception as e:
+        logger.error(f"Ошибка при инициализации планировщика: {e}")

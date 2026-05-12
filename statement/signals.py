@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 def schedule_updated(sender, instance, created, **kwargs):
     """При изменении расписания обновляем Celery Beat"""
     logger.info(f"Расписание индексации обновлено: {instance}")
-    update_smb_indexing_schedule()
+    # Используем on_commit для выполнения после фиксации транзакции
+    from django.db import transaction
+    transaction.on_commit(update_smb_indexing_schedule)
 
 
 @receiver(post_save, sender=SMBPathConfig)
@@ -25,8 +27,11 @@ def config_updated(sender, instance, created, **kwargs):
     # Если конфигурация новая и активная, можно запустить индексацию
     if created and instance.is_active:
         from .tasks import index_smb_files
-        # Запускаем индексацию асинхронно
-        index_smb_files.delay(config_id=instance.id, force=False)
+        # Запускаем индексацию асинхронно через 5 секунд
+        from django.db import transaction
+        transaction.on_commit(
+            lambda: index_smb_files.delay(config_id=instance.id, force=False)
+        )
         logger.info(f"Запущена автоматическая индексация для новой конфигурации: {instance.name}")
 
 

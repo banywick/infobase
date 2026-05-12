@@ -19,7 +19,7 @@ from statement.utils.smb import SmbFolderVk
 from smbclient import open_file, mkdir
 
 # Импортируем Celery задачи
-from statement.tasks import index_smb_files, check_smb_files_availability
+from statement.tasks import index_smb_files
 
 
 class StatementHome(TemplateView):
@@ -432,10 +432,8 @@ def job_vk(request):
 @api_view(['GET'])
 def get_index_status(request):
     """
-    Получить статус индексации (использует кэш)
+    Получить статус индексации
     """
-    from django.core.cache import cache
-    
     configs = SMBPathConfig.objects.filter(is_active=True)
     stats = {}
     
@@ -445,7 +443,6 @@ def get_index_status(request):
             is_available=True
         ).count()
         
-        # Получаем последнюю задачу индексации для этой конфигурации
         last_indexed = SMBFileIndex.objects.filter(
             config=config
         ).order_by('-last_checked').first()
@@ -459,6 +456,45 @@ def get_index_status(request):
     return Response({
         'success': True,
         'stats': stats
+    })
+
+
+@api_view(['GET'])
+def get_index_stats(request):
+    """
+    Получить статистику индексации по всем конфигурациям
+    """
+    configs = SMBPathConfig.objects.filter(is_active=True)
+    
+    stats = []
+    for config in configs:
+        file_count = SMBFileIndex.objects.filter(
+            config=config,
+            is_available=True
+        ).count()
+        
+        # Получаем список типов файлов
+        file_types = SMBFileIndex.objects.filter(
+            config=config,
+            is_available=True
+        ).values_list('file_extension', flat=True).distinct()
+        
+        stats.append({
+            'id': config.id,
+            'name': config.name,
+            'search_path': config.search_path,
+            'file_count': file_count,
+            'file_types': list(file_types),
+            'last_indexed': SMBFileIndex.objects.filter(
+                config=config
+            ).order_by('-last_checked').first().last_checked if file_count > 0 else None
+        })
+    
+    return Response({
+        'success': True,
+        'configs': stats,
+        'total_files': sum(s['file_count'] for s in stats),
+        'active_configs_count': configs.count()
     })
 
 
@@ -481,51 +517,34 @@ def start_indexing(request):
 
 
 @api_view(['GET'])
-def get_indexing_task_status(request, task_id):
-    """
-    Получить статус задачи индексации
-    """
-    from celery.result import AsyncResult
-    
-    task = AsyncResult(task_id)
-    
-    response = {
-        'task_id': task_id,
-        'status': task.status,
-        'ready': task.ready()
-    }
-    
-    if task.ready():
-        if task.successful():
-            response['result'] = task.result
-        else:
-            response['error'] = str(task.info)
-    
-    return Response(response)
-
-
-@api_view(['GET'])
 def get_indexed_files(request):
     """
-    Получить список индексированных файлов
+    Получить список индексированных файлов из ВСЕХ активных конфигураций
     Параметры:
     - search: поиск по имени файла
     - page: номер страницы
     - page_size: размер страницы
+    - config_name: опционально - фильтр по конфигурации
     """
-    # Получаем активную конфигурацию
-    config = SMBPathConfig.objects.filter(is_active=True).first()
-    if not config:
+    # Получаем все активные конфигурации
+    configs = SMBPathConfig.objects.filter(is_active=True)
+    
+    if not configs.exists():
         return Response({
             'success': False,
             'error': 'Нет активных конфигураций'
         }, status=404)
     
-    # Базовый запрос
+    # Фильтр по конкретной конфигурации (опционально)
+    config_name = request.GET.get('config_name')
+    if config_name:
+        configs = configs.filter(name=config_name)
+    
+    # Базовый запрос - собираем файлы из всех конфигураций
     queryset = SMBFileIndex.objects.filter(
-        config=config,
+        config__in=configs,
         is_available=True
-    ).order_by('filename')
+    ).select_related('config').order_by('filename')
     
     # Поиск по имени файла
     search_query = request.GET.get('search', '')
@@ -542,9 +561,10 @@ def get_indexed_files(request):
     
     files = queryset[start:end]
     
-    return Response({
-        'success': True,
-        'files': [{
+    # Формируем ответ с информацией о конфигурации для каждого файла
+    files_data = []
+    for f in files:
+        files_data.append({
             'id': f.id,
             'filename': f.filename,
             'path': f.file_path,
@@ -552,16 +572,29 @@ def get_indexed_files(request):
             'size': f.file_size,
             'modified': f.modified_time,
             'type': f.file_extension,
-        } for f in files],
+            'config': {
+                'id': f.config.id,
+                'name': f.config.name,
+                'search_path': f.config.search_path
+            }
+        })
+    
+    # Собираем информацию о всех конфигурациях для фильтрации на фронте
+    configs_info = [{
+        'id': c.id,
+        'name': c.name,
+        'file_count': SMBFileIndex.objects.filter(config=c, is_available=True).count()
+    } for c in configs]
+    
+    return Response({
+        'success': True,
+        'files': files_data,
         'total': total,
         'page': page,
         'page_size': page_size,
         'total_pages': (total + page_size - 1) // page_size,
-        'config': {
-            'name': config.name,
-            'search_path': config.search_path,
-            'result_path': config.result_path
-        }
+        'configs': configs_info,
+        'active_configs_count': configs.count()
     })
 
 
@@ -591,7 +624,13 @@ def get_file_info(request):
                 'size': file_index.file_size,
                 'modified': file_index.modified_time,
                 'type': file_index.file_extension,
-                'config_name': file_index.config.name
+                'config_name': file_index.config.name,
+                'config': {
+                    'id': file_index.config.id,
+                    'name': file_index.config.name,
+                    'search_path': file_index.config.search_path,
+                    'result_path': file_index.config.result_path
+                }
             }
         })
     except SMBFileIndex.DoesNotExist:

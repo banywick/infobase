@@ -2,13 +2,13 @@
 from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect, render
-from django.core.management import call_command
 from django.contrib import messages
 from django.utils.html import format_html
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponseRedirect
+from django.db import transaction
 from .models import SMBPathConfig, SMBFileIndex, SMBIndexSchedule
-from .tasks import index_smb_files, check_smb_files_availability, refresh_smb_index
+from .tasks import index_smb_files
 from celery.result import AsyncResult
 import json
 
@@ -23,13 +23,8 @@ class SMBPathConfigAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            # Массовая индексация всех конфигураций
             path('reindex-all/', self.admin_site.admin_view(self.reindex_all), name='smbpathconfig_reindex_all'),
-            
-            # Индексация одной конфигурации
-            path('<int:config_id>/reindex/', self.admin_site.admin_view(self.reindex_single), name='smbpathconfig_reindex_single'),
-            
-            # Проверка статуса задачи
+            path('reindex/<int:config_id>/', self.admin_site.admin_view(self.reindex_single), name='smbpathconfig_reindex_single'),
             path('check-status/<str:task_id>/', self.admin_site.admin_view(self.check_task_status), name='check_task_status'),
         ]
         return custom_urls + urls
@@ -56,9 +51,8 @@ class SMBPathConfigAdmin(admin.ModelAdmin):
     reindex_button.allow_tags = True
     
     def reindex_all(self, request):
-        """Метод для массовой индексации всех активных конфигураций"""
+        """Метод для массовой индексации"""
         if request.method == 'POST':
-            # Запускаем индексацию всех конфигураций
             force = request.POST.get('force', False) == 'true'
             task = index_smb_files.delay(force=force)
             return JsonResponse({
@@ -66,22 +60,17 @@ class SMBPathConfigAdmin(admin.ModelAdmin):
                 'status': 'started'
             })
         
-        # GET запрос - показываем страницу подтверждения
         context = {
             'title': 'Индексация всех SMB путей',
             'opts': self.model._meta,
             'has_perm': True,
-            'configs': SMBPathConfig.objects.filter(is_active=True),
-            'action': 'reindex_all'
+            'configs': SMBPathConfig.objects.filter(is_active=True)
         }
         return render(request, 'admin/statement/reindex_confirmation.html', context)
     
     def reindex_single(self, request, config_id):
         """Индексация одной конфигурации"""
-        config = SMBPathConfig.objects.get(id=config_id)
-        
         if request.method == 'POST':
-            # Запускаем индексацию
             force = request.POST.get('force', False) == 'true'
             task = index_smb_files.delay(config_id=config_id, force=force)
             return JsonResponse({
@@ -89,13 +78,12 @@ class SMBPathConfigAdmin(admin.ModelAdmin):
                 'status': 'started'
             })
         
-        # GET запрос - показываем страницу подтверждения
+        config = SMBPathConfig.objects.get(id=config_id)
         context = {
             'title': f'Индексация: {config.name}',
             'config': config,
             'opts': self.model._meta,
-            'has_perm': True,
-            'action': 'reindex_single'
+            'has_perm': True
         }
         return render(request, 'admin/statement/reindex_single_confirmation.html', context)
     
@@ -112,12 +100,10 @@ class SMBPathConfigAdmin(admin.ModelAdmin):
     
     def reindex_selected(self, request, queryset):
         """Action для массовой индексации выбранных конфигураций"""
-        count = 0
         for config in queryset:
             if config.is_active:
                 index_smb_files.delay(config_id=config.id, force=False)
-                count += 1
-        self.message_user(request, f"Запущена индексация для {count} конфигураций")
+        self.message_user(request, f"Запущена индексация для {queryset.count()} конфигураций")
     reindex_selected.short_description = "Запустить индексацию для выбранных"
 
 
@@ -127,7 +113,6 @@ class SMBFileIndexAdmin(admin.ModelAdmin):
     list_filter = ['config', 'file_extension', 'is_available']
     search_fields = ['filename', 'relative_path', 'file_path']
     readonly_fields = ['file_path', 'relative_path', 'file_size', 'modified_time', 'created_at']
-    list_per_page = 50
     actions = ['mark_available', 'mark_unavailable', 'delete_selected']
     
     def mark_available(self, request, queryset):
@@ -161,8 +146,7 @@ class SMBIndexScheduleAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            # Ручной запуск индексации
-            path('run-now/', self.admin_site.admin_view(self.run_now), name='smbindexschedule_run_now'),
+            path('run-now/', self.admin_site.admin_view(self.run_now), name='smbindedschedule_run_now'),
         ]
         return custom_urls + urls
     
@@ -173,30 +157,39 @@ class SMBIndexScheduleAdmin(admin.ModelAdmin):
     def run_now_button(self, obj):
         return format_html(
             '<a class="button" href="{}" style="background: #17a2b8;">▶️ Запустить сейчас</a>',
-            reverse('admin:smbindexschedule_run_now')
+            reverse('admin:smbindedschedule_run_now')
         )
-    run_now_button.short_description = "Ручной запуск"
-    run_now_button.allow_tags = True
+    run_now_button.short_description = "Запуск"
     
     def run_now(self, request):
         """Ручной запуск индексации"""
         if request.method == 'POST':
-            # Запускаем индексацию всех активных конфигураций
-            task = refresh_smb_index.delay()
+            task = index_smb_files.delay()
             messages.success(request, f'Индексация запущена (Task ID: {task.id})')
             return HttpResponseRedirect(reverse('admin:statement_smbindexschedule_changelist'))
         
-        # GET запрос - показываем страницу подтверждения
         context = {
             'title': 'Запустить индексацию SMB',
             'opts': self.model._meta,
-            'has_perm': True,
         }
         return render(request, 'admin/statement/run_index_now.html', context)
     
     def save_model(self, request, obj, form, change):
-        """При сохранении обновляем расписание в Celery"""
+        """При сохранении обновляем расписание в Celery без использования транзакции"""
+        # Сохраняем модель
         super().save_model(request, obj, form, change)
-        # Обновляем периодическую задачу
-        from .scheduler import update_smb_indexing_schedule
-        update_smb_indexing_schedule()
+        
+        # Обновляем расписание после сохранения, вне транзакции
+        # Используем transaction.on_commit для выполнения после фиксации транзакции
+        from django.db import transaction as db_transaction
+        
+        def update_schedule():
+            try:
+                from statement.scheduler import update_smb_indexing_schedule
+                update_smb_indexing_schedule()
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Ошибка при обновлении расписания: {e}")
+        
+        db_transaction.on_commit(update_schedule)
