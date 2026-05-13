@@ -1,4 +1,5 @@
-# utils/smb_indexer.py
+# statement/utils/smb_indexer.py
+
 import os
 from datetime import datetime
 from typing import List, Dict, Any
@@ -46,12 +47,6 @@ class SMBFileIndexer:
     def scan_and_index(self, force_rescan: bool = False) -> Dict[str, Any]:
         """
         Сканирует SMB и обновляет индекс файлов
-        
-        Args:
-            force_rescan: Принудительное полное сканирование (иначе обновляет только новые/измененные)
-        
-        Returns:
-            Dict с результатами сканирования
         """
         print(f"🔄 Начинаем индексацию для конфигурации: {self.config.name}")
         
@@ -77,7 +72,7 @@ class SMBFileIndexer:
                 
                 if ext in self.EXCEL_EXTENSIONS:
                     stats['total_found'] += 1
-                    ext_clean = ext[1:]  # убираем точку
+                    ext_clean = ext[1:]
                     stats['files_by_type'][ext_clean] = stats['files_by_type'].get(ext_clean, 0) + 1
                     
                     try:
@@ -91,12 +86,11 @@ class SMBFileIndexer:
         deleted_count = self._cleanup_missing_files()
         stats['deleted_files'] = deleted_count
         
-        print(f"✅ Индексация завершена:")
+        print(f"✅ Индексация для {self.config.name} завершена:")
         print(f"   Найдено файлов: {stats['total_found']}")
         print(f"   Новых: {stats['new_files']}")
         print(f"   Обновлено: {stats['updated_files']}")
         print(f"   Удалено из индекса: {deleted_count}")
-        print(f"   По типам: {stats['files_by_type']}")
         
         return stats
     
@@ -109,18 +103,14 @@ class SMBFileIndexer:
     
     def _update_or_create_file_index(self, item: Dict, ext: str, search_path: str):
         """Обновляет или создает запись о файле в БД"""
-        
-        # Получаем размер и время изменения через stat метод нашего класса
         file_size = None
         modified_time = None
         
         try:
-            # Используем stat_file метод SmbFolderVk
             stat_result = self.smb.stat_file(item['path'])
             if stat_result:
                 file_size = stat_result.st_size
                 if hasattr(stat_result, 'st_mtime'):
-                    from datetime import datetime
                     modified_time = datetime.fromtimestamp(stat_result.st_mtime)
         except Exception as e:
             print(f"⚠️ Не удалось получить stat для {item['name']}: {e}")
@@ -140,7 +130,6 @@ class SMBFileIndexer:
             }
         )
         
-        # Для отладки
         if created:
             print(f"   📄 Новый файл: {item['name']}")
         else:
@@ -156,12 +145,9 @@ class SMBFileIndexer:
         ).delete()
         return deleted_count
     
-    def get_available_files(self, file_type: str = None) -> List[Dict]:
+    def get_available_files(self, file_type: str = None, processing_status: str = None) -> List[Dict]:
         """
-        Получить список доступных файлов из индекса
-        
-        Args:
-            file_type: 'xlsx', 'xls', 'xlsm' или None для всех
+        Получить список доступных файлов из индекса с возможностью фильтрации по статусу
         """
         queryset = SMBFileIndex.objects.filter(
             config=self.config,
@@ -170,6 +156,9 @@ class SMBFileIndexer:
         
         if file_type:
             queryset = queryset.filter(file_extension=file_type)
+        
+        if processing_status:
+            queryset = queryset.filter(processing_status=processing_status)
         
         return [
             {
@@ -180,18 +169,73 @@ class SMBFileIndexer:
                 'size': f.file_size,
                 'modified': f.modified_time,
                 'type': f.file_extension,
-                'config_name': self.config.name
+                'config_name': self.config.name,
+                'processing_status': f.processing_status
             }
             for f in queryset
         ]
 
 
+# ============================================
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ИНДЕКСАЦИИ
+# ============================================
+
+def index_configs_by_type(config_type: str = None, force_rescan: bool = False) -> Dict[str, Any]:
+    """
+    Индексация конфигураций по типу
+    
+    Args:
+        config_type: 'search' или 'accounting_source' (если None - все активные)
+        force_rescan: полное сканирование
+    """
+    queryset = SMBPathConfig.objects.filter(is_active=True)
+    
+    if config_type:
+        queryset = queryset.filter(config_type=config_type)
+    
+    if not queryset.exists():
+        return {
+            'success': False,
+            'error': f'Нет активных конфигураций типа {config_type}'
+        }
+    
+    results = {}
+    total_stats = {
+        'total_files': 0,
+        'total_new': 0,
+        'total_updated': 0,
+        'total_deleted': 0,
+        'errors': 0
+    }
+    
+    for config in queryset:
+        try:
+            indexer = SMBFileIndexer(config)
+            stats = indexer.scan_and_index(force_rescan=force_rescan)
+            results[config.name] = stats
+            
+            total_stats['total_files'] += stats.get('total_found', 0)
+            total_stats['total_new'] += stats.get('new_files', 0)
+            total_stats['total_updated'] += stats.get('updated_files', 0)
+            total_stats['total_deleted'] += stats.get('deleted_files', 0)
+            total_stats['errors'] += stats.get('errors', 0)
+            
+        except Exception as e:
+            results[config.name] = {'error': str(e)}
+            total_stats['errors'] += 1
+            print(f"❌ Ошибка при индексации {config.name}: {e}")
+    
+    return {
+        'success': True,
+        'config_type': config_type,
+        'results': results,
+        'total_stats': total_stats
+    }
+
+
 def index_all_active_configs(force_rescan: bool = False) -> Dict[str, Any]:
     """
-    Запускает индексацию для всех активных конфигураций
-    
-    Returns:
-        Сводка по индексации
+    Запускает индексацию для ВСЕХ активных конфигураций
     """
     active_configs = SMBPathConfig.objects.filter(is_active=True)
     
@@ -212,10 +256,10 @@ def index_all_active_configs(force_rescan: bool = False) -> Dict[str, Any]:
     for config in active_configs:
         try:
             indexer = SMBFileIndexer(config)
-            stats = indexer.scan_and_index(force_rescan)
+            stats = indexer.scan_and_index(force_rescan=force_rescan)
             results[config.name] = stats
             
-            total_stats['total_files'] += stats['total_found']
+            total_stats['total_files'] += stats.get('total_found', 0)
             total_stats['total_new'] += stats.get('new_files', 0)
             total_stats['total_updated'] += stats.get('updated_files', 0)
             total_stats['total_deleted'] += stats.get('deleted_files', 0)

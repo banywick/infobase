@@ -18,14 +18,50 @@ from statement.utils.excel_processor import ExcelProcessor
 from statement.utils.smb import SmbFolderVk
 from smbclient import open_file, mkdir
 
-# Импортируем Celery задачи
-from statement.tasks import index_smb_files
 
 
 class StatementHome(TemplateView):
     """Главная страница ВК"""
     template_name = 'statement/statement.html'
 
+
+# statement/views.py (добавить)
+
+@api_view(['POST'])
+def start_processing(request):
+    """
+    Запуск обработки непрочитанных файлов
+    """
+    config_id = request.data.get('config_id')
+    limit = request.data.get('limit', 50)
+    
+    from .tasks import process_smb_files
+    task = process_smb_files.delay(config_id=config_id, limit=limit)
+    
+    return Response({
+        'success': True,
+        'task_id': task.id,
+        'message': f'Запущена обработка файлов'
+    }, status=202)
+
+
+@api_view(['GET'])
+def get_processing_stats(request):
+    """
+    Получить статистику обработки файлов
+    """
+    stats = {
+        'pending': SMBFileIndex.objects.filter(processing_status='pending', is_available=True).count(),
+        'processing': SMBFileIndex.objects.filter(processing_status='processing').count(),
+        'processed': SMBFileIndex.objects.filter(processing_status='processed').count(),
+        'error': SMBFileIndex.objects.filter(processing_status='error').count(),
+        'total_accounting_data': AccountingData.objects.count(),
+    }
+    
+    return Response({
+        'success': True,
+        'stats': stats
+    })
 
 class Statement(APIView):
     """

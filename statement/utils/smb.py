@@ -4,6 +4,7 @@ import os
 from smbclient import register_session, listdir, open_file, mkdir, stat as smb_stat
 from smbclient._os import scandir
 import logging
+import ntpath
 
 logger = logging.getLogger(__name__)
 
@@ -220,11 +221,22 @@ class SmbFolderVk:
         self._log(f"✅ Найдено {len(files)} файлов с расширениями {extensions}")
         return files
     
+# statement/utils/smb.py
+
     def download_file(self, source_path, destination_folder):
         """
         Скачивание файла из SMB
         """
-        filename = os.path.basename(source_path)
+        import ntpath
+        from smbclient import open_file as smb_open
+        
+        # Нормализуем путь
+        source_path = source_path.replace('/', '\\')
+        
+        if not source_path.startswith('\\\\'):
+            source_path = self._build_full_path(source_path)
+        
+        filename = ntpath.basename(source_path)
         destination = os.path.join(destination_folder, filename)
         
         os.makedirs(destination_folder, exist_ok=True)
@@ -232,16 +244,19 @@ class SmbFolderVk:
         self._log(f"📥 Скачиваем: {source_path} -> {destination}")
         
         try:
-            with open_file(source_path, mode='rb') as smb_file:
-                with open(destination, 'wb') as local_file:
-                    local_file.write(smb_file.read())
+            # Используем контекстный менеджер
+            with smb_open(source_path, mode='rb') as smb_file:
+                data = smb_file.read()
+                
+            with open(destination, 'wb') as local_file:
+                local_file.write(data)
             
-            self._log(f"✅ Файл скачан: {destination}")
+            self._log(f"✅ Скачано {len(data)} байт")
             return destination
+            
         except Exception as e:
-            self._log(f"❌ Ошибка при скачивании: {e}", "ERROR")
+            self._log(f"❌ Ошибка: {e}", "ERROR")
             raise
-    
     def upload_file(self, local_file_path, target_path):
         """
         Загрузка файла в SMB

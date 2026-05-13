@@ -16,4 +16,6 @@ urlpatterns = [
     path('api/smb/index/start/', views.start_indexing, name='start_indexing'),
     path('api/smb/files/', views.get_indexed_files, name='get_indexed_files'),
     path('api/smb/file-info/', views.get_file_info, name='get_file_info'),
+    path('api/smb/process/start/', views.start_processing, name='start_processing'),
+    path('api/smb/process/stats/', views.get_processing_stats, name='get_processing_stats'),
 ]
