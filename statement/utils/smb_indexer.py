@@ -109,15 +109,18 @@ class SMBFileIndexer:
     
     def _update_or_create_file_index(self, item: Dict, ext: str, search_path: str):
         """Обновляет или создает запись о файле в БД"""
-        # Получаем размер и время изменения через stat если возможно
+        
+        # Получаем размер и время изменения через stat метод нашего класса
         file_size = None
         modified_time = None
+        
         try:
+            # Используем stat_file метод SmbFolderVk
             stat_result = self.smb.stat_file(item['path'])
             if stat_result:
                 file_size = stat_result.st_size
-                # Если есть время изменения
                 if hasattr(stat_result, 'st_mtime'):
+                    from datetime import datetime
                     modified_time = datetime.fromtimestamp(stat_result.st_mtime)
         except Exception as e:
             print(f"⚠️ Не удалось получить stat для {item['name']}: {e}")

@@ -12,6 +12,10 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 # Автоподгрузка задач из всех зарегистрированных приложений
 app.autodiscover_tasks()
 
+# Базовые настройки для beat (будут переопределены из БД)
+app.conf.beat_schedule = {}
+app.conf.timezone = 'Europe/Moscow'
+
 
 # ЯВНО указываем использование Redis
 app.conf.broker_url = 'redis://redis:6379/0'

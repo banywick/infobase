@@ -89,6 +89,24 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+      # ДОБАВЛЯЕМ CELERY-BEAT
+  celery-beat:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    env_file:
+      - .env  
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+    depends_on:
+      - db
+      - redis
+      - celery
+
   nginx:
     image: nginx:alpine
     volumes:
