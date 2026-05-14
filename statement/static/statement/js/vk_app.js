@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     async function loadIndexStats() {
         try {
-            const response = await fetch('/statement/api/smb/stats/');
+            const response = await fetch('/statement/api/smb/process/stats/');
             const data = await response.json();
             
             if (data.success) {

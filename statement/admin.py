@@ -15,7 +15,7 @@ from celery.result import AsyncResult
 
 @admin.register(SMBPathConfig)
 class SMBPathConfigAdmin(admin.ModelAdmin):
-    list_display = ['name', 'config_type', 'search_path', 'is_active', 'index_status', 'action_buttons']
+    list_display = ['name', 'config_type', 'search_path', 'is_active', 'index_status']
     list_filter = ['config_type', 'is_active']
     search_fields = ['name', 'description']
     
@@ -51,18 +51,18 @@ class SMBPathConfigAdmin(admin.ModelAdmin):
         )
     index_status.short_description = "Статус индекса"
     
-    def action_buttons(self, obj):
-        buttons = []
+    # def action_buttons(self, obj):
+    #     buttons = []
         
-        # Кнопка индексации (для всех типов)
-        buttons.append(f'<a class="button" href="{reverse("admin:smbpathconfig_reindex_single", args=[obj.id])}">🔄 Индексировать</a>')
+    #     # Кнопка индексации (для всех типов)
+    #     # buttons.append(f'<a class="button" href="{reverse("admin:smbpathconfig_reindex_single", args=[obj.id])}">🔄 Индексировать</a>')
         
-        # Кнопка обработки только для accounting_source
-        if obj.config_type == 'accounting_source':
-            buttons.append(f'<a class="button" href="{reverse("admin:populate_accounting_data", args=[obj.id])}" style="background: #28a745;">📥 В AccountingData</a>')
+    #     # Кнопка обработки только для accounting_source
+    #     if obj.config_type == 'accounting_source':
+    #         buttons.append(f'<a class="button" href="{reverse("admin:populate_accounting_data", args=[obj.id])}" style="background: #28a745;">📥 В AccountingData</a>')
         
-        return format_html(' '.join(buttons))
-    action_buttons.short_description = "Действия"
+    #     return format_html(' '.join(buttons))
+    # action_buttons.short_description = "Действия"
     
     def reindex_single(self, request, config_id):
         """Индексация одной конфигурации"""

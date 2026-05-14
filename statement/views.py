@@ -358,19 +358,21 @@ def job_vk(request):
             print(f"⚠️ Ошибка при создании папки: {e}")
         
         # Создаем подпапку с именем исходного файла (без расширения)
-        file_name_without_ext = os.path.splitext(vk_file)[0]
-        target_folder = f"{result_smb_folder}\\{file_name_without_ext}"
+        # file_name_without_ext = os.path.splitext(vk_file)[0]
+        # target_folder = f"{result_smb_folder}\\{file_name_without_ext}"
         
-        # Создаем подпапку для файла
-        try:
-            mkdir(target_folder)
-            print(f"📁 Создана папка для файла: {target_folder}")
-        except Exception:
-            # Папка уже существует
-            pass
+        # # Создаем подпапку для файла
+        # try:
+        #     mkdir(target_folder)
+        #     print(f"📁 Создана папка для файла: {target_folder}")
+        # except Exception:
+        #     # Папка уже существует
+        #     pass
         
         # Формируем полный путь к файлу
-        target_path = f"{target_folder}\\{result_filename}"
+        base_name = os.path.splitext(vk_file)[0]
+        result_filename_with_suffix = f"{base_name}_заполненная.xlsx"
+        target_path = f"{result_smb_folder}\\{result_filename_with_suffix}"
         
         print(f"📤 Загружаем результат в SMB: {target_path}")
         

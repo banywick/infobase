@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # ============================================
 # ОСНОВНАЯ ЗАДАЧА ИНДЕКСАЦИИ (для всех типов конфигураций)
 # ============================================
-@shared_task(bind=True, name='statement.tasks.index_smb_files')
+@shared_task(bind=True, name='statement.tasks.index_smb_files_all')
 def index_smb_files(self, config_id: int = None, force: bool = False) -> Dict[str, Any]:
     """
     Индексация SMB файлов для указанной конфигурации
