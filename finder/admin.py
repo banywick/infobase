@@ -306,50 +306,67 @@ class AccountingDataAdmin(admin.ModelAdmin):
                     # Чтение Excel файла
                     df = pd.read_excel(excel_file)
                     
-                    # Берем только нужные столбцы (игнорируем лишние)
+                    # Очищаем названия столбцов от скрытых пробелов (частая проблема Excel)
+                    df.columns = df.columns.str.strip()
+                    
                     required_columns = ['Код бухгалтерский', 'Номенклатура КД', 'Наименование бухгалтерское']
+                    
+                    # Проверяем наличие всех нужных столбцов
+                    missing_cols = [col for col in required_columns if col not in df.columns]
+                    if missing_cols:
+                        messages.error(request, f'В файле отсутствуют столбцы: {", ".join(missing_cols)}')
+                        return redirect('..')
+                    
                     df = df[required_columns]
                     
-                    # Удаляем полностью пустые строки, но не строки с частичными данными
-                    df = df.dropna(how='all')
+                    # Оставляем ТОЛЬКО строки, где ВСЕ три столбца заполнены (отбрасываем NaN)
+                    df = df.dropna(subset=required_columns, how='any')
                     
-                    # Создание объектов
                     created_count = 0
+                    skipped_count = 0
                     errors = []
                     
-                    for index, row in df.iterrows():
+                    # Сбрасываем индекс, чтобы номера строк в ошибках были корректными после dropna
+                    for idx, row in df.reset_index(drop=True).iterrows():
                         try:
-                            accounting_code = str(row['Код бухгалтерский']).strip() if pd.notna(row['Код бухгалтерский']) else ""
-                            nomenclature_kd = str(row['Номенклатура КД']).strip() if pd.notna(row['Номенклатура КД']) else ""
-                            accounting_name = str(row['Наименование бухгалтерское']).strip() if pd.notna(row['Наименование бухгалтерское']) else ""
+                            row_number = idx + 2  # +1 за заголовок, +1 за 0-based индекс
                             
-                            # Пропускаем только полностью пустые строки
-                            if not any([accounting_code, nomenclature_kd, accounting_name]):
+                            accounting_code = str(row['Код бухгалтерский']).strip()
+                            nomenclature_kd = str(row['Номенклатура КД']).strip()
+                            accounting_name = str(row['Наименование бухгалтерское']).strip()
+                            
+                            # Дополнительная страховка: пропускаем, если после strip() остались пустые строки
+                            if not (accounting_code and nomenclature_kd and accounting_name):
                                 continue
                             
-                            # ВАЖНО: Создаем новую запись каждый раз, даже если есть дубликаты
-                            obj = AccountingData.objects.create(
+                            # Проверяем существование записи или создаём новую
+                            obj, created = AccountingData.objects.get_or_create(
                                 accounting_code=accounting_code,
                                 nomenclature_kd=nomenclature_kd,
                                 accounting_name=accounting_name
                             )
                             
-                            created_count += 1
+                            if created:
+                                created_count += 1
+                            else:
+                                skipped_count += 1
                                 
                         except Exception as e:
-                            errors.append(f"Строка {index + 2}: {str(e)}")
+                            errors.append(f"Строка {row_number}: {str(e)}")
                             continue
                     
-                    # Сообщения о результате
+                    # Формируем сообщения
                     if created_count > 0:
-                        messages.success(request, f'Успешно создано записей: {created_count}')
+                        messages.success(request, f'Успешно добавлено новых записей: {created_count}')
+                    if skipped_count > 0:
+                        messages.info(request, f'Пропущено уже существующих записей: {skipped_count}')
                     if errors:
-                        messages.error(request, f'Ошибки при обработке {len(errors)} записей')
+                        messages.error(request, f'Ошибки при обработке {len(errors)} строк')
                         for error in errors[:10]:
                             messages.warning(request, error)
-                    else:
-                        messages.success(request, 'Импорт завершен успешно!')
-                    
+                    elif created_count == 0 and skipped_count == 0:
+                        messages.info(request, 'Файл не содержит подходящих строк для импорта.')
+                        
                     return redirect('..')
                     
                 except Exception as e:

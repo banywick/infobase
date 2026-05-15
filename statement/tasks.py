@@ -6,6 +6,15 @@ from typing import Dict, Any
 import logging
 import os
 import shutil
+from .utils.accounting_validator import AccountingDataValidator
+
+from .models import SMBFileIndex, ProcessedFileLog, SMBPathConfig
+from .utils.excel_data_extractor import ExcelDataExtractor
+from .utils.smb import SmbFolderVk
+from config import settings
+from django.utils import timezone
+import os
+
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +70,7 @@ def index_smb_files(self, config_id: int = None, force: bool = False) -> Dict[st
 
 
 # ============================================
-# ЗАДАЧА ДЛЯ ИНДЕКСАЦИИ ТОЛЬКО ПОИСКОВЫХ КОНФИГУРАЦИЙ
+# ЗАДАЧА ДЛЯ ИНДЕКСАЦИИ ТОЛЬКО ПОИСКОВЫХ КОНФИГУРАЦИЙ (Новые ведомости)
 # ============================================
 @shared_task(name='statement.tasks.index_search_files')
 def index_search_files(force: bool = False) -> Dict[str, Any]:
@@ -77,7 +86,7 @@ def index_search_files(force: bool = False) -> Dict[str, Any]:
 
 
 # ============================================
-# ЗАДАЧА ДЛЯ ИНДЕКСАЦИИ ТОЛЬКО ACCOUNTING SOURCE
+# ЗАДАЧА ДЛЯ ИНДЕКСАЦИИ ТОЛЬКО ACCOUNTING SOURCE (Готовые ведомости)
 # ============================================
 @shared_task(name='statement.tasks.index_accounting_source')
 def index_accounting_source(force: bool = False) -> Dict[str, Any]:
@@ -92,10 +101,10 @@ def index_accounting_source(force: bool = False) -> Dict[str, Any]:
     return result
 
 
+
 # ============================================
-# ЗАДАЧА ДЛЯ ПОПОЛНЕНИЯ ACCOUNTING DATA
+# ЗАДАЧА ДЛЯ ПОПОЛНЕНИЯ ACCOUNTING DATA (чтение индекса заполненных ведомостей)
 # ============================================
-# statement/tasks.py
 
 @shared_task(name='statement.tasks.populate_accounting_data')
 def populate_accounting_data(config_id: int = None, limit: int = None) -> Dict[str, Any]:
@@ -104,18 +113,10 @@ def populate_accounting_data(config_id: int = None, limit: int = None) -> Dict[s
     """
     logger.info(f"🚀 Запуск пополнения AccountingData: config_id={config_id}, limit={limit}")
     
-    from .models import SMBFileIndex, ProcessedFileLog, SMBPathConfig
-    from .utils.excel_data_extractor import ExcelDataExtractor
-    from .utils.smb import SmbFolderVk
-    from config import settings
-    from finder.models import AccountingData
-    from django.utils import timezone
-    import os
-    import shutil
     
     # Получаем конфигурации типа accounting_source
     if config_id:
-        configs = SMBPathConfig.objects.filter(id=config_id, config_type='accounting_source')
+        configs = SMBPathConfig.objects.filter(id=config_id, config_type='accounting_source', is_active=True)
     else:
         configs = SMBPathConfig.objects.filter(is_active=True, config_type='accounting_source')
     
@@ -135,17 +136,19 @@ def populate_accounting_data(config_id: int = None, limit: int = None) -> Dict[s
     if limit:
         queryset = queryset[:limit]
     
+    total_files = queryset.count()
+    logger.info(f"📋 Найдено файлов для обработки: {total_files}")
+    
     stats = {
         'success': True,
-        'total': queryset.count(),
+        'total': total_files,
         'processed': 0,
         'errors': 0,
         'rows_imported': 0,
+        'invalid_rows': 0,
         'details': []
     }
     
-    # statement/tasks.py - обновленная часть обработки файла
-
     for file_index in queryset:
         work_folder = None
         file_result = {
@@ -153,6 +156,7 @@ def populate_accounting_data(config_id: int = None, limit: int = None) -> Dict[s
             'filename': file_index.filename,
             'success': False,
             'rows_imported': 0,
+            'invalid_rows': 0,
             'error': None
         }
         
@@ -217,10 +221,9 @@ def populate_accounting_data(config_id: int = None, limit: int = None) -> Dict[s
             
             file_size = os.path.getsize(local_file_path)
             logger.info(f"✅ Файл скачан успешно, размер: {file_size} байт")
-        
-        # ... остальной код обработки ...
             
-            # Извлекаем данные из Excel (начинаем с 11 строки)
+            # Извлекаем данные из Excel
+            logger.info(f"📊 Начинаем извлечение данных из Excel...")
             extractor = ExcelDataExtractor(local_file_path)
             extractor.load_file()
             
@@ -228,46 +231,67 @@ def populate_accounting_data(config_id: int = None, limit: int = None) -> Dict[s
             column_mapping = extractor.detect_columns()
             logger.info(f"📊 Определены колонки: {column_mapping}")
             
-            # Извлекаем данные, начиная с 11 строки (индекс 10 в pandas)
+            # Извлекаем данные, начиная с 11 строки
             data = extractor.extract_data(column_mapping, start_row=11)
             
             if not data:
                 logger.warning(f"⚠️ Не удалось извлечь данные из файла {file_index.filename}")
-                file_result['error'] = "Не удалось извлечь данные из файла (нет данных или неверные колонки)"
-                continue
+                raise ValueError("Не удалось извлечь данные из файла (нет данных или неверные колонки)")
             
-            logger.info(f"📊 Извлечено {len(data)} записей из файла")
+            logger.info(f"📊 Извлечено {len(data)} записей из файла, начинаем валидацию...")
             
-            # Сохраняем в AccountingData
-            rows_imported = 0
-            for item in data:
-                obj, created = AccountingData.objects.update_or_create(
-                    accounting_code=item['accounting_code'],      # Код
-                    defaults={
-                        'nomenclature_kd': item['nomenclature_kd'],  # Наименование
-                        'accounting_name': item['accounting_name']    # Артикул
-                    }
-                )
-                rows_imported += 1
+            # Сохраняем в AccountingData через валидатор
+            validation_stats = AccountingDataValidator.save_to_database(data)
+            
+            # Обновляем статистику
+            rows_imported = validation_stats['created'] + validation_stats['updated']
+            stats['rows_imported'] += rows_imported
+            stats['invalid_rows'] += validation_stats['invalid']
+            
+            # Логируем результаты валидации
+            logger.info(f"✅ Результаты валидации файла {file_index.filename}:")
+            logger.info(f"   Всего строк: {validation_stats['total']}")
+            logger.info(f"   Валидных: {validation_stats['valid']}")
+            logger.info(f"   Невалидных: {validation_stats['invalid']}")
+            logger.info(f"   Создано новых: {validation_stats['created']}")
+            logger.info(f"   Обновлено: {validation_stats['updated']}")
+            
+            # Если есть ошибки, логируем их
+            if validation_stats['errors']:
+                logger.warning(f"   Ошибки/пропуски ({len(validation_stats['errors'])}):")
+                for err in validation_stats['errors'][:10]:  # Показываем первые 10 ошибок
+                    logger.warning(f"     - {err}")
+            
+            # Если не было ни одной валидной строки, считаем обработку неуспешной
+            if validation_stats['valid'] == 0:
+                raise ValueError(f"Не найдено ни одной валидной строки в файле. Пропущено: {validation_stats['invalid']}")
             
             # Отмечаем файл как обработанный
             file_index.processing_status = 'processed'
             file_index.processed_at = timezone.now()
             file_index.save(update_fields=['processing_status', 'processed_at'])
             
-            # Создаем лог
+            # Создаем лог с детализацией
             ProcessedFileLog.objects.create(
                 file_index=file_index,
                 rows_processed=rows_imported,
-                status='processed'
+                status='processed',
+                error_message=f"Валидных: {validation_stats['valid']}, Невалидных: {validation_stats['invalid']}, Создано: {validation_stats['created']}, Обновлено: {validation_stats['updated']}"
             )
             
             stats['processed'] += 1
-            stats['rows_imported'] += rows_imported
             file_result['success'] = True
             file_result['rows_imported'] = rows_imported
+            file_result['invalid_rows'] = validation_stats['invalid']
+            file_result['validation_stats'] = {
+                'total': validation_stats['total'],
+                'valid': validation_stats['valid'],
+                'invalid': validation_stats['invalid'],
+                'created': validation_stats['created'],
+                'updated': validation_stats['updated']
+            }
             
-            logger.info(f"✅ Обработан: {file_index.filename}, импортировано {rows_imported} записей")
+            logger.info(f"✅ Обработан: {file_index.filename}, импортировано {rows_imported} записей, пропущено {validation_stats['invalid']}")
             
         except Exception as e:
             stats['errors'] += 1
@@ -277,7 +301,7 @@ def populate_accounting_data(config_id: int = None, limit: int = None) -> Dict[s
             
             try:
                 file_index.processing_status = 'error'
-                file_index.processing_error = str(e)[:500]  # Ограничиваем длину
+                file_index.processing_error = str(e)[:500]
                 file_index.save(update_fields=['processing_status', 'processing_error'])
                 
                 ProcessedFileLog.objects.create(
@@ -298,7 +322,13 @@ def populate_accounting_data(config_id: int = None, limit: int = None) -> Dict[s
                 except Exception as e:
                     logger.warning(f"⚠️ Не удалось удалить папку {work_folder}: {e}")
     
-    logger.info(f"🎉 Пополнение AccountingData завершено: обработано {stats['processed']}, ошибок {stats['errors']}, импортировано {stats['rows_imported']} записей")
+    # Итоговая статистика
+    logger.info(f"🎉 Пополнение AccountingData завершено:")
+    logger.info(f"   Обработано файлов: {stats['processed']}")
+    logger.info(f"   Ошибок: {stats['errors']}")
+    logger.info(f"   Импортировано записей: {stats['rows_imported']}")
+    logger.info(f"   Пропущено невалидных записей: {stats['invalid_rows']}")
+    
     return stats
 
 

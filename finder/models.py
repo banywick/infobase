@@ -155,6 +155,12 @@ class AccountingData(models.Model):
     class Meta:
         verbose_name = "Данные сопоставления ТН\КД"
         verbose_name_plural = "Данные сопоставления ТН\КД"
+        unique_together = ['accounting_code', 'nomenclature_kd']  # Уникальность по коду и номенклат
+
+        indexes = [
+            models.Index(fields=['accounting_code', 'nomenclature_kd']),
+            models.Index(fields=['nomenclature_kd']),
+            ]
 
     def __str__(self):
         return f"{self.accounting_code} - {self.nomenclature_kd}"
