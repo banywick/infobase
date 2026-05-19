@@ -3,6 +3,7 @@ import os
 import openpyxl
 import pandas as pd
 import time
+import re
 from datetime import datetime
 from typing import List, Dict, Optional, Union, Tuple
 
@@ -14,7 +15,8 @@ class ExcelProcessor:
     """
     Обработчик Excel файлов с проверкой доступности материалов на проектах
     Поддерживает форматы .xlsx и .xls
-    Динамическое определение столбцов по заголовкам
+    Динамическое определение столбцов и строки начала данных по порядковому номеру
+    Сохраняет исходную нумерацию строк
     """
     
     def __init__(self):
@@ -28,11 +30,11 @@ class ExcelProcessor:
         
         # Маппинг названий столбцов (ключевые слова для поиска)
         self.column_mapping = {
-            'row_number': ['№', '№ п/п', '№ пп', 'Номер', '№ строки', 'п/п', '№п/п'],
+            'row_number': ['№', '№ п/п', '№ пп', 'Номер', '№ строки', 'п/п', '№п/п', '№ п.п'],
             'name': ['Материальные ценности', 'Наименование', 'Материал', 'Наименование материала', 'Номенклатура'],
             'code': ['Код', 'Код материала', 'Код номенклатуры', 'Артикул КД', 'КД'],
             'article': ['Артикул', 'Артикул складской', 'Складской артикул', 'Артикул СКЛАД'],
-            'required': ['На 1 изд.', 'Требуется', 'Количество', 'Норма расхода', 'Потребность']
+            'required': ['На 1 изд.', 'Требуется', 'Количество', 'Норма расхода', 'Потребность', 'На изв.']
         }
     
     def _log(self, message):
@@ -106,8 +108,46 @@ class ExcelProcessor:
         }
         return 1, default_columns
     
-    def _find_data_start_row(self, sheet, header_row):
-        """Находит строку, с которой начинаются данные (после заголовков)"""
+    def _find_data_start_row_by_row_number(self, sheet, header_row, row_number_col) -> int:
+        """
+        Находит строку, с которой начинаются данные, по порядковому номеру
+        Ищет первую строку после заголовков, где в колонке row_number_col есть число 1
+        
+        Returns:
+            int: номер строки с которой начинаются данные
+        """
+        self._log(f"🔍 Поиск строки начала данных по порядковому номеру (колонка {row_number_col})...")
+        
+        start_search = header_row + 1
+        end_search = min(header_row + 500, sheet.max_row)
+        
+        for row_idx in range(start_search, end_search + 1):
+            cell_value = sheet.cell(row=row_idx, column=row_number_col).value
+            
+            if cell_value is None:
+                continue
+            
+            try:
+                num_value = int(float(str(cell_value).strip()))
+                if num_value == 1:
+                    self._log(f"✅ Найдена строка начала данных: строка {row_idx} (порядковый номер = {num_value})")
+                    return row_idx
+                elif num_value > 1 and row_idx == start_search:
+                    self._log(f"✅ Найдена строка начала данных: строка {row_idx} (порядковый номер = {num_value})")
+                    return row_idx
+            except (ValueError, TypeError):
+                continue
+            
+            cell_str = str(cell_value).strip()
+            if cell_str.isdigit() and int(cell_str) == 1:
+                self._log(f"✅ Найдена строка начала данных: строка {row_idx} (порядковый номер = {cell_str})")
+                return row_idx
+        
+        self._log(f"⚠️ Не удалось найти строку по порядковому номеру, использую поиск по наличию данных")
+        return self._find_data_start_row_by_content(sheet, header_row)
+    
+    def _find_data_start_row_by_content(self, sheet, header_row) -> int:
+        """Находит строку, с которой начинаются данные, по наличию данных в ячейках (старый метод)"""
         data_start = header_row + 1
         
         for row_idx in range(header_row + 1, min(header_row + 100, sheet.max_row + 1)):
@@ -137,6 +177,8 @@ class ExcelProcessor:
             if value is None:
                 return 0
             try:
+                if col_type == 'row_number':
+                    return int(float(str(value).strip())) if str(value).strip().isdigit() else 0
                 return float(value) if '.' in str(value) else int(value)
             except (ValueError, TypeError):
                 return 0
@@ -148,24 +190,14 @@ class ExcelProcessor:
     def check_material_availability(self, name: str, required: Union[int, float], projects: List[str], index: int, total: int, original_article: str = None) -> Optional[Dict]:
         """
         Проверяет доступность материала на проектах с учетом приоритета
-        
-        Args:
-            name: Наименование материала
-            required: Требуемое количество
-            projects: Список проектов
-            index: Индекс материала
-            total: Всего материалов
-            original_article: Оригинальный артикул из файла (если есть)
         """
         self._log(f"  [{index}/{total}] Проверка: '{name[:50]}...' (требуется: {required})")
         
         start_time = time.time()
         
         try:
-            # Сначала пробуем поискать по оригинальному артикулу, если он есть
             if original_article:
                 self._log(f"    Поиск по артикулу: {original_article}")
-                # Поиск по артикулу
                 from finder.models import Nomenclature
                 try:
                     nomenclature = Nomenclature.objects.filter(accounting_code=original_article).first()
@@ -177,7 +209,6 @@ class ExcelProcessor:
                 except:
                     all_matches = list(SearchService.search_by_nomenclature(name))
             else:
-                # Поиск в базе по наименованию
                 self._log(f"    Поиск в базе по наименованию...")
                 search_results = SearchService.search_by_nomenclature(name)
                 
@@ -195,7 +226,6 @@ class ExcelProcessor:
             
             self._log(f"    Найдено артикулов: {len(all_matches)}")
             
-            # Перебираем проекты по приоритету
             for project_idx, project_name in enumerate(projects, 1):
                 for match_idx, match in enumerate(all_matches, 1):
                     accounting_code = getattr(match, 'accounting_code', None)
@@ -217,8 +247,8 @@ class ExcelProcessor:
                                 'found': True,
                                 'name': name,
                                 'nomenclature_kd': getattr(match, 'nomenclature_kd', ''),
-                                'article': result['article'],  # Артикул из результата
-                                'original_article': original_article,  # Оригинальный артикул из файла
+                                'article': result['article'],
+                                'original_article': original_article,
                                 'title': result.get('title', getattr(match, 'name', name)),
                                 'required': required,
                                 'quantity': quantity,
@@ -233,7 +263,6 @@ class ExcelProcessor:
                         self._log(f"    ⚠️ Ошибка при проверке артикула {accounting_code}: {e}")
                         continue
             
-            # Если ни один артикул не найден ни на одном проекте
             first_match = all_matches[0] if all_matches else None
             elapsed = time.time() - start_time
             self._log(f"    ⚠️ Материал не найден на проектах, время: {elapsed:.2f} сек")
@@ -270,7 +299,8 @@ class ExcelProcessor:
     def process_with_projects(self, input_file, projects, start_row=None, end_row=None, output_folder=None):
         """
         Обработка Excel файла с проверкой материалов на проектах
-        Динамическое определение столбцов
+        Динамическое определение столбцов и строки начала данных по порядковому номеру
+        Сохраняет исходную нумерацию строк
         """
         print(f"\n{'='*60}")
         print(f"📊 ОБРАБОТКА EXCEL ФАЙЛА")
@@ -338,9 +368,17 @@ class ExcelProcessor:
         except Exception as e:
             raise Exception(f"Ошибка при открытии Excel файла: {e}")
         
-        # Определяем строку начала данных
-        data_start_row = self._find_data_start_row(sheet, header_row)
+        # ============================================
+        # ОПРЕДЕЛЕНИЕ СТРОКИ НАЧАЛА ДАННЫХ
+        # ============================================
+        data_start_row = header_row + 1
         
+        if row_num_col:
+            data_start_row = self._find_data_start_row_by_row_number(sheet, header_row, row_num_col)
+        else:
+            data_start_row = self._find_data_start_row_by_content(sheet, header_row)
+        
+        # Корректируем start_row если он передан
         if start_row is None:
             start_row = data_start_row
         elif start_row < data_start_row:
@@ -362,34 +400,46 @@ class ExcelProcessor:
             raise ValueError(f"Начальная строка ({start_row}) больше конечной ({end_row})")
         
         print(f"\n📖 Чтение данных из файла...")
+        
         for row_idx in range(start_row, end_row + 1):
             name_value = self._get_column_value(sheet, row_idx, name_col, 'name')
             required_value = self._get_column_value(sheet, row_idx, required_col, 'required')
             code_value = self._get_column_value(sheet, row_idx, code_col, 'code') if code_col else None
             article_value = self._get_column_value(sheet, row_idx, article_col, 'article') if article_col else None
             
-            if row_idx <= start_row + 5:
-                print(f"   Строка {row_idx}: Наименование='{name_value}', Требуется={required_value}, Артикул={article_value}")
+            # Получаем исходный номер строки из файла (есть колонка с номерами или используем реальный номер строки)
+            if row_num_col:
+                original_row_number = self._get_column_value(sheet, row_idx, row_num_col, 'row_number')
+            else:
+                original_row_number = row_idx - data_start_row + 1  # Нумеруем с 1 от начала данных
             
-            if name_value:
+            if row_idx <= start_row + 5:
+                print(f"   Строка {row_idx}: №={original_row_number}, Наименование='{name_value[:50] if name_value else ''}...', Требуется={required_value}, Артикул={article_value}")
+            
+            if name_value and name_value.strip():
                 materials_data.append({
-                    'row': row_idx,
+                    'row': row_idx,                          # Реальный номер строки в Excel
+                    'original_row_number': original_row_number,  # Исходный номер из колонки № п/п
                     'name': name_value,
-                    'required': required_value,
+                    'required': required_value if required_value and required_value > 0 else 0,
                     'original_name': sheet.cell(row=row_idx, column=name_col).value if name_col else None,
                     'original_required': sheet.cell(row=row_idx, column=required_col).value if required_col else None,
                     'code': code_value,
-                    'article': article_value,
-                    'row_number': self._get_column_value(sheet, row_idx, row_num_col, 'row_number') if row_num_col else row_idx
+                    'article': article_value
                 })
             else:
                 empty_names += 1
             
-            if not required_value:
+            if not required_value or required_value == 0:
                 empty_required += 1
         
         self.last_row_count = len(materials_data)
-        self.processed_range = f"{start_row}-{end_row}"
+        
+        # Формируем строку диапазона для отображения
+        if start_row == data_start_row and end_row == max_row:
+            self.processed_range = f"автоопределение (строки {start_row}-{end_row})"
+        else:
+            self.processed_range = f"{start_row}-{end_row if end_row else 'конец'}"
         
         print(f"\n📊 Статистика чтения:")
         print(f"📋 Найдено материалов: {len(materials_data)}")
@@ -410,10 +460,9 @@ class ExcelProcessor:
         
         for i, material in enumerate(materials_data, 1):
             print(f"\n{'='*50}")
-            print(f"🔍 Материал {i}/{len(materials_data)}")
+            print(f"🔍 Материал {i}/{len(materials_data)} (№ строки: {material.get('original_row_number', material['row'])})")
             print(f"{'='*50}")
             
-            # Передаем оригинальный артикул из файла
             original_article = material.get('article') or material.get('code')
             
             result = self.check_material_availability(
@@ -433,8 +482,9 @@ class ExcelProcessor:
                 else:
                     self.materials_insufficient += 1
                 
-                # Добавляем информацию о строке
+                # Добавляем информацию о строке (сохраняем исходный номер)
                 result['row'] = material['row']
+                result['original_row_number'] = material.get('original_row_number', i)
                 result['original_name'] = material['original_name']
                 result['original_required'] = material['original_required']
                 result['code'] = material.get('code')
@@ -446,38 +496,38 @@ class ExcelProcessor:
                 print(f"   ✅ Достаточно: {self.materials_found}")
                 print(f"   ⚠️ Недостаточно: {self.materials_insufficient}")
                 print(f"   ❌ Не найдено: {self.materials_not_found}")
-                print(f"   📋 Артикул в результате: {result.get('article', 'не указан')}")
         
         print(f"\n\n✅ Проверка завершена!")
         
         # ============================================
-        # СОЗДАЕМ РЕЗУЛЬТИРУЮЩИЙ ФАЙЛ (10 СТОЛБЦОВ)
+        # СОЗДАЕМ РЕЗУЛЬТИРУЮЩИЙ ФАЙЛ
         # ============================================
         result_wb = openpyxl.Workbook()
         result_sheet = result_wb.active
         result_sheet.title = "Результаты проверки"
         
-        # Заголовки (10 столбцов)
+        # Заголовки (11 колонок) - порядок изменен
         headers = [
-            "Строка",                      # 1. Номер строки в исходном файле
-            "Наименование (исходное)",     # 2. Исходное наименование из файла
-            "Код",                         # 3. Артикул (код материала)
-            "Наименование (найденное)",    # 4. Найденное наименование из базы
-            "Ед. изм.",                    # 5. Единица измерения
-            "Требуется",                   # 6. Требуемое количество
-            "Всего на проекте",            # 7. Доступное количество на проекте
-            "Проект",                      # 8. Проект, с которого берем
-            "Статус",                      # 9. Статус
-            "Партии"                       # 10. Список партий
+            "Строка в файле",              # 1. Реальный номер строки в Excel
+            "№ строки",                    # 2. Исходный номер строки из файла
+            "Наименование (исходное)",     # 3. Исходное наименование из файла
+            "Код",                         # 4. Артикул (код материала)
+            "Наименование (найденное)",    # 5. Найденное наименование из базы
+            "Ед. изм.",                    # 6. Единица измерения
+            "Требуется",                   # 7. Требуемое количество
+            "Всего на проекте",            # 8. Доступное количество на проекте
+            "Проект",                      # 9. Проект, с которого берем
+            "Статус",                      # 10. Статус
+            "Партии"                       # 11. Список партий
         ]
-
+        
         # Создаем заголовки
         for col, header in enumerate(headers, 1):
             cell = result_sheet.cell(row=1, column=col, value=header)
             cell.font = openpyxl.styles.Font(bold=True)
             cell.fill = openpyxl.styles.PatternFill(start_color="366092", end_color="366092", fill_type="solid")
             cell.font = openpyxl.styles.Font(color="FFFFFF", bold=True)
-
+        
         # Заполняем результаты
         for i, result in enumerate(results, 1):
             if not result.get('found', False):
@@ -495,43 +545,44 @@ class ExcelProcessor:
                 parties_list = [p['party'] for p in result['positions_details']]
                 parties_str = ", ".join(parties_list)
             
-            # Используем article из результата (найденный артикул)
             article_to_display = result.get('article', '')
             if not article_to_display and result.get('original_article'):
                 article_to_display = result.get('original_article')
             
             row_data = [
-                result.get('row', ''),                      # 1. Строка
-                result.get('original_name', ''),            # 2. Наименование (исходное)
-                article_to_display,                         # 3. Код (артикул)
-                result.get('title', ''),                    # 4. Наименование (найденное)
-                result.get('base_unit', ''),                # 5. Ед. изм.
-                result.get('required', ''),                 # 6. Требуется
-                result.get('quantity', 0),                  # 7. Всего на проекте
-                result.get('project', 'Не найден'),         # 8. Проект
-                status,                                     # 9. Статус
-                parties_str                                 # 10. Партии
+                result.get('row', ''),                    # 1. Строка в файле
+                result.get('original_row_number', i),     # 2. № строки (исходный номер)
+                result.get('original_name', ''),          # 3. Наименование (исходное)
+                article_to_display,                       # 4. Код
+                result.get('title', ''),                  # 5. Наименование (найденное)
+                result.get('base_unit', ''),              # 6. Ед. изм.
+                result.get('required', ''),               # 7. Требуется
+                result.get('quantity', 0),                # 8. Всего на проекте
+                result.get('project', 'Не найден'),       # 9. Проект
+                status,                                   # 10. Статус
+                parties_str                               # 11. Партии
             ]
             
             for col, value in enumerate(row_data, 1):
                 cell = result_sheet.cell(row=i+1, column=col, value=value)
-                if col == 9:  # Столбец со статусом
+                if col == 10:  # Столбец со статусом
                     cell.fill = openpyxl.styles.PatternFill(start_color=status_color, end_color=status_color, fill_type="solid")
-
+        
         # Настраиваем ширину колонок
         column_widths = {
-            1: 8,   # Строка
-            2: 35,  # Наименование (исходное)
-            3: 15,  # Код
-            4: 35,  # Наименование (найденное)
-            5: 8,   # Ед. изм.
-            6: 12,  # Требуется
-            7: 15,  # Всего на проекте
-            8: 20,  # Проект
-            9: 15,  # Статус
-            10: 35  # Партии
+            1: 12,  # Строка в файле
+            2: 10,  # № строки
+            3: 35,  # Наименование (исходное)
+            4: 15,  # Код
+            5: 35,  # Наименование (найденное)
+            6: 8,   # Ед. изм.
+            7: 12,  # Требуется
+            8: 15,  # Всего на проекте
+            9: 20,  # Проект
+            10: 15, # Статус
+            11: 35  # Партии
         }
-
+        
         for col, width in column_widths.items():
             result_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
         
@@ -545,7 +596,8 @@ class ExcelProcessor:
             f"📁 Исходный файл: {os.path.basename(input_file)}",
             f"📄 Формат файла: {file_ext}",
             f"📋 Строка заголовков: {header_row}",
-            f"📋 Столбцы: Наименование={name_col}, Требуется={required_col}, Артикул={article_col}",
+            f"📋 Строка начала данных (определена): {data_start_row}",
+            f"📋 Столбцы: Наименование={name_col}, Требуется={required_col}, Артикул={article_col}, № п/п={row_num_col}",
             f"📄 Диапазон строк: {start_row}-{end_row}",
             f"📊 Обработано материалов: {len(materials_data)}",
             f"✅ Найдено с достаточным количеством: {self.materials_found}",
@@ -571,19 +623,9 @@ class ExcelProcessor:
             projects_sheet.cell(row=i+1, column=2, value=project)
             projects_sheet.cell(row=i+1, column=3, value=i)
         
-        if projects and len(projects) > 0 and isinstance(projects[0], dict):
-            projects_sheet.cell(row=1, column=4, value="ID")
-            projects_sheet.cell(row=1, column=5, value="Статус")
-            
-            for i, project in enumerate(projects, 1):
-                projects_sheet.cell(row=i+1, column=4, value=project.get('id', ''))
-                projects_sheet.cell(row=i+1, column=5, value=project.get('status_color', 'gray'))
-        
         projects_sheet.column_dimensions['A'].width = 5
         projects_sheet.column_dimensions['B'].width = 25
         projects_sheet.column_dimensions['C'].width = 10
-        projects_sheet.column_dimensions['D'].width = 10
-        projects_sheet.column_dimensions['E'].width = 10
         
         # Сохраняем файл
         if output_folder is None:
@@ -592,7 +634,7 @@ class ExcelProcessor:
         base_name = os.path.basename(input_file)
         name_without_ext = os.path.splitext(base_name)[0]
         
-        result_filename = f"{name_without_ext}_проверка_строк_{start_row}-{end_row}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        result_filename = f"{name_without_ext}_проверка_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         result_path = os.path.join(output_folder, result_filename)
         
         result_wb.save(result_path)

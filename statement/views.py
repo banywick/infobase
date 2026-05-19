@@ -125,7 +125,7 @@ def job_vk(request):
         vk_file = data.get('vk_file')
         file_id = data.get('file_id')
         projects = data.get('projects', [])
-        start_row = data.get('start_row', 2)
+        start_row = data.get('start_row')
         end_row = data.get('end_row')
         
         print(f"📦 Получены данные:")
@@ -141,7 +141,9 @@ def job_vk(request):
                 'error': 'Не указан файл ВК или ID файла'
             }, status=400)
         
-        if not start_row or start_row < 1:
+        # ИСПРАВЛЕННАЯ ПРОВЕРКА: если start_row НЕ равен None И start_row < 1, то ошибка
+        # При авторежиме start_row = None, поэтому проверка пропускается
+        if start_row is not None and (start_row < 1):
             return Response({
                 'success': False,
                 'error': 'Укажите корректную начальную строку (>= 1)'
@@ -295,6 +297,7 @@ def job_vk(request):
         
         processor = ExcelProcessor()
         
+        # Передаем start_row (может быть None для авторежима)
         result_file = processor.process_with_projects(
             input_file=dest_path,
             projects=projects,
@@ -357,18 +360,6 @@ def job_vk(request):
         except Exception as e:
             print(f"⚠️ Ошибка при создании папки: {e}")
         
-        # Создаем подпапку с именем исходного файла (без расширения)
-        # file_name_without_ext = os.path.splitext(vk_file)[0]
-        # target_folder = f"{result_smb_folder}\\{file_name_without_ext}"
-        
-        # # Создаем подпапку для файла
-        # try:
-        #     mkdir(target_folder)
-        #     print(f"📁 Создана папка для файла: {target_folder}")
-        # except Exception:
-        #     # Папка уже существует
-        #     pass
-        
         # Формируем полный путь к файлу
         base_name = os.path.splitext(vk_file)[0]
         result_filename_with_suffix = f"{base_name}_заполненная.xlsx"
@@ -425,6 +416,12 @@ def job_vk(request):
         
         user_smb_path = target_path if upload_success else f"Локальный файл: {result_file} (не удалось скопировать в SMB: {upload_error})"
         
+        # Формируем строку диапазона для отображения
+        if start_row is None:
+            row_range_display = "автоопределение"
+        else:
+            row_range_display = f"{start_row}-{end_row if end_row else 'конец'}"
+        
         response_data = {
             'success': upload_success,
             'message': f'✅ Файл {vk_file} обработан' if upload_success else f'⚠️ Файл обработан, но не скопирован в SMB',
@@ -432,7 +429,7 @@ def job_vk(request):
             'job_folder': f"job/{job_subfolder}",
             'projects': [p.get('project') for p in projects],
             'rows_processed': processor.last_row_count if hasattr(processor, 'last_row_count') else 0,
-            'row_range': processor.processed_range if hasattr(processor, 'processed_range') else f"{start_row}-{end_row if end_row else 'конец'}",
+            'row_range': row_range_display,
             'result_filename': result_filename,
             'temp_folder_deleted': deletion_status == 'deleted',
             'upload_success': upload_success,

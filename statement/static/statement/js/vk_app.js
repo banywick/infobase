@@ -42,29 +42,43 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     
     rangeContainer.innerHTML = `
-        <div class="range-header" style="display: flex; align-items: center; gap: 8px; color: #0b1e33; font-weight: 600; font-size: 1rem; margin-bottom: 16px;">
-            <span class="material-icons">format_list_numbered</span>
-            <span>Диапазон строк для обработки</span>
-        </div>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.9rem; color: #4b6589; margin-bottom: 6px;">
-                    Начать со строки:
-                </label>
-                <input type="number" id="startRow" min="1" value="11" 
-                    style="padding: 12px 16px; border: 1px solid #dce3ec; border-radius: 20px; font-size: 1rem; outline: none; transition: all 0.15s;">
+        <div class="range-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px; color: #0b1e33; font-weight: 600; font-size: 1rem;">
+                <span class="material-icons">format_list_numbered</span>
+                <span>Диапазон строк для обработки</span>
             </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.9rem; color: #4b6589; margin-bottom: 6px;">
-                    Закончить на строке:
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="radio" name="rangeMode" value="auto" checked style="width: 16px; height: 16px; cursor: pointer;">
+                    <span style="font-size: 0.85rem;">Автоопределение</span>
                 </label>
-                <input type="number" id="endRow" min="1" value="50"
-                    style="padding: 12px 16px; border: 1px solid #dce3ec; border-radius: 20px; font-size: 1rem; outline: none; transition: all 0.15s;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="radio" name="rangeMode" value="manual" style="width: 16px; height: 16px; cursor: pointer;">
+                    <span style="font-size: 0.85rem;">Вручную</span>
+                </label>
             </div>
         </div>
-        <div style="margin-top: 12px; font-size: 0.85rem; color: #f57c00; display: flex; align-items: center; gap: 6px;">
-            <span class="material-icons" style="font-size: 1.1rem;">info</span>
-            <span>Укажите диапазон строк. Первая строка обычно заголовок.</span>
+        <div id="manualRangeInputs" style="display: none;">
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; font-size: 0.9rem; color: #4b6589; margin-bottom: 6px;">
+                        Начать со строки:
+                    </label>
+                    <input type="number" id="startRow" min="1" value="11" 
+                        style="padding: 12px 16px; border: 1px solid #dce3ec; border-radius: 20px; font-size: 1rem; outline: none; transition: all 0.15s; width: 100%;">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; font-size: 0.9rem; color: #4b6589; margin-bottom: 6px;">
+                        Закончить на строке:
+                    </label>
+                    <input type="number" id="endRow" min="1" value="50"
+                        style="padding: 12px 16px; border: 1px solid #dce3ec; border-radius: 20px; font-size: 1rem; outline: none; transition: all 0.15s; width: 100%;">
+                </div>
+            </div>
+        </div>
+        <div id="autoRangeInfo" style="margin-top: 12px; font-size: 0.85rem; color: #4CAF50; display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 1.1rem;">auto_awesome</span>
+            <span>Данные будут определены автоматически по порядковым номерам</span>
         </div>
     `;
     
@@ -72,8 +86,26 @@ document.addEventListener('DOMContentLoaded', function() {
         projectsPanel.parentNode.insertBefore(rangeContainer, projectsPanel.nextSibling);
     }
     
+    // Получаем элементы диапазона
     const startRowInput = document.getElementById('startRow');
     const endRowInput = document.getElementById('endRow');
+    const manualRangeInputs = document.getElementById('manualRangeInputs');
+    const autoRangeInfo = document.getElementById('autoRangeInfo');
+    const radioButtons = document.querySelectorAll('input[name="rangeMode"]');
+    
+    // Обработчик переключения режима
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            console.log('🔄 Переключение режима на:', this.value);
+            if (this.value === 'auto') {
+                manualRangeInputs.style.display = 'none';
+                autoRangeInfo.style.display = 'flex';
+            } else {
+                manualRangeInputs.style.display = 'block';
+                autoRangeInfo.style.display = 'none';
+            }
+        });
+    });
     
     // ============================================
     // СОЗДАЕМ UI ДЛЯ СТАТИСТИКИ
@@ -145,7 +177,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 vkFiles = data.files || [];
                 console.log(`✅ Загружено ${vkFiles.length} файлов из ${data.active_configs_count || data.configs?.length || 1} конфигураций`);
                 
-                // Логируем распределение по конфигурациям
                 if (data.configs && data.configs.length > 0) {
                     console.log('📁 Конфигурации:');
                     data.configs.forEach(config => {
@@ -153,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
                 
-                // Обновляем счетчик
                 if (window.vkFileCounter) {
                     const total = data.total || vkFiles.length;
                     const configsCount = data.active_configs_count || data.configs?.length || 1;
@@ -164,10 +194,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Обновляем статистику
                 await loadIndexStats();
                 
-                // Если поле в фокусе и нет поиска, показываем первые 30 файлов
                 if (!searchQuery && vkInput && document.activeElement === vkInput) {
                     showVkSuggestions(vkFiles.slice(0, 30));
                 } else if (searchQuery) {
@@ -251,7 +279,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Закрытие списка при клике вне
         document.addEventListener('click', function(e) {
             if (vkInput && !vkInput.contains(e.target) && vkList && !vkList.contains(e.target)) {
                 vkList.style.display = 'none';
@@ -271,10 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const displayFiles = files.slice(0, 50);
         const fragment = document.createDocumentFragment();
-        
-        // Проверяем, несколько ли конфигураций
         const configNames = new Set(displayFiles.map(f => f.config?.name).filter(Boolean));
-        const showConfigHeaders = configNames.size > 1;
         
         displayFiles.forEach(file => {
             const li = document.createElement('li');
@@ -287,13 +311,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 displayName = file.filename.replace(regex, '<mark>$1</mark>');
             }
             
-            // Информация о конфигурации
             const configInfo = file.config ? 
                 `<span style="font-size: 0.65rem; background: #e8f0fe; color: #1967d2; padding: 2px 6px; border-radius: 12px; margin-left: 8px; white-space: nowrap;">
                     📁 ${file.config.name.length > 20 ? file.config.name.substring(0, 20) + '...' : file.config.name}
                 </span>` : '';
             
-            // Информация о пути
             const pathInfo = file.relative_path && file.relative_path !== file.filename ? 
                 `<span style="font-size: 0.7rem; color: #999; margin-left: 8px;" title="${file.relative_path}">
                     📂 ${file.relative_path.length > 30 ? '...' + file.relative_path.slice(-27) : file.relative_path}
@@ -331,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
         vkList.appendChild(fragment);
         vkList.style.display = 'block';
         
-        // Показываем информацию о количестве конфигураций
         if (configNames.size > 1) {
             const infoFooter = document.createElement('li');
             infoFooter.style.cssText = `
@@ -384,7 +405,6 @@ document.addEventListener('DOMContentLoaded', function() {
             vkList.style.display = 'none';
         }
         
-        // Показываем информацию о конфигурации и пути
         let infoHtml = '';
         if (file.config) {
             infoHtml += `<span style="background: #e8f0fe; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem;">
@@ -421,7 +441,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Показываем панель проектов и диапазон строк
         if (projectsPanel) {
             projectsPanel.classList.add('visible');
         }
@@ -430,13 +449,11 @@ document.addEventListener('DOMContentLoaded', function() {
             rangeContainer.style.display = 'block';
         }
         
-        // Сбрасываем выбранные проекты
         selectedProjects = [];
         renderSelectedProjects();
         
-        // Сбрасываем диапазон на значения по умолчанию
-        if (startRowInput) startRowInput.value = '11';
-        if (endRowInput) endRowInput.value = '50';
+        if (startRowInput) startRowInput.value = '';
+        if (endRowInput) endRowInput.value = '';
         
         updateFillButton();
         
@@ -483,7 +500,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Закрытие списка проектов при клике вне
         document.addEventListener('click', function(e) {
             if (projectSearchInput && !projectSearchInput.contains(e.target) && 
                 projectSuggestList && !projectSuggestList.contains(e.target) && 
@@ -550,8 +566,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderSelectedProjects() {
         if (!multiselectContainer) return;
         
-        // Очищаем контейнер, но сохраняем input
-        const savedInput = multiselectContainer.querySelector('#projectSearchInput');
         multiselectContainer.innerHTML = '';
         
         selectedProjects.forEach(projectObj => {
@@ -574,7 +588,6 @@ document.addEventListener('DOMContentLoaded', function() {
             multiselectContainer.appendChild(chip);
         });
         
-        // Возвращаем input обратно
         if (projectSearchInput) {
             multiselectContainer.appendChild(projectSearchInput);
             projectSearchInput.placeholder = selectedProjects.length ? 'Добавить еще проект...' : 'Введите номер проекта...';
@@ -611,36 +624,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ============================================
-    // ВАЛИДАЦИЯ ДИАПАЗОНА СТРОК
+    // ОПРЕДЕЛЕНИЕ РЕЖИМА ДИАПАЗОНА СТРОК
     // ============================================
     
-    function validateRowRange() {
-        const start = parseInt(startRowInput ? startRowInput.value : 2);
-        let end = parseInt(endRowInput ? endRowInput.value : 50);
+    function getRowRange() {
+        // Находим выбранный режим
+        const selectedMode = document.querySelector('input[name="rangeMode"]:checked');
+        console.log('🔍 Выбранный режим:', selectedMode ? selectedMode.value : 'не найден');
         
+        // Проверяем, что выбран авторежим
+        if (selectedMode && selectedMode.value === 'auto') {
+            console.log('🔍 Используем автоопределение строк (по порядковому номеру 1)');
+            return { start_row: null, end_row: null };
+        }
+        
+        // Если не авторежим, то ручной режим - проверяем поля
+        console.log('🔍 Ручной режим, проверяем поля...');
+        
+        const startInput = document.getElementById('startRow');
+        const endInput = document.getElementById('endRow');
+        
+        if (!startInput) {
+            return { error: 'Поле "Начать со строки" не найдено' };
+        }
+        
+        const startValue = startInput.value.trim();
+        if (startValue === '') {
+            startInput.style.borderColor = '#f44336';
+            return { error: 'Укажите начальную строку' };
+        }
+        
+        const start = parseInt(startValue);
         if (isNaN(start) || start < 1) {
-            if (startRowInput) startRowInput.style.borderColor = '#f44336';
-            return { valid: false, error: 'Начальная строка должна быть >= 1' };
-        } else {
-            if (startRowInput) startRowInput.style.borderColor = '#dce3ec';
+            startInput.style.borderColor = '#f44336';
+            return { error: 'Укажите корректную начальную строку (>= 1)' };
+        }
+        startInput.style.borderColor = '#dce3ec';
+        
+        let end = null;
+        if (endInput) {
+            const endValue = endInput.value.trim();
+            if (endValue !== '') {
+                end = parseInt(endValue);
+                if (isNaN(end) || end < 1) {
+                    endInput.style.borderColor = '#f44336';
+                    return { error: 'Конечная строка должна быть >= 1' };
+                }
+                endInput.style.borderColor = '#dce3ec';
+                
+                if (start > end) {
+                    startInput.style.borderColor = '#f44336';
+                    endInput.style.borderColor = '#f44336';
+                    return { error: 'Начальная строка не может быть больше конечной' };
+                }
+            }
         }
         
-        if (isNaN(end)) {
-            end = null;
-        } else if (end < 1) {
-            if (endRowInput) endRowInput.style.borderColor = '#f44336';
-            return { valid: false, error: 'Конечная строка должна быть >= 1' };
-        } else {
-            if (endRowInput) endRowInput.style.borderColor = '#dce3ec';
-        }
-        
-        if (end !== null && start > end) {
-            if (startRowInput) startRowInput.style.borderColor = '#f44336';
-            if (endRowInput) endRowInput.style.borderColor = '#f44336';
-            return { valid: false, error: 'Начальная строка не может быть больше конечной' };
-        }
-        
-        return { valid: true, start, end };
+        console.log(`📋 Ручной режим: строки ${start} - ${end || 'конец'}`);
+        return { start_row: start, end_row: end };
     }
     
     // ============================================
@@ -649,6 +690,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (fillBtn) {
         fillBtn.addEventListener('click', async function() {
+            console.log('🔘 Кнопка "Заполнить ведомость" нажата');
+            
             if (!selectedVK) {
                 showNotification('❌ Выберите файл ВК', 'error');
                 return;
@@ -659,9 +702,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            const rangeValidation = validateRowRange();
-            if (!rangeValidation.valid) {
-                showNotification(`❌ ${rangeValidation.error}`, 'error');
+            // Проверяем какой режим выбран
+            const selectedMode = document.querySelector('input[name="rangeMode"]:checked');
+            console.log('📌 Текущий режим перед валидацией:', selectedMode ? selectedMode.value : 'не определен');
+            
+            const range = getRowRange();
+            console.log('📌 Результат getRowRange():', range);
+            
+            if (range.error) {
+                showNotification(`❌ ${range.error}`, 'error');
                 return;
             }
             
@@ -670,7 +719,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('   File name:', selectedVK.name);
             console.log('   Config:', selectedVK.config?.name);
             console.log('   Projects:', selectedProjects.map(p => p.project));
-            console.log('   Range:', rangeValidation.start, '-', rangeValidation.end || 'конец');
+            console.log('   Range mode:', range.start_row === null ? 'авто' : `ручной (${range.start_row} - ${range.end_row || 'конец'})`);
             
             fillBtn.disabled = true;
             fillBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Заполнение...';
@@ -683,9 +732,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         id: p.id,
                         project: p.project
                     })),
-                    start_row: rangeValidation.start,
-                    end_row: rangeValidation.end
+                    start_row: range.start_row,
+                    end_row: range.end_row
                 };
+                
+                console.log('📦 Request data:', requestData);
                 
                 const response = await fetch('/statement/job_vk_statement/', {
                     method: 'POST',
@@ -724,7 +775,6 @@ document.addEventListener('DOMContentLoaded', function() {
         resultContainer.style.flexDirection = 'column';
         resultContainer.style.alignItems = 'flex-start';
         
-        // Заголовок
         const title = document.createElement('div');
         title.style.cssText = `
             font-weight: 600;
@@ -737,7 +787,6 @@ document.addEventListener('DOMContentLoaded', function() {
         title.innerHTML = '<span class="material-icons">check_circle</span> Файл успешно обработан';
         resultContainer.appendChild(title);
         
-        // Информация о файле
         const fileInfo = document.createElement('div');
         fileInfo.style.cssText = `
             font-size: 0.85rem;
@@ -754,7 +803,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         resultContainer.appendChild(fileInfo);
         
-        // Блок с путем для копирования
         const pathBlock = document.createElement('div');
         pathBlock.style.cssText = `
             background: #f0f5ff;
@@ -770,7 +818,6 @@ document.addEventListener('DOMContentLoaded', function() {
         pathBlock.textContent = result.smb_result_path;
         resultContainer.appendChild(pathBlock);
         
-        // Кнопка копирования
         const copyBtn = document.createElement('button');
         copyBtn.style.cssText = `
             background: #e6edfa;
@@ -804,7 +851,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         resultContainer.appendChild(copyBtn);
         
-        // Информация о результате
         const infoLine = document.createElement('div');
         infoLine.style.cssText = `
             font-size: 0.9rem;
@@ -816,11 +862,10 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         infoLine.innerHTML = `
             <span>📊 Строк обработано: <strong>${result.rows_processed || 0}</strong></span>
-            <span>📄 Диапазон: <strong>${result.row_range || '-'}</strong></span>
+            <span>📄 Диапазон: <strong>${result.row_range || 'автоопределение'}</strong></span>
         `;
         resultContainer.appendChild(infoLine);
         
-        // Информация об удалении временной папки
         if (result.temp_folder_deleted) {
             const cleanInfo = document.createElement('div');
             cleanInfo.style.cssText = `
@@ -835,7 +880,6 @@ document.addEventListener('DOMContentLoaded', function() {
             resultContainer.appendChild(cleanInfo);
         }
         
-        // Информация о конфигурации
         if (result.config_used) {
             const configInfo = document.createElement('div');
             configInfo.style.cssText = `
@@ -1012,20 +1056,45 @@ document.addEventListener('DOMContentLoaded', function() {
             cursor: not-allowed;
             opacity: 0.6;
         }
+        input[type="radio"] {
+            cursor: pointer;
+        }
+        label {
+            cursor: pointer;
+        }
     `;
     document.head.appendChild(style);
+    
+    // ============================================
+    // ИНИЦИАЛИЗАЦИЯ ПОЛЕЙ ВВОДА И РЕЖИМА
+    // ============================================
+    
+    // Устанавливаем значения по умолчанию для полей диапазона
+    const defaultStartRow = document.getElementById('startRow');
+    const defaultEndRow = document.getElementById('endRow');
+    if (defaultStartRow) defaultStartRow.value = '11';
+    if (defaultEndRow) defaultEndRow.value = '50';
+    
+    // По умолчанию включен авторежим
+    const autoRadioInitial = document.querySelector('input[name="rangeMode"][value="auto"]');
+    if (autoRadioInitial) {
+        autoRadioInitial.checked = true;
+        const manualInputsElem = document.getElementById('manualRangeInputs');
+        const autoInfoElem = document.getElementById('autoRangeInfo');
+        if (manualInputsElem) manualInputsElem.style.display = 'none';
+        if (autoInfoElem) autoInfoElem.style.display = 'flex';
+        console.log('✅ Авторежим включен по умолчанию');
+    } else {
+        console.log('⚠️ Радио-кнопка авторежима не найдена');
+    }
     
     // ============================================
     // ЗАПУСК ЗАГРУЗКИ ДАННЫХ
     // ============================================
     
-    // Загружаем файлы из индекса
     loadIndexedFiles('');
-    
-    // Загружаем проекты
     loadProjects();
     
-    // Обновляем статистику каждые 30 секунд
     setInterval(() => {
         loadIndexStats();
     }, 30000);
