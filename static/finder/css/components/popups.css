@@ -430,12 +430,20 @@ animation-duration: 2.5s;
 }
 
 .error-message {
-    color: #dc3545;
-    font-size: 14px;
+    color: #e74c3c;
+    font-size: 12px;
     margin-top: 5px;
+    display: none; /* Скрыты по умолчанию */
     min-height: 20px;
 }
 
 .input_wrapper {
     margin-bottom: 10px;
+    
+    
+}
+
+/* Показываем сообщение об ошибке */
+.error-message.visible {
+    display: block;
 }

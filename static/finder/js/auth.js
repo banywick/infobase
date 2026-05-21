@@ -1,37 +1,104 @@
+// Функции для управления отображением ошибок
+function showError(elementId, message) {
+    const errorElement = document.getElementById(elementId);
+    const inputElement = document.getElementById(elementId.replace('Error', ''));
+    
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.add('visible');
+        errorElement.style.display = 'block';
+    }
+    
+    if (inputElement) {
+        inputElement.classList.add('error-input');
+    }
+}
+
+function hideError(elementId) {
+    const errorElement = document.getElementById(elementId);
+    const inputElement = document.getElementById(elementId.replace('Error', ''));
+    
+    if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.classList.remove('visible');
+        errorElement.style.display = 'none';
+    }
+    
+    if (inputElement) {
+        inputElement.classList.remove('error-input');
+    }
+}
+
+function hideAllErrors() {
+    hideError('usernameError');
+    hideError('passwordError');
+}
+
+// НОВАЯ ФУНКЦИЯ: Полная очистка всех ошибок
+function resetAllErrors() {
+    const usernameError = document.getElementById('usernameError');
+    const passwordError = document.getElementById('passwordError');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    
+    // Очищаем сообщения об ошибках
+    if (usernameError) {
+        usernameError.textContent = '';
+        usernameError.classList.remove('visible');
+        usernameError.style.display = 'none';
+    }
+    
+    if (passwordError) {
+        passwordError.textContent = '';
+        passwordError.classList.remove('visible');
+        passwordError.style.display = 'none';
+    }
+    
+    // Убираем красную подсветку с полей
+    if (usernameInput) {
+        usernameInput.classList.remove('error-input');
+        usernameInput.style.borderColor = '';
+        usernameInput.style.boxShadow = '';
+        usernameInput.value = ''; // Очищаем поле (опционально)
+    }
+    
+    if (passwordInput) {
+        passwordInput.classList.remove('error-input');
+        passwordInput.style.borderColor = '';
+        passwordInput.style.boxShadow = '';
+        passwordInput.value = ''; // Очищаем поле (опционально)
+    }
+}
+
+// Обработчик входа
 document.getElementById('loginButton').addEventListener('click', function(e) {
     e.preventDefault();
     
-    // Получаем значения полей
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
-    // Сбрасываем предыдущие ошибки
-    document.getElementById('usernameError').textContent = '';
-    document.getElementById('passwordError').textContent = '';
+    hideAllErrors();
     
-    // Валидация полей
     let isValid = true;
     
     if (!username.trim()) {
-        document.getElementById('usernameError').textContent = 'Введите логин';
+        showError('usernameError', 'Введите логин');
         isValid = false;
     }
     
     if (!password.trim()) {
-        document.getElementById('passwordError').textContent = 'Введите пароль';
+        showError('passwordError', 'Введите пароль');
         isValid = false;
     }
     
     if (!isValid) return;
     
-    // Показываем индикатор загрузки
     const button = document.getElementById('loginButton');
     const originalText = button.textContent;
     button.textContent = 'Загрузка...';
     button.disabled = true;
     
-    // Отправляем запрос на сервер
     fetch('/auth/login/', {
         method: 'POST',
         headers: {
@@ -44,7 +111,6 @@ document.getElementById('loginButton').addEventListener('click', function(e) {
         })
     })
     .then(response => {
-        // Восстанавливаем кнопку
         button.textContent = originalText;
         button.disabled = false;
         
@@ -56,34 +122,74 @@ document.getElementById('loginButton').addEventListener('click', function(e) {
         return response.json();
     })
     .then(data => {
-        // Успешная аутентификация
-         // console.log('Успешный вход:', data);
-        
-        // Можно перенаправить пользователя или обновить интерфейс
-        window.location.href = '/'; // Перенаправление на главную страницу
+        showNotification('Успешный вход!', 'success');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 500);
     })
     .catch(error => {
-        // Обработка ошибок
         console.error('Ошибка:', error);
-        
-        // Показываем общую ошибку аутентификации
-        document.getElementById('passwordError').textContent = error.message;
-        
-        // Можно также сбросить поле пароля для безопасности
+        showError('passwordError', error.message);
         document.getElementById('password').value = '';
+        showNotification(error.message, 'error');
     });
 });
 
-// Обработка нажатия Enter в полях формы
-document.getElementById('loginForm').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        document.getElementById('loginButton').click();
+// Очистка ошибок при вводе текста
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+
+if (usernameInput) {
+    usernameInput.addEventListener('input', function() {
+        hideError('usernameError');
+    });
+}
+
+if (passwordInput) {
+    passwordInput.addEventListener('input', function() {
+        hideError('passwordError');
+    });
+}
+
+// Обработка нажатия Enter
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+    loginForm.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('loginButton').click();
+        }
+    });
+}
+
+// ВАЖНО: Очищаем ошибки при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    resetAllErrors();
+    
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', logoutUser);
     }
 });
 
+// Если popup открывается по кнопке, добавьте очистку
+// Например, если у вас есть кнопка открытия popup:
+const openPopupButton = document.getElementById('openPopupButton');
+if (openPopupButton) {
+    openPopupButton.addEventListener('click', function() {
+        // Очищаем ошибки перед открытием popup
+        setTimeout(() => {
+            resetAllErrors();
+        }, 100);
+    });
+}
 
-
+// Если используете Bootstrap модальное окно
+$(document).ready(function() {
+    $('#yourModalId').on('show.bs.modal', function() {
+        resetAllErrors();
+    });
+});
 
 // Функция для получения CSRF токена
 function getCsrfToken() {
@@ -92,7 +198,6 @@ function getCsrfToken() {
 
 // Функция для показа уведомления
 function showNotification(message, type = 'success') {
-    // Создаем элемент уведомления
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
@@ -111,7 +216,6 @@ function showNotification(message, type = 'success') {
         animation: slideIn 0.3s ease-out;
     `;
     
-    // Добавляем анимацию
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideIn {
@@ -137,10 +241,8 @@ function showNotification(message, type = 'success') {
     `;
     document.head.appendChild(style);
     
-    // Добавляем уведомление на страницу
     document.body.appendChild(notification);
     
-    // Автоматически скрываем через 3 секунды
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out forwards';
         setTimeout(() => {
@@ -156,9 +258,11 @@ function showNotification(message, type = 'success') {
     return notification;
 }
 
+// Функция выхода из системы
 function logoutUser() {
-    // Показываем индикатор загрузки на кнопке
     const logoutButton = document.getElementById('logoutButton');
+    if (!logoutButton) return;
+    
     const originalText = logoutButton.textContent;
     logoutButton.textContent = 'Выход...';
     logoutButton.disabled = true;
@@ -169,14 +273,11 @@ function logoutUser() {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCsrfToken()
         },
-        credentials: 'same-origin' // Важно для отправки сессионных куки
+        credentials: 'same-origin'
     })
     .then(response => {
         if (response.ok) {
-            // Показываем уведомление об успешном выходе
             showNotification('Вы вышли из учетной записи');
-            
-            // Ждем пока уведомление покажется и через секунду перенаправляем
             setTimeout(() => {
                 window.location.href = '/';
             }, 1000);
@@ -186,21 +287,8 @@ function logoutUser() {
     })
     .catch(error => {
         console.error('Ошибка выхода:', error);
-        
-        // Восстанавливаем кнопку
         logoutButton.textContent = originalText;
         logoutButton.disabled = false;
-        
-        // Показываем уведомление об ошибке
         showNotification('Не удалось выйти. Попробуйте еще раз.', 'error');
     });
 }
-
-// Добавляем слушатель кнопки по клику
-document.addEventListener('DOMContentLoaded', function() {
-    const logoutButton = document.getElementById('logoutButton');
-    
-    if (logoutButton) {
-        logoutButton.addEventListener('click', logoutUser);
-    }
-});
