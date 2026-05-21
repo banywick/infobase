@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # ============================================
 # ОСНОВНАЯ ЗАДАЧА ИНДЕКСАЦИИ (для всех типов конфигураций)
 # ============================================
-@shared_task(bind=True, name='statement.tasks.index_smb_files_all')
+@shared_task(bind=True, name='statement.tasks.index_smb_files')
 def index_smb_files(self, config_id: int = None, force: bool = False) -> Dict[str, Any]:
     """
     Индексация SMB файлов для указанной конфигурации
@@ -343,9 +343,222 @@ def process_smb_files(config_id: int = None, limit: int = None) -> Dict[str, Any
     return populate_accounting_data(config_id=config_id, limit=limit)
 
 
+
+# statement/tasks.py - добавьте эту задачу
+
+@shared_task(bind=True, name='statement.tasks.process_vk_file_async')
+def process_vk_file_async(self, file_id=None, vk_file=None, projects=None, start_row=None, end_row=None):
+    """
+    Асинхронная обработка файла ВК с обновлением прогресса
+    """
+    from datetime import datetime
+    import os
+    import shutil
+    from config import settings
+    from statement.models import SMBFileIndex, SMBPathConfig
+    from statement.utils.smb import SmbFolderVk
+    from statement.utils.excel_processor import ExcelProcessor
+    from smbclient import open_file, mkdir
+    
+    try:
+        # Шаг 1: Получение конфигурации (5%)
+        self.update_state(
+            state='PROGRESS',
+            meta={'current': 5, 'total': 100, 'status': 'Получение конфигурации...'}
+        )
+        
+        if file_id:
+            file_index = SMBFileIndex.objects.filter(id=file_id, is_available=True).first()
+            if not file_index:
+                raise Exception(f'Файл с ID {file_id} не найден')
+            config = file_index.config
+            vk_file = file_index.filename
+            vk_file_path = file_index.file_path
+        else:
+            config = SMBPathConfig.objects.filter(is_active=True).first()
+            if not config:
+                raise Exception('Активная конфигурация не найдена')
+            vk_file_path = None
+        
+        # Шаг 2: Парсинг путей (10%)
+        self.update_state(
+            state='PROGRESS',
+            meta={'current': 10, 'total': 100, 'status': 'Парсинг путей...'}
+        )
+        
+        search_root = config.search_path
+        result_root = config.result_path
+        
+        path_parts = search_root.strip('\\').split('\\')
+        if len(path_parts) >= 2:
+            smb_server = path_parts[0]
+            smb_share = path_parts[1]
+            search_subfolder = '\\'.join(path_parts[2:]) if len(path_parts) > 2 else ''
+        else:
+            raise Exception(f'Некорректный путь поиска: {search_root}')
+        
+        # Шаг 3: Подготовка папки job (15%)
+        self.update_state(
+            state='PROGRESS',
+            meta={'current': 15, 'total': 100, 'status': 'Подготовка рабочей папки...'}
+        )
+        
+        job_root = os.path.join(settings.BASE_DIR, 'job')
+        os.makedirs(job_root, exist_ok=True)
+        
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        safe_filename = vk_file.replace('.xlsx', '').replace('.xls', '').replace(' ', '_')
+        job_subfolder = f"vk_{safe_filename}_{timestamp}"
+        job_path = os.path.join(job_root, job_subfolder)
+        os.makedirs(job_path, exist_ok=True)
+        
+        # Шаг 4: Поиск файла в SMB (20%)
+        self.update_state(
+            state='PROGRESS',
+            meta={'current': 20, 'total': 100, 'status': 'Поиск файла в SMB...'}
+        )
+        
+        smb = SmbFolderVk(server=smb_server, share=smb_share)
+        
+        if not vk_file_path:
+            full_search_path = f"\\\\{smb_server}\\{smb_share}"
+            if search_subfolder:
+                full_search_path = f"{full_search_path}\\{search_subfolder}"
+            
+            all_items = smb.get_all_files_and_folders_recursive(full_search_path)
+            source_path = None
+            
+            for item in all_items:
+                if not item['is_directory'] and item['name'] == vk_file:
+                    source_path = item['path']
+                    break
+            
+            if not source_path:
+                raise Exception(f'Файл "{vk_file}" не найден')
+            vk_file_path = source_path
+        
+        # Шаг 5: Копирование файла (30%)
+        self.update_state(
+            state='PROGRESS',
+            meta={'current': 30, 'total': 100, 'status': 'Копирование файла...'}
+        )
+        
+        dest_path = os.path.join(job_path, vk_file)
+        
+        with open_file(vk_file_path, mode='rb') as smb_file:
+            with open(dest_path, 'wb') as local_file:
+                local_file.write(smb_file.read())
+        
+        # Шаг 6: Обработка Excel (40-90%)
+        self.update_state(
+        state='PROGRESS',
+        meta={'current': 40, 'total': 100, 'status': 'Обработка Excel файла...'}
+)
+
+        result_folder = os.path.join(job_path, 'results')
+        os.makedirs(result_folder, exist_ok=True)
+
+        processor = ExcelProcessor()
+
+        # Убеждаемся, что папка для результатов существует и доступна для записи
+        print(f"📁 Папка для результатов: {result_folder}")
+        print(f"📁 Существует: {os.path.exists(result_folder)}")
+        print(f"📁 Доступна для записи: {os.access(result_folder, os.W_OK)}")
+
+        result_file = processor.process_with_projects(
+            input_file=dest_path,
+            projects=projects,
+            start_row=start_row,
+            end_row=end_row,
+            output_folder=result_folder
+        )
+
+        print(f"📁 Результат сохранен: {result_file}")
+        print(f"📁 Файл существует: {os.path.exists(result_file)}")
+        
+        # Шаг 7: Копирование результата в SMB (95%)
+        self.update_state(
+            state='PROGRESS',
+            meta={'current': 95, 'total': 100, 'status': 'Копирование результата в SMB...'}
+        )
+        
+        result_filename = os.path.basename(result_file)
+        
+        result_path_parts = result_root.strip('\\').split('\\')
+        if len(result_path_parts) >= 2:
+            result_server = result_path_parts[0]
+            result_share = result_path_parts[1]
+            result_subfolder = '\\'.join(result_path_parts[2:]) if len(result_path_parts) > 2 else ''
+        else:
+            result_server = smb_server
+            result_share = smb_share
+            result_subfolder = "результат"
+        
+        if result_server != smb_server or result_share != smb_share:
+            result_smb = SmbFolderVk(server=result_server, share=result_share)
+        else:
+            result_smb = smb
+        
+        if result_subfolder:
+            result_smb_folder = f"\\\\{result_server}\\{result_share}\\{result_subfolder}"
+        else:
+            result_smb_folder = f"\\\\{result_server}\\{result_share}"
+        
+        current_path = f"\\\\{result_server}\\{result_share}"
+        for folder in result_subfolder.split('\\'):
+            if folder:
+                current_path = f"{current_path}\\{folder}"
+                try:
+                    mkdir(current_path)
+                except Exception:
+                    pass
+        
+        base_name = os.path.splitext(vk_file)[0]
+        result_filename_with_suffix = f"{base_name}_заполненная.xlsx"
+        target_path = f"{result_smb_folder}\\{result_filename_with_suffix}"
+        
+        result_smb.upload_file(result_file, target_path)
+        
+        # Шаг 8: Очистка (100%)
+        self.update_state(
+            state='PROGRESS',
+            meta={'current': 100, 'total': 100, 'status': 'Завершение...'}
+        )
+        
+        shutil.rmtree(job_path)
+        
+        if file_id:
+            SMBFileIndex.objects.filter(id=file_id).update(last_checked=datetime.now())
+        
+        if start_row is None:
+            row_range_display = "автоопределение"
+        else:
+            row_range_display = f"{start_row}-{end_row if end_row else 'конец'}"
+        
+        return {
+            'success': True,
+            'smb_result_path': target_path,
+            'rows_processed': processor.last_row_count if hasattr(processor, 'last_row_count') else 0,
+            'row_range': row_range_display,
+            'result_filename': result_filename,
+            'config_used': {
+                'name': config.name,
+                'search_path': search_root,
+                'result_path': result_root
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Ошибка при обработке: {e}")
+        raise e
+
+
+
+
 # ============================================
 # АЛИАСЫ ДЛЯ ОБРАТНОЙ СОВМЕСТИМОСТИ
 # ============================================
+index_smb_files = index_smb_files
 index_search_files = index_search_files
 index_accounting_source = index_accounting_source
 populate_accounting_data = populate_accounting_data

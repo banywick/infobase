@@ -1,5 +1,5 @@
 // ============================================
-// vk_app.js - ПОЛНАЯ ВЕРСИЯ С ПОДДЕРЖКОЙ НЕСКОЛЬКИХ КОНФИГУРАЦИЙ
+// vk_app.js - ПОЛНАЯ ВЕРСИЯ С ПОДДЕРЖКОЙ ИНДЕКСАЦИИ И АНИМАЦИЕЙ ПРОГРЕССА
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -22,6 +22,386 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedProjects = [];
     let searchTimeout = null;
     let isLoading = false;
+    let progressInterval = null;
+    let currentTaskId = null;
+    let currentIndexingTaskId = null;
+    
+    // ============================================
+    // СОЗДАЕМ КНОПКУ ДЛЯ ОБНОВЛЕНИЯ ГОТОВЫХ ВЕДОМОСТЕЙ
+    // ============================================
+    
+    const refreshButtonContainer = document.createElement('div');
+    refreshButtonContainer.style.cssText = `
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 15px;
+    `;
+    
+    const refreshBtn = document.createElement('button');
+    refreshBtn.id = 'refreshAccountingBtn';
+    refreshBtn.innerHTML = `
+        <span class="material-icons" style="font-size: 18px;">sync</span>
+        Обновить готовые ведомости
+    `;
+    refreshBtn.style.cssText = `
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 30px;
+        padding: 10px 20px;
+        color: white;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    `;
+    
+    refreshBtn.addEventListener('mouseenter', () => {
+        refreshBtn.style.transform = 'translateY(-2px)';
+        refreshBtn.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+    });
+    
+    refreshBtn.addEventListener('mouseleave', () => {
+        refreshBtn.style.transform = 'translateY(0)';
+        refreshBtn.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+    });
+    
+    // ============================================
+    // КОНТЕЙНЕР ДЛЯ ПРОГРЕССА ИНДЕКСАЦИИ
+    // ============================================
+    
+    const indexingProgressContainer = document.createElement('div');
+    indexingProgressContainer.id = 'indexingProgressContainer';
+    indexingProgressContainer.style.cssText = `
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin: 10px 0 20px 0;
+        color: white;
+        display: none;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    `;
+    
+    indexingProgressContainer.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="indexing-spinner" style="width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.9rem;">Обновление готовых ведомостей</div>
+                    <div id="indexingProgressStatus" style="font-size: 0.75rem; opacity: 0.9;">Подготовка...</div>
+                </div>
+            </div>
+            <div id="indexingProgressStats" style="font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px;">
+                ⏳ Ожидание...
+            </div>
+        </div>
+        <div style="width: 100%; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden; margin-bottom: 8px;">
+            <div id="indexingProgressBar" style="width: 0%; height: 6px; background: white; transition: width 0.3s ease; border-radius: 10px;"></div>
+        </div>
+        <div id="indexingProgressDetails" style="font-size: 0.7rem; opacity: 0.8; display: flex; justify-content: space-between;">
+            <span>📁 Сканирование папок...</span>
+            <span id="indexingFileCount">0 файлов найдено</span>
+        </div>
+    `;
+    
+    // Находим место для вставки кнопки
+    if (vkInput && vkInput.parentElement && vkInput.parentElement.parentElement) {
+        const searchWrapper = vkInput.parentElement.parentElement;
+        const buttonRow = document.createElement('div');
+        buttonRow.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        `;
+        
+        const searchContainer = vkInput.parentElement;
+        const originalParent = searchContainer.parentElement;
+        
+        buttonRow.appendChild(refreshButtonContainer);
+        refreshButtonContainer.appendChild(refreshBtn);
+        
+        originalParent.insertBefore(buttonRow, searchContainer);
+        originalParent.insertBefore(indexingProgressContainer, searchContainer);
+    }
+    
+    // Функции для управления прогрессом индексации
+    function showIndexingProgress() {
+        indexingProgressContainer.style.display = 'block';
+    }
+    
+    function hideIndexingProgress() {
+        indexingProgressContainer.style.display = 'none';
+        const indexingProgressBar = document.getElementById('indexingProgressBar');
+        if (indexingProgressBar) indexingProgressBar.style.width = '0%';
+    }
+    
+    function updateIndexingProgress(percent, status, stats, fileCount = null) {
+        const indexingProgressBar = document.getElementById('indexingProgressBar');
+        const indexingProgressStatus = document.getElementById('indexingProgressStatus');
+        const indexingProgressStats = document.getElementById('indexingProgressStats');
+        const indexingFileCountSpan = document.getElementById('indexingFileCount');
+        
+        if (indexingProgressBar) indexingProgressBar.style.width = `${percent}%`;
+        if (indexingProgressStatus) indexingProgressStatus.textContent = status;
+        if (indexingProgressStats) indexingProgressStats.textContent = stats;
+        if (indexingFileCountSpan && fileCount !== null) {
+            indexingFileCountSpan.textContent = `${fileCount} файлов найдено`;
+        }
+    }
+    
+    // Функция для обновления индекса
+    async function refreshAccountingIndex() {
+        if (refreshBtn.disabled) {
+            showNotification('Индексация уже выполняется...', 'info');
+            return;
+        }
+        
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = `
+            <span class="material-icons" style="font-size: 18px; animation: spin 1s linear infinite;">sync</span>
+            Индексация...
+        `;
+        
+        showIndexingProgress();
+        updateIndexingProgress(5, 'Запуск индексации...', '🔄 Инициализация', 0);
+        
+        let checkInterval = null;
+        const startTime = Date.now();
+        
+        try {
+            const response = await fetch('/statement/api/smb/index/start/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    config_type: 'search',
+                    force: false
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.task_id) {
+                currentIndexingTaskId = data.task_id;
+                console.log('✅ Задача индексации запущена, task_id:', currentIndexingTaskId);
+                
+                checkInterval = setInterval(async () => {
+                    try {
+                        const statusResponse = await fetch(`/statement/api/smb/index/task/${currentIndexingTaskId}/`);
+                        const statusData = await statusResponse.json();
+                        
+                        console.log('Статус индексации:', statusData.status);
+                        
+                        if (statusData.status === 'SUCCESS') {
+                            clearInterval(checkInterval);
+                            updateIndexingProgress(100, '✅ Индексация завершена!', 'Готово!', statusData.result?.total_files || 0);
+                            
+                            await loadIndexedFiles('');
+                            
+                            setTimeout(() => {
+                                hideIndexingProgress();
+                                refreshBtn.disabled = false;
+                                refreshBtn.innerHTML = `
+                                    <span class="material-icons" style="font-size: 18px;">sync</span>
+                                    Обновить готовые ведомости
+                                `;
+                                showNotification('Индексация готовых ведомостей завершена!', 'success');
+                            }, 2000);
+                            
+                        } else if (statusData.status === 'FAILURE') {
+                            clearInterval(checkInterval);
+                            updateIndexingProgress(0, '❌ Ошибка индексации', statusData.error || 'Неизвестная ошибка', 0);
+                            
+                            setTimeout(() => {
+                                hideIndexingProgress();
+                                refreshBtn.disabled = false;
+                                refreshBtn.innerHTML = `
+                                    <span class="material-icons" style="font-size: 18px;">sync</span>
+                                    Обновить готовые ведомости
+                                `;
+                                showNotification(`Ошибка индексации: ${statusData.error || 'Неизвестная ошибка'}`, 'error');
+                            }, 3000);
+                            
+                        } else if (statusData.status === 'PROGRESS' && statusData.progress) {
+                            const progress = statusData.progress;
+                            const percent = Math.min(progress.current || 0, 95);
+                            const statusText = progress.status || 'Индексация...';
+                            const fileCount = progress.total_found || 0;
+                            
+                            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                            const timeStr = elapsed > 60 ? `${Math.floor(elapsed / 60)} мин ${elapsed % 60} сек` : `${elapsed} сек`;
+                            
+                            updateIndexingProgress(percent, statusText, `⏱️ ${timeStr}`, fileCount);
+                            
+                            refreshBtn.innerHTML = `
+                                <span class="material-icons" style="font-size: 18px; animation: spin 1s linear infinite;">sync</span>
+                                Индексация: ${percent}%
+                            `;
+                        } else if (statusData.status === 'PENDING') {
+                            updateIndexingProgress(5, '⏳ Ожидание очереди...', 'Задача в очереди', 0);
+                        } else if (statusData.status === 'STARTED') {
+                            updateIndexingProgress(10, '🔄 Начало индексации...', 'Сканирование файлов...', 0);
+                        }
+                        
+                    } catch (err) {
+                        console.error('Ошибка при опросе статуса:', err);
+                    }
+                }, 1500);
+                
+            } else {
+                throw new Error(data.error || 'Не удалось запустить индексацию');
+            }
+            
+        } catch (error) {
+            console.error('❌ Ошибка индексации:', error);
+            updateIndexingProgress(0, '❌ Ошибка', error.message, 0);
+            
+            setTimeout(() => {
+                hideIndexingProgress();
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = `
+                    <span class="material-icons" style="font-size: 18px;">sync</span>
+                    Обновить готовые ведомости
+                `;
+                showNotification(`Ошибка индексации: ${error.message}`, 'error');
+            }, 3000);
+        }
+    }
+    
+    // Добавляем обработчик на кнопку
+    refreshBtn.addEventListener('click', refreshAccountingIndex);
+    
+    // ============================================
+    // СОЗДАЕМ КОНТЕЙНЕР ДЛЯ ПРОГРЕССА ОБРАБОТКИ
+    // ============================================
+    
+    const progressContainer = document.createElement('div');
+    progressContainer.id = 'progressContainer';
+    progressContainer.style.cssText = `
+        background: rgba(255,255,255,0.95);
+        border-radius: 32px;
+        padding: 1.5rem 2rem;
+        margin: 20px 0;
+        border: 1px solid rgba(66, 153, 225, 0.3);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        display: none;
+        position: relative;
+        overflow: hidden;
+    `;
+    
+    progressContainer.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="progress-spinner" style="width: 32px; height: 32px; border: 3px solid #e2e8f0; border-top-color: #4299e1; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div>
+                    <div style="font-weight: 600; color: #2d3748; font-size: 1rem;">Обработка файла...</div>
+                    <div id="progressStatus" style="font-size: 0.85rem; color: #718096; margin-top: 4px;">Подготовка к обработке</div>
+                </div>
+            </div>
+            <div id="progressStats" style="font-size: 0.9rem; color: #4a5568; background: #edf2f7; padding: 6px 12px; border-radius: 20px;">
+                ⏳ Ожидание...
+            </div>
+        </div>
+        <div style="width: 100%; background: #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 12px;">
+            <div id="progressBar" style="width: 0%; height: 8px; background: linear-gradient(90deg, #4299e1, #9f7aea); transition: width 0.3s ease; border-radius: 12px;"></div>
+        </div>
+        <div id="progressDetails" style="font-size: 0.75rem; color: #a0aec0; display: flex; justify-content: space-between;">
+            <span>📊 Начато: --:--:--</span>
+            <span>✅ Обработано: 0</span>
+            <span>⏱️ Прошло: 0 сек</span>
+        </div>
+        <div id="progressCancelBtn" style="margin-top: 12px; text-align: center;">
+            <button style="background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 20px; padding: 6px 16px; cursor: pointer; font-size: 0.8rem; color: #e53e3e; transition: all 0.2s;">
+                ❌ Отменить обработку
+            </button>
+        </div>
+    `;
+    
+    // Добавляем стили для анимации
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .progress-shimmer {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            to { left: 100%; }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+    
+    if (fillBtn && fillBtn.parentNode) {
+        fillBtn.parentNode.insertBefore(progressContainer, fillBtn.nextSibling);
+    }
+    
+    const progressBar = document.getElementById('progressBar');
+    const progressStatus = document.getElementById('progressStatus');
+    const progressStats = document.getElementById('progressStats');
+    const progressDetails = document.getElementById('progressDetails');
+    const cancelBtn = progressContainer.querySelector('#progressCancelBtn button');
+    
+    function showProgress() {
+        progressContainer.style.display = 'block';
+        const shimmer = document.createElement('div');
+        shimmer.className = 'progress-shimmer';
+        progressContainer.appendChild(shimmer);
+    }
+    
+    function hideProgress() {
+        progressContainer.style.display = 'none';
+        const shimmer = progressContainer.querySelector('.progress-shimmer');
+        if (shimmer) shimmer.remove();
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+    }
+    
+    function updateProgress(percent, status, stats, startTime) {
+        if (progressBar) progressBar.style.width = `${percent}%`;
+        if (progressStatus) progressStatus.textContent = status;
+        if (progressStats) progressStats.textContent = stats;
+        
+        if (progressDetails && startTime) {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeStr = minutes > 0 ? `${minutes} мин ${seconds} сек` : `${seconds} сек`;
+            
+            const startTimeStr = new Date(startTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            progressDetails.innerHTML = `
+                <span>📊 Начато: ${startTimeStr}</span>
+                <span>✅ Обработано: ${stats.match(/\d+/)?.[0] || 0}</span>
+                <span>⏱️ Прошло: ${timeStr}</span>
+            `;
+        }
+    }
     
     // ============================================
     // СОЗДАЕМ КОНТЕЙНЕР ДЛЯ ДИАПАЗОНА СТРОК
@@ -224,11 +604,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/statement/api/smb/process/stats/');
             const data = await response.json();
             
-            if (data.success) {
+            if (data.success && data.configs) {
                 const statsContainer = document.getElementById('indexStats');
                 if (statsContainer) {
                     const configCount = data.configs.length;
-                    const totalFiles = data.total_files;
+                    const totalFiles = data.total_files || 0;
                     
                     if (configCount > 1) {
                         statsContainer.innerHTML = `
@@ -628,18 +1008,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function getRowRange() {
-        // Находим выбранный режим
         const selectedMode = document.querySelector('input[name="rangeMode"]:checked');
-        console.log('🔍 Выбранный режим:', selectedMode ? selectedMode.value : 'не найден');
+        const isAutoMode = selectedMode && selectedMode.value === 'auto';
         
-        // Проверяем, что выбран авторежим
-        if (selectedMode && selectedMode.value === 'auto') {
+        if (isAutoMode) {
             console.log('🔍 Используем автоопределение строк (по порядковому номеру 1)');
             return { start_row: null, end_row: null };
         }
-        
-        // Если не авторежим, то ручной режим - проверяем поля
-        console.log('🔍 Ручной режим, проверяем поля...');
         
         const startInput = document.getElementById('startRow');
         const endInput = document.getElementById('endRow');
@@ -685,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ============================================
-    // ОТПРАВКА ДАННЫХ
+    // ОТПРАВКА ДАННЫХ С АНИМАЦИЕЙ ПРОГРЕССА (АСИНХРОННО)
     // ============================================
     
     if (fillBtn) {
@@ -702,27 +1077,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Проверяем какой режим выбран
-            const selectedMode = document.querySelector('input[name="rangeMode"]:checked');
-            console.log('📌 Текущий режим перед валидацией:', selectedMode ? selectedMode.value : 'не определен');
-            
             const range = getRowRange();
-            console.log('📌 Результат getRowRange():', range);
-            
             if (range.error) {
                 showNotification(`❌ ${range.error}`, 'error');
                 return;
             }
             
-            console.log('📤 Отправка данных:');
-            console.log('   File ID:', selectedVK.id);
-            console.log('   File name:', selectedVK.name);
-            console.log('   Config:', selectedVK.config?.name);
-            console.log('   Projects:', selectedProjects.map(p => p.project));
-            console.log('   Range mode:', range.start_row === null ? 'авто' : `ручной (${range.start_row} - ${range.end_row || 'конец'})`);
-            
             fillBtn.disabled = true;
             fillBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Заполнение...';
+            
+            showProgress();
+            updateProgress(0, '🔄 Отправка запроса...', '⏳ Подготовка', Date.now());
             
             try {
                 const requestData = {
@@ -736,9 +1101,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     end_row: range.end_row
                 };
                 
-                console.log('📦 Request data:', requestData);
-                
-                const response = await fetch('/statement/job_vk_statement/', {
+                const response = await fetch('/statement/job_vk_async/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -747,22 +1110,81 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify(requestData)
                 });
                 
-                const result = await response.json();
-                console.log('📥 Ответ сервера:', result);
+                const data = await response.json();
                 
-                if (result.success) {
-                    showResult(result);
-                    showNotification(`✅ Обработано строк: ${result.rows_processed || 0}`);
+                if (data.success && data.task_id) {
+                    currentTaskId = data.task_id;
+                    console.log('✅ Задача запущена, task_id:', currentTaskId);
+                    
+                    const startTime = Date.now();
+                    const checkInterval = setInterval(async () => {
+                        try {
+                            const statusResponse = await fetch(`/statement/api/task/status/${currentTaskId}/`);
+                            const statusData = await statusResponse.json();
+                            
+                            console.log('Статус задачи:', statusData.status);
+                            
+                            if (statusData.status === 'SUCCESS') {
+                                clearInterval(checkInterval);
+                                updateProgress(100, '✅ Обработка завершена!', 'Готово!', startTime);
+                                setTimeout(() => {
+                                    hideProgress();
+                                    showResult(statusData.result);
+                                    showNotification(`✅ Обработано строк: ${statusData.result.rows_processed || 0}`);
+                                    fillBtn.disabled = false;
+                                    fillBtn.innerHTML = '<span class="material-icons">auto_awesome</span> Заполнить ведомость';
+                                }, 1000);
+                                
+                            } else if (statusData.status === 'FAILURE') {
+                                clearInterval(checkInterval);
+                                updateProgress(0, '❌ Ошибка обработки', statusData.error || 'Неизвестная ошибка', startTime);
+                                setTimeout(() => {
+                                    hideProgress();
+                                    showNotification(`❌ ${statusData.error || 'Ошибка при обработке'}`, 'error');
+                                    fillBtn.disabled = false;
+                                    fillBtn.innerHTML = '<span class="material-icons">auto_awesome</span> Заполнить ведомость';
+                                }, 2000);
+                                
+                            } else if (statusData.status === 'PROGRESS' && statusData.progress) {
+                                const progress = statusData.progress;
+                                const percent = progress.current || 0;
+                                const statusText = progress.status || 'Обработка...';
+                                const processed = progress.processed_rows || 0;
+                                const total = progress.total_rows || 0;
+                                
+                                let statsText = `📊 Прогресс: ${percent}%`;
+                                if (processed > 0) {
+                                    statsText = `✅ Обработано: ${processed} из ${total || '?'}`;
+                                }
+                                
+                                updateProgress(percent, statusText, statsText, startTime);
+                                
+                            } else if (statusData.status === 'PENDING') {
+                                updateProgress(5, '⏳ Ожидание очереди...', 'Задача в очереди', startTime);
+                            } else if (statusData.status === 'STARTED') {
+                                updateProgress(10, '🔄 Начало обработки...', 'Запущено', startTime);
+                            }
+                            
+                        } catch (err) {
+                            console.error('Ошибка при опросе статуса:', err);
+                        }
+                    }, 1500);
+                    
+                    window._currentInterval = checkInterval;
+                    
                 } else {
-                    throw new Error(result.error || 'Ошибка при обработке');
+                    throw new Error(data.error || 'Не удалось запустить обработку');
                 }
                 
             } catch (error) {
                 console.error('❌ Ошибка:', error);
-                showNotification(`❌ ${error.message}`, 'error');
-            } finally {
-                fillBtn.disabled = false;
-                fillBtn.innerHTML = '<span class="material-icons">auto_awesome</span> Заполнить ведомость';
+                updateProgress(0, '❌ Ошибка', error.message, Date.now());
+                setTimeout(() => {
+                    hideProgress();
+                    showNotification(`❌ ${error.message}`, 'error');
+                    fillBtn.disabled = false;
+                    fillBtn.innerHTML = '<span class="material-icons">auto_awesome</span> Заполнить ведомость';
+                }, 2000);
             }
         });
     }
@@ -892,6 +1314,34 @@ document.addEventListener('DOMContentLoaded', function() {
             configInfo.innerHTML = `🔧 Конфигурация: ${result.config_used.name}`;
             resultContainer.appendChild(configInfo);
         }
+    }
+    
+    // Обработчик отмены обработки файла
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', async () => {
+            if (currentTaskId) {
+                try {
+                    const response = await fetch(`/statement/api/task/cancel/${currentTaskId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        if (window._currentInterval) {
+                            clearInterval(window._currentInterval);
+                        }
+                        showNotification('⚠️ Обработка отменена', 'info');
+                        hideProgress();
+                        fillBtn.disabled = false;
+                        fillBtn.innerHTML = '<span class="material-icons">auto_awesome</span> Заполнить ведомость';
+                    }
+                } catch (error) {
+                    console.error('Ошибка отмены:', error);
+                }
+            }
+        });
     }
     
     // ============================================
@@ -1069,13 +1519,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // ИНИЦИАЛИЗАЦИЯ ПОЛЕЙ ВВОДА И РЕЖИМА
     // ============================================
     
-    // Устанавливаем значения по умолчанию для полей диапазона
     const defaultStartRow = document.getElementById('startRow');
     const defaultEndRow = document.getElementById('endRow');
     if (defaultStartRow) defaultStartRow.value = '11';
     if (defaultEndRow) defaultEndRow.value = '50';
     
-    // По умолчанию включен авторежим
     const autoRadioInitial = document.querySelector('input[name="rangeMode"][value="auto"]');
     if (autoRadioInitial) {
         autoRadioInitial.checked = true;
@@ -1084,8 +1532,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (manualInputsElem) manualInputsElem.style.display = 'none';
         if (autoInfoElem) autoInfoElem.style.display = 'flex';
         console.log('✅ Авторежим включен по умолчанию');
-    } else {
-        console.log('⚠️ Радио-кнопка авторежима не найдена');
     }
     
     // ============================================

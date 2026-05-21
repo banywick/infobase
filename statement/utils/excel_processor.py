@@ -499,35 +499,36 @@ class ExcelProcessor:
         
         print(f"\n\n✅ Проверка завершена!")
         
+
         # ============================================
         # СОЗДАЕМ РЕЗУЛЬТИРУЮЩИЙ ФАЙЛ
         # ============================================
         result_wb = openpyxl.Workbook()
         result_sheet = result_wb.active
         result_sheet.title = "Результаты проверки"
-        
-        # Заголовки (11 колонок) - порядок изменен
+
+        # Заголовки
         headers = [
-            "Строка в файле",              # 1. Реальный номер строки в Excel
-            "№ строки",                    # 2. Исходный номер строки из файла
-            "Наименование (исходное)",     # 3. Исходное наименование из файла
-            "Код",                         # 4. Артикул (код материала)
-            "Наименование (найденное)",    # 5. Найденное наименование из базы
-            "Ед. изм.",                    # 6. Единица измерения
-            "Требуется",                   # 7. Требуемое количество
-            "Всего на проекте",            # 8. Доступное количество на проекте
-            "Проект",                      # 9. Проект, с которого берем
-            "Статус",                      # 10. Статус
-            "Партии"                       # 11. Список партий
+            "№ строки",
+            "Строка в файле",
+            "Наименование (исходное)",
+            "Код",
+            "Наименование (найденное)",
+            "Ед. изм.",
+            "Требуется",
+            "Всего на проекте",
+            "Проект",
+            "Статус",
+            "Партии"
         ]
-        
+
         # Создаем заголовки
         for col, header in enumerate(headers, 1):
             cell = result_sheet.cell(row=1, column=col, value=header)
             cell.font = openpyxl.styles.Font(bold=True)
             cell.fill = openpyxl.styles.PatternFill(start_color="366092", end_color="366092", fill_type="solid")
             cell.font = openpyxl.styles.Font(color="FFFFFF", bold=True)
-        
+
         # Заполняем результаты
         for i, result in enumerate(results, 1):
             if not result.get('found', False):
@@ -550,28 +551,28 @@ class ExcelProcessor:
                 article_to_display = result.get('original_article')
             
             row_data = [
-                result.get('row', ''),                    # 1. Строка в файле
-                result.get('original_row_number', i),     # 2. № строки (исходный номер)
-                result.get('original_name', ''),          # 3. Наименование (исходное)
-                article_to_display,                       # 4. Код
-                result.get('title', ''),                  # 5. Наименование (найденное)
-                result.get('base_unit', ''),              # 6. Ед. изм.
-                result.get('required', ''),               # 7. Требуется
-                result.get('quantity', 0),                # 8. Всего на проекте
-                result.get('project', 'Не найден'),       # 9. Проект
-                status,                                   # 10. Статус
-                parties_str                               # 11. Партии
+                result.get('original_row_number', i),
+                result.get('row', ''),
+                result.get('original_name', ''),
+                article_to_display,
+                result.get('title', ''),
+                result.get('base_unit', ''),
+                result.get('required', ''),
+                result.get('quantity', 0),
+                result.get('project', 'Не найден'),
+                status,
+                parties_str
             ]
             
             for col, value in enumerate(row_data, 1):
                 cell = result_sheet.cell(row=i+1, column=col, value=value)
-                if col == 10:  # Столбец со статусом
+                if col == 10:
                     cell.fill = openpyxl.styles.PatternFill(start_color=status_color, end_color=status_color, fill_type="solid")
-        
+
         # Настраиваем ширину колонок
         column_widths = {
-            1: 12,  # Строка в файле
-            2: 10,  # № строки
+            1: 10,  # № строки
+            2: 12,  # Строка в файле
             3: 35,  # Наименование (исходное)
             4: 15,  # Код
             5: 35,  # Наименование (найденное)
@@ -582,16 +583,16 @@ class ExcelProcessor:
             10: 15, # Статус
             11: 35  # Партии
         }
-        
+
         for col, width in column_widths.items():
             result_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
-        
+
         # Информация об обработке
         info_row = len(results) + 3
         result_sheet.cell(row=info_row, column=1, value="📊 ИНФОРМАЦИЯ ОБ ОБРАБОТКЕ")
         result_sheet.cell(row=info_row, column=1).font = openpyxl.styles.Font(bold=True, size=12)
         info_row += 1
-        
+
         info_data = [
             f"📁 Исходный файл: {os.path.basename(input_file)}",
             f"📄 Формат файла: {file_ext}",
@@ -606,39 +607,60 @@ class ExcelProcessor:
             f"📋 Проекты для проверки: {', '.join(project_names)}",
             f"🕒 Дата обработки: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         ]
-        
+
         for info in info_data:
             result_sheet.cell(row=info_row, column=1, value=info)
             info_row += 1
-        
+
         # Создаем отдельный лист с информацией о проектах
         projects_sheet = result_wb.create_sheet("Проекты")
-        
+
         projects_sheet.cell(row=1, column=1, value="№")
         projects_sheet.cell(row=1, column=2, value="Проект")
         projects_sheet.cell(row=1, column=3, value="Приоритет")
-        
+
         for i, project in enumerate(project_names, 1):
             projects_sheet.cell(row=i+1, column=1, value=i)
             projects_sheet.cell(row=i+1, column=2, value=project)
             projects_sheet.cell(row=i+1, column=3, value=i)
-        
+
         projects_sheet.column_dimensions['A'].width = 5
         projects_sheet.column_dimensions['B'].width = 25
         projects_sheet.column_dimensions['C'].width = 10
-        
-        # Сохраняем файл
+
+        # ============================================
+        # СОХРАНЯЕМ ФАЙЛ С БЕЗОПАСНЫМ ИМЕНЕМ
+        # ============================================
         if output_folder is None:
             output_folder = os.path.dirname(input_file)
-        
+
+        # Создаем безопасное имя файла (без специальных символов)
         base_name = os.path.basename(input_file)
         name_without_ext = os.path.splitext(base_name)[0]
-        
-        result_filename = f"{name_without_ext}_проверка_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        # Очищаем имя файла от проблемных символов
+        import re
+        safe_name = re.sub(r'[^\w\-а-яА-Я]', '_', name_without_ext)
+        safe_name = re.sub(r'_+', '_', safe_name)  # Убираем множественные подчеркивания
+        safe_name = safe_name[:100]  # Ограничиваем длину
+
+        result_filename = f"{safe_name}_проверка_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         result_path = os.path.join(output_folder, result_filename)
-        
-        result_wb.save(result_path)
-        
+
+        # Убеждаемся, что папка существует
+        os.makedirs(output_folder, exist_ok=True)
+
+        try:
+            result_wb.save(result_path)
+            print(f"✅ Файл сохранен: {result_path}")
+        except Exception as e:
+            print(f"❌ Ошибка сохранения файла: {e}")
+            # Пробуем сохранить с еще более коротким именем
+            fallback_name = f"result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            result_path = os.path.join(output_folder, fallback_name)
+            result_wb.save(result_path)
+            print(f"✅ Файл сохранен с именем по умолчанию: {result_path}")
+
         print(f"\n{'='*60}")
         print(f"💾 РЕЗУЛЬТАТ СОХРАНЕН:")
         print(f"📁 {result_path}")
@@ -648,5 +670,5 @@ class ExcelProcessor:
         print(f"⚠️ Недостаточно: {self.materials_insufficient}")
         print(f"❌ Не найдено: {self.materials_not_found}")
         print(f"📋 Всего обработано: {len(materials_data)}")
-        
+
         return result_path

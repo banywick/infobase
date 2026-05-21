@@ -1,16 +1,25 @@
+# finder/admin.py
+
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.urls import path
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.utils.html import format_html
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
 import pandas as pd
 from .models import AccountingData, ProjectStatus, LinkAccess, Remains, Standard, StandardValue
 from django import forms
 from django.core.exceptions import ValidationError
-from .forms import ExcelImportFormEquivalent  # Импортируем вашу форму
+from .forms import ExcelImportFormEquivalent
+import datetime
+import time
+from django.db import transaction
+
 
 # Форма для импорта Excel
 class ExcelImportForm(forms.Form):
@@ -26,10 +35,8 @@ class ExcelImportForm(forms.Form):
             raise ValidationError('Файл должен быть в формате Excel (.xlsx или .xls)')
         
         try:
-            # Читаем файл
             df = pd.read_excel(excel_file, header=0, keep_default_na=False)
             
-            # Проверяем обязательные колонки
             required_columns = ['Группа', 'id', 'Стандарт']
             missing_columns = [col for col in required_columns if col not in df.columns]
             
@@ -40,7 +47,7 @@ class ExcelImportForm(forms.Form):
         except Exception as e:
             raise ValidationError(f'Ошибка чтения файла: {str(e)}')
 
-# Ваши существующие модели админки
+
 @admin.register(ProjectStatus)
 class ProjectStatusAdmin(admin.ModelAdmin):
     list_display = ('project_name', 'color')
@@ -53,6 +60,7 @@ class ProjectStatusAdmin(admin.ModelAdmin):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields['project_name'].choices = ProjectStatus.get_project_choices()
         return form
+
 
 @admin.register(LinkAccess)
 class LinkAccessAdmin(admin.ModelAdmin):
@@ -67,6 +75,7 @@ class LinkAccessAdmin(admin.ModelAdmin):
     group.short_description = 'Группа'
     group.admin_order_field = 'group__name'
 
+
 @admin.register(Remains)
 class RemainsAdmin(admin.ModelAdmin):
     list_display = ('article', 'title', 'quantity', 'project',)
@@ -74,7 +83,7 @@ class RemainsAdmin(admin.ModelAdmin):
     list_filter = ('project',)
     list_per_page = 100
 
-# Кастомная админка для Group
+
 class GroupAdmin(BaseGroupAdmin):
     list_display = ('name', 'get_users')
     search_fields = ('name',)
@@ -83,63 +92,96 @@ class GroupAdmin(BaseGroupAdmin):
         return ", ".join([user.username for user in obj.user_set.all()])
     get_users.short_description = 'Пользователи'
 
+
 admin.site.unregister(Group)
 admin.site.register(Group, GroupAdmin)
 
-# Standard и StandardValue админки
+
 class StandardValueInline(admin.TabularInline):
     model = StandardValue
     extra = 1
 
+
 def import_excel_optimized(df):
     """
-    Импорт для нового формата Excel без GROUP_INFO
+    Импорт для нового формата Excel (оптимизированный с bulk_create)
     """
     created_standards = 0
     created_values = 0
     errors = []
     
+    # Используем bulk_create для массовой вставки
+    standards_to_create = []
+    values_to_create = []
+    
+    # Получаем существующие записи для быстрой проверки
+    existing_standards = set(Standard.objects.values_list('name', flat=True))
+    existing_values = set(StandardValue.objects.values_list('value', flat=True))
+    
+    # Сначала собираем все стандарты для создания
     for index, row in df.iterrows():
         try:
-            group_name = str(row['Группа']).strip()
+            standard_id = str(row['id']).strip()
+            if not standard_id or standard_id == 'nan':
+                continue
+            
+            if standard_id not in existing_standards:
+                standards_to_create.append(Standard(name=standard_id))
+                existing_standards.add(standard_id)
+                created_standards += 1
+        except Exception as e:
+            errors.append(f"Строка {index + 2}: {str(e)}")
+    
+    # Массовое создание стандартов
+    if standards_to_create:
+        Standard.objects.bulk_create(standards_to_create, ignore_conflicts=True)
+    
+    # Теперь обрабатываем значения
+    for index, row in df.iterrows():
+        try:
             standard_id = str(row['id']).strip()
             main_standard = str(row['Стандарт']).strip()
             
             if not standard_id or standard_id == 'nan' or not main_standard or main_standard == 'nan':
                 continue
             
-            # Создаем стандарт с ID из колонки id
-            standard, created_std = Standard.objects.get_or_create(name=standard_id)
-            if created_std:
-                created_standards += 1
+            # Получаем объект стандарта
+            try:
+                standard_obj = Standard.objects.get(name=standard_id)
+            except Standard.DoesNotExist:
+                continue
             
-            # Собираем все артикулы (стандарт + аналоги)
+            # Собираем все артикулы
             all_articles = [main_standard]
             
-            # Добавляем аналоги из колонок Аналог 1, Аналог 2, etc.
             analog_columns = [col for col in df.columns if col.startswith('Аналог')]
             for analog_col in analog_columns:
                 analog_value = str(row[analog_col]).strip()
                 if analog_value and analog_value != 'nan' and analog_value != '':
                     all_articles.append(analog_value)
             
-            # Удаляем дубликаты
             all_articles = list(dict.fromkeys(all_articles))
             
-            # Сохраняем каждый артикул как отдельное значение
+            # Собираем значения для создания
             for article in all_articles:
-                if article and article != 'nan':
-                    article_value, created_art = StandardValue.objects.get_or_create(
-                        standard=standard,
-                        value=article
-                    )
-                    if created_art:
-                        created_values += 1
-                        
+                if article and article != 'nan' and article not in existing_values:
+                    values_to_create.append(StandardValue(standard=standard_obj, value=article))
+                    existing_values.add(article)
+                    created_values += 1
+                    
         except Exception as e:
             errors.append(f"Строка {index + 2}: {str(e)}")
     
+    # Массовое создание значений
+    if values_to_create:
+        # Создаем пачками по 1000 для оптимизации памяти
+        batch_size = 1000
+        for i in range(0, len(values_to_create), batch_size):
+            batch = values_to_create[i:i + batch_size]
+            StandardValue.objects.bulk_create(batch, ignore_conflicts=True)
+    
     return created_standards, created_values, errors
+
 
 @admin.register(Standard)
 class StandardAdmin(admin.ModelAdmin):
@@ -149,14 +191,10 @@ class StandardAdmin(admin.ModelAdmin):
     change_list_template = 'admin/finder/standard/change_list.html'
     
     def get_group_info(self, obj):
-        """Получаем информацию о группе из первого артикула или по логике"""
-        # Если у стандарта есть значения, берем группу из контекста
-        # Или можно определить по имени стандарта
         return "Болт" if obj.name in ['1', '2', '3'] else "Гайка" if obj.name in ['4', '5'] else "Шайба"
     get_group_info.short_description = "Группа"
     
     def get_main_standard(self, obj):
-        """Получаем основной стандарт - первое значение"""
         first_value = obj.values.first()
         return first_value.value if first_value else "Не указано"
     get_main_standard.short_description = "Основной стандарт"
@@ -179,23 +217,24 @@ class StandardAdmin(admin.ModelAdmin):
         return custom_urls + urls
     
     def import_excel(self, request):
-        """Кастомная view для импорта Excel"""
         if request.method == 'POST':
             form = ExcelImportForm(request.POST, request.FILES)
             if form.is_valid():
+                start_time = time.time()
                 try:
                     df = form.cleaned_data['excel_file']
                     created_standards, created_values, errors = import_excel_optimized(df)
                     
+                    elapsed_time = time.time() - start_time
+                    
                     if errors:
-                        for error in errors:
+                        for error in errors[:10]:
                             messages.warning(request, error)
                     
                     messages.success(
                         request,
-                        f'✅ Успешно импортировано! '
-                        f'Стандартов: {created_standards}, '
-                        f'артикулов: {created_values}'
+                        f'✅ Импорт завершен за {elapsed_time:.2f} сек!\n'
+                        f'📊 Создано стандартов: {created_standards}, артикулов: {created_values}'
                     )
                     
                     return HttpResponseRedirect('../')
@@ -213,7 +252,6 @@ class StandardAdmin(admin.ModelAdmin):
         return render(request, 'admin/excel_import.html', context)
     
     def download_template(self, request):
-        """Генерация и скачивание шаблона Excel"""
         import pandas as pd
         from django.http import HttpResponse
         
@@ -246,22 +284,16 @@ class StandardAdmin(admin.ModelAdmin):
         return response
     
     def view_analogs(self, request):
-        """Просмотр загруженных аналогов в виде таблицы"""
         standards = Standard.objects.all().order_by('name')
         
         parsed_groups = []
         
         for standard in standards:
             values = standard.values.all()
-            
-            # Определяем группу по логике или контексту
             group_name = self.get_group_info(standard)
             main_standard = self.get_main_standard(standard)
             
-            # Собираем все артикулы
             analogs = [value.value for value in values]
-            
-            # Убираем основной стандарт из списка аналогов для чистоты отображения
             analogs_display = [a for a in analogs if a != main_standard]
             
             parsed_groups.append({
@@ -282,10 +314,15 @@ class StandardAdmin(admin.ModelAdmin):
         return render(request, 'admin/view_analogs.html', context)
 
 
+# finder/admin.py - только измененная часть для AccountingData
+
 @admin.register(AccountingData)
 class AccountingDataAdmin(admin.ModelAdmin):
     list_display = ['accounting_code', 'nomenclature_kd', 'accounting_name']
     search_fields = ['accounting_code', 'nomenclature_kd', 'accounting_name']
+    list_filter = ['accounting_code']
+    actions = ['export_selected']
+    list_per_page = 100
     
     change_list_template = "admin/accounting_data_changelist.html"
     
@@ -293,20 +330,125 @@ class AccountingDataAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path('import-excel/', self.import_excel, name='import_excel'),
+            path('export-all/', self.export_all, name='export_all'),
+            path('export-csv/', self.export_csv_all, name='export_csv_all'),  # Быстрый экспорт в CSV
         ]
         return custom_urls + urls
     
+    def export_all(self, request):
+        """Экспорт всех данных в Excel (оптимизированный через pandas)"""
+        return self._export_to_excel_optimized(request, "accounting_data_all")
+    
+    def export_csv_all(self, request):
+        """Быстрый экспорт всех данных в CSV"""
+        return self._export_to_csv(request, "accounting_data_all")
+    
+    def export_selected(self, request, queryset):
+        """Action для экспорта выбранных записей"""
+        return self._export_to_excel_optimized(request, "accounting_data_selected", queryset)
+    export_selected.short_description = "Экспортировать выбранные в Excel"
+    
+    def _export_to_excel_optimized(self, request, filename_prefix, queryset=None):
+        """
+        Оптимизированный экспорт данных в Excel через pandas
+        Работает значительно быстрее для больших объемов данных
+        """
+        if queryset is None:
+            queryset = AccountingData.objects.all().order_by('accounting_code')
+        
+        if not queryset.exists():
+            messages.error(request, "Нет данных для экспорта")
+            return redirect('..')
+        
+        total = queryset.count()
+        messages.info(request, f"Начинается экспорт {total} записей...")
+        
+        start_time = time.time()
+        
+        # Используем values_list для быстрого получения данных
+        data = list(queryset.values_list('accounting_code', 'nomenclature_kd', 'accounting_name'))
+        
+        # Создаем DataFrame
+        df = pd.DataFrame(data, columns=['Код бухгалтерский', 'Номенклатура КД', 'Наименование бухгалтерское'])
+        
+        # Создаем Excel файл через pandas (быстрее, чем openpyxl вручную)
+        output = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{filename_prefix}_{total}_{timestamp}.xlsx"
+        output['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Используем pandas для записи Excel
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Accounting Data', index=False)
+            
+            # Настраиваем ширину колонок
+            worksheet = writer.sheets['Accounting Data']
+            worksheet.column_dimensions['A'].width = 20
+            worksheet.column_dimensions['B'].width = 35
+            worksheet.column_dimensions['C'].width = 50
+        
+        elapsed_time = time.time() - start_time
+        messages.success(request, f"✅ Экспорт завершен за {elapsed_time:.2f} сек! Выгружено {total} записей.")
+        
+        return output
+    
+    def _export_to_csv(self, request, filename_prefix, queryset=None):
+        """
+        Экспорт в CSV - самый быстрый вариант для больших объемов
+        """
+        if queryset is None:
+            queryset = AccountingData.objects.all().order_by('accounting_code')
+        
+        if not queryset.exists():
+            messages.error(request, "Нет данных для экспорта")
+            return redirect('..')
+        
+        total = queryset.count()
+        messages.info(request, f"Начинается экспорт {total} записей в CSV...")
+        
+        start_time = time.time()
+        
+        # Используем values_list для быстрого получения данных
+        data = list(queryset.values_list('accounting_code', 'nomenclature_kd', 'accounting_name'))
+        
+        # Создаем DataFrame
+        df = pd.DataFrame(data, columns=['Код бухгалтерский', 'Номенклатура КД', 'Наименование бухгалтерское'])
+        
+        # Создаем CSV ответ
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{filename_prefix}_{total}_{timestamp}.csv"
+        
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Добавляем BOM для поддержки UTF-8 в Excel
+        response.write('\ufeff')
+        
+        # Записываем CSV
+        df.to_csv(response, index=False, encoding='utf-8')
+        
+        elapsed_time = time.time() - start_time
+        messages.success(request, f"✅ Экспорт CSV завершен за {elapsed_time:.2f} сек! Выгружено {total} записей.")
+        
+        return response
+    
     def import_excel(self, request):
+        """Оптимизированный импорт данных из Excel для больших объемов"""
         if request.method == 'POST':
             form = ExcelImportFormEquivalent(request.POST, request.FILES)
             if form.is_valid():
                 excel_file = request.FILES['excel_file']
                 
                 try:
-                    # Чтение Excel файла
-                    df = pd.read_excel(excel_file)
+                    start_time = time.time()
                     
-                    # Очищаем названия столбцов от скрытых пробелов (частая проблема Excel)
+                    # Чтение Excel файла с оптимизациями
+                    if excel_file.name.endswith('.xlsx'):
+                        df = pd.read_excel(excel_file, engine='openpyxl')
+                    else:
+                        df = pd.read_excel(excel_file, engine='xlrd')
+                    
+                    # Очищаем названия столбцов
                     df.columns = df.columns.str.strip()
                     
                     required_columns = ['Код бухгалтерский', 'Номенклатура КД', 'Наименование бухгалтерское']
@@ -317,60 +459,82 @@ class AccountingDataAdmin(admin.ModelAdmin):
                         messages.error(request, f'В файле отсутствуют столбцы: {", ".join(missing_cols)}')
                         return redirect('..')
                     
+                    # Берем только нужные колонки
                     df = df[required_columns]
                     
-                    # Оставляем ТОЛЬКО строки, где ВСЕ три столбца заполнены (отбрасываем NaN)
+                    # Оставляем только строки, где ВСЕ три столбца заполнены
+                    original_len = len(df)
                     df = df.dropna(subset=required_columns, how='any')
+                    after_dropna = len(df)
                     
+                    # Удаляем дубликаты
+                    df = df.drop_duplicates()
+                    duplicates_removed = after_dropna - len(df)
+                    
+                    messages.info(request, f"📊 Обработка {len(df)} уникальных строк (всего в файле: {original_len})...")
+                    
+                    # Получаем существующие записи для быстрой проверки
+                    existing_records = set(
+                        AccountingData.objects.values_list(
+                            'accounting_code', 'nomenclature_kd', 'accounting_name'
+                        )
+                    )
+                    
+                    # Подготавливаем новые записи для массового создания
+                    new_records = []
                     created_count = 0
-                    skipped_count = 0
-                    errors = []
+                    skipped_existing = 0
                     
-                    # Сбрасываем индекс, чтобы номера строк в ошибках были корректными после dropna
-                    for idx, row in df.reset_index(drop=True).iterrows():
-                        try:
-                            row_number = idx + 2  # +1 за заголовок, +1 за 0-based индекс
-                            
-                            accounting_code = str(row['Код бухгалтерский']).strip()
-                            nomenclature_kd = str(row['Номенклатура КД']).strip()
-                            accounting_name = str(row['Наименование бухгалтерское']).strip()
-                            
-                            # Дополнительная страховка: пропускаем, если после strip() остались пустые строки
-                            if not (accounting_code and nomenclature_kd and accounting_name):
-                                continue
-                            
-                            # Проверяем существование записи или создаём новую
-                            obj, created = AccountingData.objects.get_or_create(
+                    # Обрабатываем данные пачками
+                    batch_size = 5000
+                    for idx, row in df.iterrows():
+                        accounting_code = str(row['Код бухгалтерский']).strip()
+                        nomenclature_kd = str(row['Номенклатура КД']).strip()
+                        accounting_name = str(row['Наименование бухгалтерское']).strip()
+                        
+                        if not (accounting_code and nomenclature_kd and accounting_name):
+                            continue
+                        
+                        # Проверяем, существует ли уже такая запись
+                        if (accounting_code, nomenclature_kd, accounting_name) not in existing_records:
+                            new_records.append(AccountingData(
                                 accounting_code=accounting_code,
                                 nomenclature_kd=nomenclature_kd,
                                 accounting_name=accounting_name
-                            )
+                            ))
+                            created_count += 1
                             
-                            if created:
-                                created_count += 1
-                            else:
-                                skipped_count += 1
-                                
-                        except Exception as e:
-                            errors.append(f"Строка {row_number}: {str(e)}")
-                            continue
+                            # Добавляем в существующие, чтобы избежать повторной проверки в этой сессии
+                            existing_records.add((accounting_code, nomenclature_kd, accounting_name))
+                        else:
+                            skipped_existing += 1
+                        
+                        # Создаем записи пачками для оптимизации памяти
+                        if len(new_records) >= batch_size:
+                            AccountingData.objects.bulk_create(new_records, ignore_conflicts=True)
+                            new_records = []
+                    
+                    # Создаем оставшиеся записи
+                    if new_records:
+                        AccountingData.objects.bulk_create(new_records, ignore_conflicts=True)
+                    
+                    elapsed_time = time.time() - start_time
                     
                     # Формируем сообщения
-                    if created_count > 0:
-                        messages.success(request, f'Успешно добавлено новых записей: {created_count}')
-                    if skipped_count > 0:
-                        messages.info(request, f'Пропущено уже существующих записей: {skipped_count}')
-                    if errors:
-                        messages.error(request, f'Ошибки при обработке {len(errors)} строк')
-                        for error in errors[:10]:
-                            messages.warning(request, error)
-                    elif created_count == 0 and skipped_count == 0:
-                        messages.info(request, 'Файл не содержит подходящих строк для импорта.')
-                        
+                    messages.success(
+                        request,
+                        f'✅ Импорт завершен за {elapsed_time:.2f} сек!\n'
+                        f'📊 Добавлено новых записей: {created_count}\n'
+                        f'⏭️ Пропущено (уже существовали): {skipped_existing}\n'
+                        f'🔄 Удалено дубликатов в файле: {duplicates_removed}'
+                    )
+                    
                     return redirect('..')
                     
                 except Exception as e:
-                    messages.error(request, f'Ошибка при обработке файла: {str(e)}')
+                    messages.error(request, f'❌ Ошибка при обработке файла: {str(e)}')
+            else:
+                messages.error(request, f'Ошибка валидации формы: {form.errors}')
         else:
             form = ExcelImportFormEquivalent()
         

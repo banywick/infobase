@@ -17,12 +17,16 @@ from statement.utils.comparison_search_service import SearchService
 from statement.utils.excel_processor import ExcelProcessor
 from statement.utils.smb import SmbFolderVk
 from smbclient import open_file, mkdir
+from common.utils.access_mixin import UserGroupRequiredMixin
+
+# Импорт Celery задач
+from statement.tasks import *
 
 
-
-class StatementHome(TemplateView):
+class StatementHome(UserGroupRequiredMixin, TemplateView):
     """Главная страница ВК"""
     template_name = 'statement/statement.html'
+    group_required = ['sklad', 'comers', 'everyone']
 
 
 # statement/views.py (добавить)
@@ -460,6 +464,107 @@ def job_vk(request):
         }, status=500)
 
 
+
+
+
+
+@api_view(['POST'])
+def job_vk_async(request):
+    """
+    Асинхронная обработка файла через Celery
+    """
+    print("=" * 50)
+    print("🚀 Начало job_vk_async")
+    
+    try:
+        data = request.data
+        vk_file = data.get('vk_file')
+        file_id = data.get('file_id')
+        projects = data.get('projects', [])
+        start_row = data.get('start_row')
+        end_row = data.get('end_row')
+        
+        print(f"📦 Получены данные:")
+        print(f"   Файл: {vk_file}")
+        print(f"   File ID: {file_id}")
+        print(f"   Проекты: {json.dumps(projects, indent=2, ensure_ascii=False)}")
+        print(f"   Начальная строка: {start_row}")
+        print(f"   Конечная строка: {end_row if end_row else 'до конца'}")
+        
+        if not vk_file and not file_id:
+            return Response({
+                'success': False,
+                'error': 'Не указан файл ВК или ID файла'
+            }, status=400)
+        
+        if start_row is not None and (start_row < 1):
+            return Response({
+                'success': False,
+                'error': 'Укажите корректную начальную строку (>= 1)'
+            }, status=400)
+        
+        # Запускаем асинхронную задачу
+        from .tasks import process_vk_file_async
+        task = process_vk_file_async.delay(
+            file_id=file_id,
+            vk_file=vk_file,
+            projects=projects,
+            start_row=start_row,
+            end_row=end_row
+        )
+        
+        return Response({
+            'success': True,
+            'task_id': task.id,
+            'message': 'Обработка запущена в фоновом режиме'
+        }, status=202)
+        
+    except Exception as e:
+        print(f"❌ Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+
+
+# ============================================
+# Заполение ведомостей через celery
+# ============================================
+@api_view(['GET'])
+def get_task_status(request, task_id):
+    """
+    Получить статус асинхронной задачи
+    """
+    from celery.result import AsyncResult
+    
+    task = AsyncResult(task_id)
+    
+    response = {
+        'task_id': task_id,
+        'status': task.status,
+        'ready': task.ready()
+    }
+    
+    if task.ready():
+        if task.successful():
+            response['result'] = task.result
+        else:
+            response['error'] = str(task.info) if task.info else 'Unknown error'
+    else:
+        if hasattr(task, 'info') and task.info:
+            response['progress'] = task.info
+    
+    return Response(response)
+
+
+
+
+
+
 # ============================================
 # НОВЫЕ ЭНДПОЙНТЫ ДЛЯ РАБОТЫ С ИНДЕКСОМ
 # ============================================
@@ -533,22 +638,135 @@ def get_index_stats(request):
     })
 
 
+# statement/views.py - исправленный start_indexing
+
+# statement/views.py - исправленный start_indexing
+
 @api_view(['POST'])
 def start_indexing(request):
     """
     Запустить индексацию через Celery
     """
-    config_id = request.data.get('config_id')
-    force = request.data.get('force', False)
-    
-    # Запускаем задачу
-    task = index_smb_files.delay(config_id=config_id, force=force)
-    
-    return Response({
-        'success': True,
-        'task_id': task.id,
-        'message': 'Индексация запущена в фоновом режиме'
-    }, status=202)
+    try:
+        config_id = request.data.get('config_id')
+        config_type = request.data.get('config_type')  # 'search' или 'accounting_source'
+        force = request.data.get('force', False)
+        
+        logger.info(f"📝 Запрос на индексацию: config_type={config_type}, config_id={config_id}, force={force}")
+        
+        # Выбираем задачу в зависимости от типа конфигурации
+        if config_type == 'search':
+            # Индексация только поисковых конфигураций (новые ведомости)
+            task = index_search_files.delay(force=force)
+            task_name = "индексация поисковых конфигураций"
+        elif config_type == 'accounting_source':
+            # Индексация только accounting_source (готовые ведомости)
+            task = index_accounting_source.delay(force=force)
+            task_name = "индексация готовых ведомостей"
+        else:
+            # Индексация всех конфигураций или конкретной по ID
+            task = index_smb_files.delay(config_id=config_id, force=force)
+            task_name = "индексация всех конфигураций"
+        
+        logger.info(f"✅ Запущена задача: {task_name}, task_id={task.id}")
+        
+        return Response({
+            'success': True,
+            'task_id': task.id,
+            'message': f'{task_name} запущена в фоновом режиме',
+            'task_name': task_name
+        }, status=202)
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка в start_indexing: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+# statement/views.py - добавьте после start_indexing
+
+@api_view(['GET'])
+def get_indexing_task_status(request, task_id):
+    """
+    Получить статус задачи индексации
+    """
+    try:
+        from celery.result import AsyncResult
+        
+        task = AsyncResult(task_id)
+        
+        response = {
+            'task_id': task_id,
+            'status': task.status,
+            'ready': task.ready()
+        }
+        
+        if task.ready():
+            if task.successful():
+                response['result'] = task.result
+            else:
+                response['error'] = str(task.info) if task.info else 'Unknown error'
+        else:
+            # Если задача еще выполняется, можно получить прогресс
+            if hasattr(task, 'info') and task.info:
+                response['progress'] = task.info
+        
+        return Response(response)
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка в get_indexing_task_status: {e}")
+        return Response({
+            'error': str(e)
+        }, status=500)
+
+
+@api_view(['POST'])
+def cancel_task(request, task_id):
+    """
+    Отмена асинхронной задачи
+    """
+    try:
+        from celery.result import AsyncResult
+        
+        task = AsyncResult(task_id)
+        task.revoke(terminate=True)
+        
+        return Response({
+            'success': True,
+            'message': 'Задача отменена'
+        })
+    except Exception as e:
+        logger.error(f"❌ Ошибка в cancel_task: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@api_view(['POST'])
+def cancel_task(request, task_id):
+    """
+    Отмена асинхронной задачи
+    """
+    try:
+        from celery.result import AsyncResult
+        
+        task = AsyncResult(task_id)
+        task.revoke(terminate=True)
+        
+        return Response({
+            'success': True,
+            'message': 'Задача отменена'
+        })
+    except Exception as e:
+        logger.error(f"❌ Ошибка в cancel_task: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 @api_view(['GET'])
