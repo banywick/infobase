@@ -1,7 +1,7 @@
 from .base import *
 
 DEBUG = False
-ALLOWED_HOSTS = ['infobase-01.okbtsp.corp', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['infobase.okbtsp.com', 'localhost', '127.0.0.1']
 
 # CSRF_COOKIE_SECURE = True    # Передавать CSRF-куки только по HTTPS
 # SESSION_COOKIE_SECURE = True # Передавать сессионные куки только по HTTPS
