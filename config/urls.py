@@ -41,7 +41,7 @@ urlpatterns = [
     path('statement/', include('statement.urls')),
     path('access_denited/', include('common.urls')),
     path('auth/', include('auth.urls')),
-    # path('finder/', include('finder.urls')),
+    path('finder/', include('finder.urls')),
 #     path('sahr/', include('sahr.urls')),
 #     path('notes/', include('notes.urls')),
 #     path('reviews/', include('reviews.urls')),
