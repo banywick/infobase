@@ -36,17 +36,16 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='finder/', permanent=True)),
+    path('', RedirectView.as_view(url='statement/', permanent=True)),
     path('admin/', admin.site.urls),
-    path('auth/', include('auth.urls')),
-    path('finder/', include('finder.urls')),
-    path('sahr/', include('sahr.urls')),
-    path('notes/', include('notes.urls')),
-    path('reviews/', include('reviews.urls')),
-    path('comers/', include('comers.urls')),
     path('statement/', include('statement.urls')),
     path('access_denited/', include('common.urls')),
-    # path('inventory/', include('inventory.urls')),
+    path('auth/', include('auth.urls')),
+    # path('finder/', include('finder.urls')),
+#     path('sahr/', include('sahr.urls')),
+#     path('notes/', include('notes.urls')),
+#     path('reviews/', include('reviews.urls')),
+#     path('comers/', include('comers.urls')),
 ]
 
 # Подключаем Swagger и ReDoc только в режиме разработки

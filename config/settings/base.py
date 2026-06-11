@@ -15,13 +15,13 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'rest_framework',
     'drf_yasg',
-    'finder',
     'common',
-    'notes',
-    'reviews',
-    'sahr',
-    'comers',
     'statement',
+    'finder',
+    # 'notes',
+    # 'reviews',
+    # 'sahr',
+    # 'comers',
 ]
 
 MIDDLEWARE = [
@@ -61,7 +61,7 @@ AUTH_PASSWORD_VALIDATORS = [
     # ... ваши валидаторы паролей ...
 ]
 
-HOME_PAGE_URL = 'home_finder'  # имя URL из urlpatterns
+# HOME_PAGE_URL = 'statement_home'  # имя URL из urlpatterns
 
 
 LANGUAGE_CODE = 'ru'
