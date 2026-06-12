@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Учет материальных ценностей | Инвентаризация</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/cars/style.css' %}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Хедер -->
+        <div class="header">
+            <div class="logo-section">
+                <h1><i class="fas fa-boxes"></i> Учет материальных ценностей</h1>
+                <p>Управление складскими запасами и инвентаризация</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Всего позиций</div>
+                    <div class="stat-value" id="total-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Общее кол-во</div>
+                    <div class="stat-value" id="total-quantity">0</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="addNewRow()">
+                <i class="fas fa-plus"></i> Добавить строку
+            </button>
+        </div>
+
+        <!-- Таблица -->
+        <div class="table-wrapper">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th style="width: 12%"><i class="fas fa-hashtag"></i> №ТН, ТТН</th>
+                        <th style="width: 10%"><i class="fas fa-calendar"></i> Дата поступления</th>
+                        <th style="width: 12%"><i class="fas fa-barcode"></i> Код (Артикул)</th>
+                        <th style="width: 20%"><i class="fas fa-tag"></i> Наименование</th>
+                        <th style="width: 8%"><i class="fas fa-cubes"></i> Кол-во</th>
+                        <th style="width: 8%"><i class="fas fa-ruler"></i> Ед. изм.</th>
+                        <th style="width: 20%"><i class="fas fa-comment"></i> Комментарии</th>
+                        <th style="width: 5%"></th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    {% for item in items %}
+                    <tr data-id="{{ item.id }}">
+                        <td><input type="text" class="number-input" value="{{ item.number }}" placeholder="Введите №"></td>
+                        <td><input type="date" class="date-input" value="{{ item.arrival_date|date:'Y-m-d' }}"></td>
+                        <td>
+                            <input type="text" 
+                                   class="article-input" 
+                                   value="{{ item.article }}" 
+                                   placeholder="Введите артикул"
+                                   oninput="autoFillName(this, {{ item.id }})">
+                        </td>
+                        <td><input type="text" class="name-input" value="{{ item.name }}" readonly style="background:#f9fafb"></td>
+                        <td><input type="number" class="quantity-input" value="{{ item.quantity }}" placeholder="0"></td>
+                        <td><input type="text" class="unit-input" value="{{ item.unit }}" placeholder="шт"></td>
+                        <td><input type="text" class="comment-input" value="{{ item.comment }}" placeholder="Комментарий"></td>
+                        <td class="delete-cell">
+                            <button class="delete-btn" onclick="deleteRow({{ item.id }})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr id="no-data-row">
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>Нет данных</p>
+                                <p style="font-size: 12px; margin-top: 8px;">Нажмите кнопку "Добавить строку" чтобы начать</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="{% static 'js/table.js' %}"></script>
+</body>
+</html>

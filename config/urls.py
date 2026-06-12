@@ -44,6 +44,7 @@ urlpatterns = [
     path('notes/', include('notes.urls')),
     path('reviews/', include('reviews.urls')),
     path('comers/', include('comers.urls')),
+    path('special_cars/', include('cars.urls')),
     path('access_denited/', include('common.urls')),
     # path('inventory/', include('inventory.urls')),
 ]
