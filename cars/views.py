@@ -5,51 +5,30 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from .models import InventoryItem
-import json
 from finder.models import Remains
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 
 
 def table_view(request):
     """Главная страница с таблицей"""
-    items = InventoryItem.objects.all().order_by('-id')
-    return render(request, 'cars/index.html', {'items': items})
-
-
-@csrf_exempt
-def get_details_by_article(request, article):
-    """Ваш существующий API для получения данных по артикулу"""
-    try:
-        # Поиск в таблице Remains
-        remains = Remains.objects.filter(article=article).first()
-        
-        if remains:
-            # Формируем ответ в том формате, который вы показали
-            data = {
-                "id": remains.id,
-                "article": remains.article,
-                "title": remains.name,  # или remains.title, зависит от вашей модели
-                "base_unit": remains.base_unit if hasattr(remains, 'base_unit') else "шт",
-                "one_project": remains.one_project if hasattr(remains, 'one_project') else "",
-                "status_one_project": "gray",
-                "total_quantity": remains.total_quantity if hasattr(remains, 'total_quantity') else 0,
-                "total_quantity_by_project": remains.total_quantity if hasattr(remains, 'total_quantity') else 0,
-                "party": [],
-                "details_any_projects": [],
-                "total_sum_any_projects": 0
-            }
-            return JsonResponse(data)
-        else:
-            return JsonResponse(
-                {"error": f"Артикул {article} не найден"},
-                status=404
-            )
-            
-    except Exception as e:
-        return JsonResponse(
-            {"error": str(e)},
-            status=500
-        )
+    items = InventoryItem.objects.filter(parent__isnull=True).order_by('-id')
+    
+    # Получаем уникальные места хранения
+    locations = InventoryItem.objects.exclude(location__isnull=True).exclude(location='').values_list('location', flat=True).distinct()
+    default_locations = ['Площадка Хранилища №30', 'Склад №5', 'Склад №12', 'Открытая площадка 1']
+    all_locations = list(set(list(locations) + default_locations))
+    all_locations.sort()
+    
+    context = {
+        'items': items,
+        'locations': all_locations,
+    }
+    return render(request, 'cars/index.html', context)
 
 
 @csrf_exempt
@@ -64,9 +43,10 @@ def save_row(request):
             arrival_date=data.get('arrival_date') or None,
             article=data.get('article', ''),
             name=data.get('name', ''),
+            location=data.get('location', ''),
             quantity=data.get('quantity'),
-            unit=data.get('unit', ''),
-            comment=data.get('comment', '')
+            comment=data.get('comment', ''),
+            parent_id=data.get('parent') or None
         )
         
         return JsonResponse({
@@ -76,6 +56,7 @@ def save_row(request):
         })
         
     except Exception as e:
+        logger.error(f"Error saving row: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -94,82 +75,90 @@ def update_row(request, item_id):
         item.arrival_date = data.get('arrival_date') or item.arrival_date
         item.article = data.get('article', item.article)
         item.name = data.get('name', item.name)
+        item.location = data.get('location', item.location)
         item.quantity = data.get('quantity', item.quantity)
-        item.unit = data.get('unit', item.unit)
         item.comment = data.get('comment', item.comment)
         item.save()
         
         return JsonResponse({
             'success': True,
             'id': item.id,
-            'message': 'Строка успешно обновлена'
+            'message': 'Строка обновлена'
         })
         
     except Exception as e:
+        logger.error(f"Error updating row: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
-        }, status=400)
+        }, status=500)
 
 
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def delete_row(request, item_id):
-    """Удаление строки"""
+    """Удаление строки и всех её детей"""
     try:
         item = get_object_or_404(InventoryItem, id=item_id)
+        # Удаляем рекурсивно всех детей
         item.delete()
         
         return JsonResponse({
             'success': True,
-            'message': 'Строка успешно удалена'
+            'message': 'Строка удалена'
         })
         
     except Exception as e:
+        logger.error(f"Error deleting row: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
-        }, status=400)
+        }, status=500)
 
 
-def get_rows(request):
-    """Получение всех записей (для AJAX)"""
-    items = InventoryItem.objects.all().order_by('-id')
-    data = []
-    
-    for item in items:
-        data.append({
-            'id': item.id,
-            'number': item.number,
-            'arrival_date': item.arrival_date.strftime('%Y-%m-%d') if item.arrival_date else None,
-            'article': item.article,
-            'name': item.name,
-            'quantity': item.quantity,
-            'unit': item.unit,
-            'comment': item.comment,
-        })
-    
-    return JsonResponse({'success': True, 'data': data})
-
-
-def get_row(request, item_id):
-    """Получение одной записи"""
+def get_locations(request):
+    """Получение списка уникальных мест хранения"""
     try:
-        item = get_object_or_404(InventoryItem, id=item_id)
-        data = {
-            'id': item.id,
-            'number': item.number,
-            'arrival_date': item.arrival_date.strftime('%Y-%m-%d') if item.arrival_date else None,
-            'article': item.article,
-            'name': item.name,
-            'quantity': item.quantity,
-            'unit': item.unit,
-            'comment': item.comment,
-        }
-        return JsonResponse({'success': True, 'data': data})
+        locations = InventoryItem.objects.exclude(location__isnull=True).exclude(location='').values_list('location', flat=True).distinct()
+        default_locations = ['Площадка Хранилища №30', 'Склад №5', 'Склад №12', 'Открытая площадка 1']
+        all_locations = list(set(list(locations) + default_locations))
+        all_locations.sort()
         
+        return JsonResponse({'success': True, 'locations': all_locations})
     except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def add_child(request):
+    """Добавление дочерней позиции"""
+    try:
+        data = json.loads(request.body)
+        parent_id = data.get('parent_id')
+        article = data.get('article')
+        name = data.get('name', article)
+        quantity = data.get('quantity', 1)
+        
+        parent = InventoryItem.objects.get(id=parent_id)
+        
+        child = InventoryItem.objects.create(
+            number=parent.number,
+            arrival_date=parent.arrival_date,
+            location=parent.location,
+            article=article,
+            name=name,
+            quantity=quantity,
+            comment=data.get('comment', ''),
+            parent=parent
+        )
+        
         return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=404)
+            'success': True,
+            'id': child.id,
+            'message': 'Дочерняя позиция добавлена'
+        })
+    except InventoryItem.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Родительская позиция не найдена'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

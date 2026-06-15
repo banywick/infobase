@@ -148,7 +148,7 @@ body {
 }
 
 .inventory-table td {
-    padding: 12px;
+    padding: 5px;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -376,3 +376,452 @@ body {
         justify-content: center;
     }
 }
+
+/* Добавьте в конец style.css */
+
+/* Поиск */
+.search-section {
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box i {
+    position: absolute;
+    left: 12px;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 35px 10px 35px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-clear {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.search-clear:hover {
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+/* Модальное окно */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    animation: scaleIn 0.2s ease;
+}
+
+.modal-icon {
+    width: 60px;
+    height: 60px;
+    background: #fef2f2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.modal-icon i {
+    font-size: 28px;
+    color: #ef4444;
+}
+
+.modal h3 {
+    margin-bottom: 12px;
+    font-size: 20px;
+    color: #1f2937;
+}
+
+.modal p {
+    color: #6b7280;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+/* Выпадающий список локаций */
+.location-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+    cursor: pointer;
+}
+
+.location-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Кнопки действий */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.add-child-btn {
+    background: none;
+    border: none;
+    color: #10b981;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.add-child-btn:hover {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.expand-cell {
+    text-align: center;
+    width: 30px;
+}
+
+.expand-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.expand-btn:hover {
+    background: #e5e7eb;
+}
+
+.expand-btn i {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Отступы для дочерних строк */
+.child-row td:first-child input {
+    margin-left: 20px;
+}
+
+/* Стили для поля артикула в модальном окне */
+#child-article.found {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4 !important;
+}
+
+#child-article.not-found {
+    border-color: #f59e0b !important;
+    background-color: #fffbeb !important;
+}
+
+/* Анимация для кнопки */
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* ========== ИЕРАРХИЧЕСКОЕ ВЫДЕЛЕНИЕ ========== */
+
+/* Общий стиль для дочерних строк */
+.child-row {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+/* Выделение на разных уровнях */
+.level-1 {
+    background-color: #f8fafc;
+    border-left: 3px solid #3b82f6;
+}
+
+.level-2 {
+    background-color: #f1f5f9;
+    border-left: 3px solid #8b5cf6;
+}
+
+.level-3 {
+    background-color: #eef2ff;
+    border-left: 3px solid #ec489a;
+}
+
+.level-4 {
+    background-color: #fdf4ff;
+    border-left: 3px solid #f59e0b;
+}
+
+.level-5 {
+    background-color: #fef2f2;
+    border-left: 3px solid #ef4444;
+}
+
+/* Подсветка при наведении на дочерние строки */
+.child-row:hover {
+    background-color: #e0f2fe !important;
+    transition: background-color 0.2s;
+}
+
+/* Стили для иерархических линий */
+.hierarchy-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    font-family: monospace;
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.hierarchy-indent {
+    display: inline-block;
+    width: 20px;
+    position: relative;
+}
+
+.hierarchy-indent::before {
+    content: '│';
+    position: absolute;
+    left: 8px;
+    color: #cbd5e1;
+}
+
+.hierarchy-connector {
+    color: #94a3b8;
+    font-weight: normal;
+    margin-right: 4px;
+}
+
+/* Стиль для родительской строки с детьми */
+tr[data-id]:has(.child-row) {
+    background-color: #ffffff;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+tr[data-id]:has(.child-row):hover {
+    background-color: #f8fafc;
+}
+
+/* Анимация для раскрытия/сворачивания */
+.child-row {
+    transition: all 0.3s ease;
+}
+
+.child-row[style*="display: none"] {
+    opacity: 0;
+}
+
+/* Визуальный индикатор уровня вложенности в поле артикула */
+.article-input[data-level="1"] {
+    background: linear-gradient(90deg, #f8fafc 0%, #ffffff 10%);
+}
+
+.article-input[data-level="2"] {
+    background: linear-gradient(90deg, #f1f5f9 0%, #ffffff 10%);
+}
+
+/* Рамка для связанных объектов при наведении */
+tr:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Группировка связанных объектов */
+.parent-group {
+    border-radius: 8px;
+    margin-bottom: 4px;
+}
+
+.parent-group .child-row:last-child {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+
+/* Родитель с детьми - зеленый фон и рамка */
+tr.has-children {
+    background: antiquewhite;
+    border-left: 4px solid #fe0101;
+    position: relative;
+}
+
+tr.has-children:hover {
+    background: linear-gradient(90deg, #dcfce7 0%, #ffffff 100%);
+}
+
+/* Родитель без детей - обычный, без подсветки */
+tr[data-level="0"]:not(.has-children) {
+    background: transparent;
+    border-left: none;
+}
+
+/* Синие дети - комплектующие */
+.child-row {
+    background: #538442a3;
+    border-left: 4px solid #3b82f6;
+    border-right: 4px solid #3b82f6;
+    position: relative;
+}
+
+/* Первый ребенок - верхняя граница */
+.child-row:first-child {
+    border-top: 4px solid #3b82f6;
+}
+
+/* Последний ребенок - нижняя граница */
+.child-row:last-child {
+    border-bottom: 4px solid #3b82f6;
+}
+
+.child-row:hover {
+    background: linear-gradient(90deg, #dbeafe 0%, #ffffff 100%);
+}
+
+/* Стрелка для детей */
+.child-row td:first-child {
+    padding-left: 25px !important;
+    position: relative;
+}
+
+.child-row td:first-child::before {
+    content: '↳';
+    position: absolute;
+    left: 8px;
+    color: #3b82f6;
+    font-weight: bold;
+}
+
+/* Иконка разворачивания/сворачивания */
+.expand-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    color: #22c55e;
+}
+
+.expand-btn:hover {
+    background: #dcfce7;
+}
+
+.expand-btn i {
+    font-size: 12px;
+}
+
+/* Кнопки действий */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.add-child-btn {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.add-child-btn:hover {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+
+

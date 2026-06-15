@@ -1,0 +1,46 @@
+<tr data-id="{{ item.id }}" data-parent="{{ item.parent.id|default:'' }}" data-level="{{ level }}" 
+    class="{% if level > 0 %}child-row parent-{{ item.parent.id }}{% endif %} 
+           {% if item.children.count > 0 %}has-children{% endif %}">
+    <td class="expand-cell" style="text-align: center;">
+        {% if item.children.count > 0 %}
+            <button class="expand-btn" onclick="toggleChildren({{ item.id }})">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        {% endif %}
+    </td>
+    <td>
+        <input type="text" class="number-input" value="{{ item.number }}" placeholder="Введите №" style="padding-left: {% widthratio level 1 20 %}px;">
+    </td>
+    <td><input type="date" class="date-input" value="{{ item.arrival_date|date:'Y-m-d' }}"></td>
+    <td>
+        <input type="text" 
+               class="article-input" 
+               value="{{ item.article }}" 
+               placeholder="Введите артикул"
+               oninput="autoFillName(this, {{ item.id }})">
+    </td>
+    <td><input type="text" class="name-input" value="{{ item.name }}" readonly style="background:#f9fafb"></td>
+    <td>
+        <select class="location-input" onchange="autoSaveLocation(this, {{ item.id }})">
+            <option value="">-- Выберите место --</option>
+            {% for loc in locations %}
+            <option value="{{ loc }}" {% if item.location == loc %}selected{% endif %}>{{ loc }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td><input type="number" class="quantity-input" value="{{ item.quantity }}" placeholder="0" oninput="autoSaveQuantity(this, {{ item.id }})"></td>
+    <td><input type="text" class="comment-input" value="{{ item.comment }}" placeholder="Комментарий" oninput="autoSaveComment(this, {{ item.id }})"></td>
+    <td class="delete-cell">
+        <div class="action-buttons">
+            <button class="add-child-btn" onclick="showAddChildModal({{ item.id }}, '{{ item.name|escapejs }}')" title="Добавить вложенную позицию">
+                <i class="fas fa-plus-circle"></i>
+            </button>
+            <button class="delete-btn" onclick="showDeleteModal({{ item.id }})">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </td>
+</tr>
+{% for child in item.children.all %}
+    {% include 'cars/row_template.html' with item=child level=level|add:1 %}
+{% endfor %}

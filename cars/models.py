@@ -1,4 +1,8 @@
+# models.py
+from django.contrib.postgres.fields import JSONField  # для PostgreSQL
+# или для SQLite используйте:
 from django.db import models
+
 
 class InventoryItem(models.Model):
     """Основная таблица учета"""
@@ -43,6 +47,16 @@ class InventoryItem(models.Model):
     comment = models.TextField(
         blank=True,
         verbose_name="Комментарии"
+    )
+    
+    # Поле для иерархии (родительская позиция)
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='children',
+        verbose_name="Родительская позиция"
     )
     
     created_at = models.DateTimeField(
