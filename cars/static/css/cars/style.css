@@ -99,7 +99,7 @@ body {
 
 .search-box i {
     position: absolute;
-    left: 14px;
+    left: 6px;
     color: var(--secondary-gray);
     font-size: 15px;
 }
@@ -125,7 +125,7 @@ body {
 
 .search-clear {
     position: absolute;
-    right: 12px;
+    right: 35px;
     background: none;
     border: none;
     color: var(--secondary-gray);

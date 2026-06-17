@@ -5,12 +5,13 @@ let pendingParentId = null;
 let childPreviewTimer = null;
 let currentChildData = null;
 
-// Базовый URL для API - исправлено для вашего приложения
+// Базовый URL для API
 const API_BASE = '/special_cars/';
 const ARTICLE_SEARCH_URL = '/finder/get_details/article_id/';
 const MIN_ARTICLE_LENGTH = 2;
 
 let locationsList = [];
+let saveTimers = {};
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
@@ -79,13 +80,16 @@ async function saveRowToServer(rowId, data) {
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRFToken': getCSRFToken() 
+            },
             body: JSON.stringify(data)
         });
         const result = await response.json();
         return response.ok && result.success;
     } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Ошибка сохранения:', error);
         return false;
     }
 }
@@ -108,7 +112,10 @@ async function createNewRow(data, parentId = null) {
         
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRFToken': getCSRFToken() 
+            },
             body: JSON.stringify(requestData)
         });
         const result = await response.json();
@@ -123,9 +130,12 @@ async function createNewRow(data, parentId = null) {
     }
 }
 
-async function saveField(rowId, fieldName, value) {
+// ========== СОХРАНЕНИЕ ВСЕЙ СТРОКИ ==========
+
+async function saveFullRow(rowId, showSaveToast = false) {
     const row = document.querySelector(`tr[data-id="${rowId}"]`);
     if (!row) return false;
+    
     const data = {
         number: row.querySelector('.number-input')?.value || '',
         arrival_date: row.querySelector('.date-input')?.value || null,
@@ -135,18 +145,171 @@ async function saveField(rowId, fieldName, value) {
         quantity: row.querySelector('.quantity-input')?.value || null,
         comment: row.querySelector('.comment-input')?.value || ''
     };
-    return await saveRowToServer(rowId, data);
+    
+    const hasData = data.article || data.name || data.number || data.location || data.quantity || data.comment;
+    if (!hasData) return false;
+    
+    if (rowId.toString().startsWith('new_')) {
+        const parentId = row.getAttribute('data-parent');
+        const newId = await createNewRow(data, parentId);
+        if (newId) {
+            row.setAttribute('data-id', newId);
+            row.classList.remove('new-row');
+            flashRowGreen(row);
+            if (showSaveToast) showToast('✓ Строка создана', 'success');
+            return true;
+        }
+        return false;
+    }
+    
+    const success = await saveRowToServer(rowId, data);
+    if (success) {
+        flashRowGreen(row);
+        if (showSaveToast) showToast('✓ Сохранено', 'success');
+    }
+    return success;
 }
 
-// ========== АВТОСОХРАНЕНИЕ ==========
+// ========== ВИЗУАЛЬНЫЙ ЭФФЕКТ СОХРАНЕНИЯ ==========
 
-function setupAutoSave(input, rowId, fieldName) {
-    input.addEventListener('blur', async function() {
-        if (rowId.toString().startsWith('new_')) return;
-        const success = await saveField(rowId, fieldName, this.value);
-        if (success) {
-            this.style.backgroundColor = '#d1fae5';
-            setTimeout(() => { this.style.backgroundColor = ''; }, 300);
+function flashRowGreen(row) {
+    const inputs = row.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.style.transition = 'background-color 0.3s ease';
+        input.style.backgroundColor = '#d1fae5';
+        setTimeout(() => { 
+            input.style.backgroundColor = ''; 
+        }, 600);
+    });
+}
+
+function flashFieldGreen(input) {
+    input.style.transition = 'background-color 0.3s ease';
+    input.style.backgroundColor = '#d1fae5';
+    setTimeout(() => { 
+        input.style.backgroundColor = ''; 
+    }, 600);
+}
+
+// ========== ПОЛУЧЕНИЕ ID СТРОКИ ИЗ ЭЛЕМЕНТА ==========
+
+function getRowId(element) {
+    const row = element.closest('tr[data-id]');
+    if (!row) return null;
+    return row.getAttribute('data-id');
+}
+
+// ========== СОХРАНЕНИЕ ПОЛЯ (ЕДИНАЯ ФУНКЦИЯ) ==========
+
+async function saveFieldHandler(input) {
+    const rowId = getRowId(input);
+    if (!rowId) return;
+    
+    const row = document.querySelector(`tr[data-id="${rowId}"]`);
+    if (!row) return;
+    
+    const data = {
+        number: row.querySelector('.number-input')?.value || '',
+        arrival_date: row.querySelector('.date-input')?.value || null,
+        article: row.querySelector('.article-input')?.value || '',
+        name: row.querySelector('.name-input')?.value || '',
+        location: row.querySelector('.location-input')?.value || '',
+        quantity: row.querySelector('.quantity-input')?.value || null,
+        comment: row.querySelector('.comment-input')?.value || ''
+    };
+    
+    const hasData = data.article || data.name || data.number || data.location || data.quantity || data.comment;
+    if (!hasData) return;
+    
+    if (rowId.startsWith('new_')) {
+        const parentId = row.getAttribute('data-parent');
+        const newId = await createNewRow(data, parentId);
+        if (newId) {
+            row.setAttribute('data-id', newId);
+            row.classList.remove('new-row');
+            flashFieldGreen(input);
+            showToast('✓ Строка создана', 'success');
+        }
+        return;
+    }
+    
+    const success = await saveRowToServer(rowId, data);
+    if (success) {
+        flashFieldGreen(input);
+    }
+}
+
+// ========== ДЕЛЕГИРОВАНИЕ СОБЫТИЙ ==========
+
+// Настраиваем делегирование для всех полей ввода
+function setupDelegatedEvents() {
+    const tableBody = document.getElementById('table-body');
+    if (!tableBody) return;
+    
+    // Обработка ввода для всех полей (кроме date)
+    tableBody.addEventListener('input', function(e) {
+        const target = e.target;
+        if (!target.matches('input:not([type="date"]), textarea')) return;
+        
+        const rowId = getRowId(target);
+        if (!rowId) return;
+        
+        // Очищаем предыдущий таймер для этой строки
+        if (saveTimers[rowId]) {
+            clearTimeout(saveTimers[rowId]);
+        }
+        
+        // Устанавливаем таймер с debounce
+        saveTimers[rowId] = setTimeout(async () => {
+            await saveFieldHandler(target);
+        }, 500);
+    });
+    
+    // Обработка для date (change)
+    tableBody.addEventListener('change', function(e) {
+        const target = e.target;
+        if (!target.matches('input[type="date"]')) return;
+        saveFieldHandler(target);
+    });
+    
+    // Обработка для select
+    tableBody.addEventListener('change', function(e) {
+        const target = e.target;
+        if (!target.matches('select')) return;
+        saveFieldHandler(target);
+        showToast('✓ Место сохранено', 'success');
+    });
+    
+    // Обработка blur для всех полей
+    tableBody.addEventListener('blur', function(e) {
+        const target = e.target;
+        if (!target.matches('input, select, textarea')) return;
+        
+        const rowId = getRowId(target);
+        if (!rowId) return;
+        
+        // Очищаем таймер и сохраняем сразу
+        if (saveTimers[rowId]) {
+            clearTimeout(saveTimers[rowId]);
+            delete saveTimers[rowId];
+        }
+        saveFieldHandler(target);
+    }, true); // capture фаза для blur
+    
+    // Обработка Enter
+    tableBody.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        const target = e.target;
+        if (!target.matches('input, select, textarea')) return;
+        
+        e.preventDefault();
+        saveFieldHandler(target);
+        
+        // Переход на следующее поле
+        const inputs = Array.from(document.querySelectorAll('.inventory-table input:not([readonly]), .inventory-table select'));
+        const currentIndex = inputs.indexOf(target);
+        if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
+            inputs[currentIndex + 1].focus();
         }
     });
 }
@@ -163,11 +326,16 @@ window.autoFillName = async function(articleInput, rowId) {
     if (!article) {
         nameInput.value = '';
         nameInput.setAttribute('readonly', 'readonly');
+        nameInput.placeholder = 'Наименование';
+        nameInput.style.background = '#f9fafb';
         return;
     }
     if (article.length < MIN_ARTICLE_LENGTH) return;
     
     articleInput.classList.add('loading');
+    nameInput.placeholder = 'Поиск...';
+    nameInput.style.background = '#fff8e1';
+    
     debounceTimers[currentRowId] = setTimeout(async () => {
         try {
             const response = await fetch(`${ARTICLE_SEARCH_URL}${encodeURIComponent(article)}/`);
@@ -178,64 +346,35 @@ window.autoFillName = async function(articleInput, rowId) {
                     nameInput.classList.add('auto-filled');
                     setTimeout(() => nameInput.classList.remove('auto-filled'), 500);
                     nameInput.setAttribute('readonly', 'readonly');
+                    nameInput.placeholder = 'Наименование';
+                    nameInput.style.background = '#f9fafb';
                     showToast(`✓ Найдено: ${data.title}`, 'success');
                     
-                    if (currentRowId.startsWith('new_')) {
-                        const parentId = row.getAttribute('data-parent');
-                        const rowData = {
-                            number: row.querySelector('.number-input')?.value || '',
-                            arrival_date: row.querySelector('.date-input')?.value || null,
-                            article: article,
-                            name: data.title,
-                            location: row.querySelector('.location-input')?.value || '',
-                            quantity: row.querySelector('.quantity-input')?.value || null,
-                            comment: row.querySelector('.comment-input')?.value || ''
-                        };
-                        const newId = await createNewRow(rowData, parentId);
-                        if (newId) {
-                            row.setAttribute('data-id', newId);
-                            updateRowHandlers(currentRowId, newId);
-                            showToast('✓ Строка сохранена', 'success');
-                        }
-                    } else {
-                        await saveField(currentRowId, 'article', article);
-                        await saveField(currentRowId, 'name', data.title);
-                    }
+                    // Сохраняем через общий обработчик
+                    await saveFieldHandler(articleInput);
+                    flashFieldGreen(nameInput);
                 }
             } else {
-                nameInput.placeholder = 'Артикул не найден';
+                nameInput.value = '';
+                nameInput.placeholder = 'Артикул не найден, введите вручную';
                 nameInput.removeAttribute('readonly');
                 nameInput.style.background = '#fff3e0';
+                nameInput.style.border = '1px solid #ff9800';
+                showToast(`⚠ Артикул "${article}" не найден. Введите наименование вручную.`, 'info');
+                
+                await saveFieldHandler(articleInput);
             }
         } catch (error) {
             console.error('Ошибка:', error);
+            nameInput.placeholder = 'Ошибка поиска, введите вручную';
+            nameInput.removeAttribute('readonly');
+            nameInput.style.background = '#fff3e0';
+            showToast('❌ Ошибка поиска. Введите наименование вручную.', 'error');
         } finally {
             articleInput.classList.remove('loading');
             updateStats();
         }
     }, 1000);
-};
-
-// ========== СОХРАНЕНИЕ ПОЛЕЙ ==========
-
-window.autoSaveLocation = async function(select, rowId) {
-    if (!rowId.toString().startsWith('new_')) {
-        await saveField(rowId, 'location', select.value);
-        showToast('✓ Место сохранено', 'success');
-    }
-};
-
-window.autoSaveQuantity = async function(input, rowId) {
-    if (!rowId.toString().startsWith('new_')) {
-        await saveField(rowId, 'quantity', input.value);
-        updateStats();
-    }
-};
-
-window.autoSaveComment = async function(input, rowId) {
-    if (!rowId.toString().startsWith('new_')) {
-        await saveField(rowId, 'comment', input.value);
-    }
 };
 
 // ========== ДОБАВЛЕНИЕ ДОЧЕРНЕЙ ПОЗИЦИИ ==========
@@ -326,7 +465,10 @@ window.addChildItem = async function() {
         
         const response = await fetch(`${API_BASE}api/add-child/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRFToken': getCSRFToken() 
+            },
             body: JSON.stringify(requestData)
         });
         
@@ -358,19 +500,22 @@ window.addNewRow = function() {
     newRow.setAttribute('data-id', newId);
     newRow.setAttribute('data-parent', '');
     newRow.setAttribute('data-level', '0');
+    newRow.classList.add('new-row');
     
     let locationOptions = '<option value="">-- Выберите место --</option>';
-    locationsList.forEach(loc => { locationOptions += `<option value="${loc}">${loc}</option>`; });
+    locationsList.forEach(loc => { 
+        locationOptions += `<option value="${loc}">${loc}</option>`; 
+    });
     
     newRow.innerHTML = `
         <td class="expand-cell" style="text-align: center;"></td>
-        <td><input type="text" class="number-input" placeholder="Введите №"></td>
-        <td><input type="date" class="date-input"></td>
-        <td><input type="text" class="article-input" placeholder="Введите артикул" oninput="autoFillName(this, '${newId}')"></td>
-        <td><input type="text" class="name-input" readonly style="background:#f9fafb; width:100%; min-width:100px;" placeholder="Наименование"></td>
-        <td><select class="location-input">${locationOptions}</select></td>
-        <td><input type="number" class="quantity-input" placeholder="0"></td>
-        <td><input type="text" class="comment-input" placeholder="Комментарий"></td>
+        <td><input type="text" class="number-input" placeholder="Введите №" data-field="number"></td>
+        <td><input type="date" class="date-input" placeholder="дд.мм.гггг" data-field="arrival_date"></td>
+        <td><input type="text" class="article-input" placeholder="Введите артикул" data-field="article" oninput="autoFillName(this, '${newId}')"></td>
+        <td><input type="text" class="name-input" readonly style="background:#f9fafb; width:100%; min-width:100px;" placeholder="Наименование" data-field="name"></td>
+        <td><select class="location-input" data-field="location">${locationOptions}</select></td>
+        <td><input type="number" class="quantity-input" placeholder="0" data-field="quantity"></td>
+        <td><input type="text" class="comment-input" placeholder="Комментарий" data-field="comment"></td>
         <td class="delete-cell">
             <div class="action-buttons">
                 <button class="add-child-btn" onclick="showAddChildModal('${newId}', '')" title="Добавить комплектующую">
@@ -384,38 +529,11 @@ window.addNewRow = function() {
     `;
     
     tbody.appendChild(newRow);
+    
     showToast('➕ Новая строка добавлена', 'info');
     newRow.querySelector('.article-input').focus();
     updateStats();
 };
-
-function updateRowHandlers(oldId, newId) {
-    const row = document.querySelector(`tr[data-id="${oldId}"]`);
-    if (!row) return;
-    row.setAttribute('data-id', newId);
-    
-    const articleInput = row.querySelector('.article-input');
-    if (articleInput) articleInput.setAttribute('oninput', `autoFillName(this, ${newId})`);
-    
-    const addBtn = row.querySelector('.add-child-btn');
-    const nameInput = row.querySelector('.name-input');
-    if (addBtn) {
-        addBtn.setAttribute('onclick', `showAddChildModal(${newId}, '${(nameInput?.value || '').replace(/'/g, "\\'")}')`);
-    }
-    
-    const deleteBtn = row.querySelector('.delete-btn');
-    if (deleteBtn) deleteBtn.setAttribute('onclick', `showDeleteModal(${newId})`);
-    
-    const inputs = row.querySelectorAll('input, select');
-    inputs.forEach(input => {
-        const fieldName = input.classList.contains('number-input') ? 'number' :
-                         input.classList.contains('date-input') ? 'arrival_date' :
-                         input.classList.contains('article-input') ? 'article' :
-                         input.classList.contains('quantity-input') ? 'quantity' :
-                         input.classList.contains('comment-input') ? 'comment' : '';
-        if (fieldName) setupAutoSave(input, newId, fieldName);
-    });
-}
 
 // ========== УДАЛЕНИЕ ==========
 
@@ -458,29 +576,24 @@ window.confirmDelete = async function() {
     closeDeleteModal();
 };
 
-// ========== ФИЛЬТРАЦИЯ (ПОИСК) - ИСПРАВЛЕННАЯ ==========
+// ========== ФИЛЬТРАЦИЯ (ПОИСК) ==========
 
 window.filterTable = function() {
     const searchInput = document.getElementById('search-input');
-    if (!searchInput) {
-        console.error('❌ search-input не найден');
-        return;
-    }
+    if (!searchInput) return;
     
     const searchTerm = searchInput.value.toLowerCase().trim();
-    console.log(`🔍 Поиск: "${searchTerm}"`);
-    
     const clearBtn = document.querySelector('.search-clear');
     if (clearBtn) {
         clearBtn.style.display = searchTerm ? 'flex' : 'none';
     }
     
     const allRows = document.querySelectorAll('#table-body > tr[data-id]');
+    const childRows = document.querySelectorAll('.child-row');
     
-    // Если поиск пустой - показываем все
     if (searchTerm === '') {
         allRows.forEach(row => row.style.display = '');
-        document.querySelectorAll('.child-row').forEach(child => child.style.display = 'none');
+        childRows.forEach(child => child.style.display = 'none');
         document.querySelectorAll('.expand-btn i').forEach(icon => {
             icon.className = 'fas fa-chevron-right';
         });
@@ -490,36 +603,27 @@ window.filterTable = function() {
         return;
     }
     
-    // Скрываем все дочерние
-    document.querySelectorAll('.child-row').forEach(child => {
-        child.style.display = 'none';
-    });
+    childRows.forEach(child => child.style.display = 'none');
     
     let visibleCount = 0;
     let foundIds = new Set();
     
     allRows.forEach(row => {
-        // Получаем значения из всех полей
         const number = row.querySelector('.number-input')?.value || '';
         const article = row.querySelector('.article-input')?.value || '';
         const name = row.querySelector('.name-input')?.value || '';
         const location = row.querySelector('.location-input')?.value || '';
         const comment = row.querySelector('.comment-input')?.value || '';
         
-        // Объединяем все поля для поиска
         const fullText = `${number} ${article} ${name} ${location} ${comment}`.toLowerCase();
         const matches = fullText.includes(searchTerm);
-        
         const rowId = row.getAttribute('data-id');
-        
-        console.log(`  Строка ${rowId}: "${name}" -> совпадение: ${matches}`);
         
         if (matches) {
             row.style.display = '';
             visibleCount++;
             foundIds.add(rowId);
             
-            // Показываем родителей
             let parentId = row.getAttribute('data-parent');
             while (parentId && parentId !== '' && parentId !== 'null') {
                 const parentRow = document.querySelector(`tr[data-id="${parentId}"]`);
@@ -527,7 +631,6 @@ window.filterTable = function() {
                     parentRow.style.display = '';
                     foundIds.add(parentId);
                     
-                    // Раскрываем родителя
                     const children = document.querySelectorAll(`.child-row.parent-${parentId}`);
                     children.forEach(child => {
                         child.style.display = '';
@@ -540,7 +643,6 @@ window.filterTable = function() {
                 parentId = parentRow?.getAttribute('data-parent');
             }
         } else if (!row.classList.contains('child-row')) {
-            // Скрываем родителя, если у него нет видимых детей
             const hasVisibleChildren = row.querySelectorAll('.child-row:not([style*="display: none"])').length > 0;
             if (!hasVisibleChildren) {
                 row.style.display = 'none';
@@ -548,13 +650,9 @@ window.filterTable = function() {
         }
     });
     
-    console.log(`✅ Найдено совпадений: ${visibleCount}`);
-    
-    // Удаляем старое сообщение
     const searchNoData = document.getElementById('search-no-data');
     if (searchNoData) searchNoData.remove();
     
-    // Если ничего не найдено
     if (visibleCount === 0 && allRows.length > 0) {
         const tbody = document.getElementById('table-body');
         const emptyRow = document.createElement('tr');
@@ -563,7 +661,7 @@ window.filterTable = function() {
             <td colspan="9">
                 <div class="empty-state">
                     <i class="fas fa-search"></i>
-                    <p>Ничего не найдено по запросу "<strong>${searchTerm}</strong>"</p>
+                    <p>Ничего не найдено</p>
                     <p style="font-size: 12px;">Попробуйте изменить поисковый запрос</p>
                 </div>
             </td>
@@ -597,6 +695,21 @@ async function loadLocations() {
     }
 }
 
+// ========== ЭКСПОРТ ОТЧЕТА ==========
+
+function exportReport() {
+    showToast('📊 Формирование отчета...', 'info');
+    const link = document.createElement('a');
+    link.href = '/special_cars/export-report/';
+    link.download = 'inventory_report.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => {
+        showToast('✅ Отчет скачан', 'success');
+    }, 1500);
+}
+
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -604,20 +717,8 @@ document.addEventListener('DOMContentLoaded', function() {
     loadLocations();
     updateStats();
     
-    // Настраиваем автосохранение для существующих строк
-    document.querySelectorAll('#table-body > tr[data-id]').forEach(row => {
-        const rowId = row.getAttribute('data-id');
-        if (!rowId.toString().startsWith('new_')) {
-            row.querySelectorAll('input, select').forEach(input => {
-                const fieldName = input.classList.contains('number-input') ? 'number' :
-                                 input.classList.contains('date-input') ? 'arrival_date' :
-                                 input.classList.contains('article-input') ? 'article' :
-                                 input.classList.contains('quantity-input') ? 'quantity' :
-                                 input.classList.contains('comment-input') ? 'comment' : '';
-                if (fieldName) setupAutoSave(input, rowId, fieldName);
-            });
-        }
-    });
+    // Настраиваем делегирование событий
+    setupDelegatedEvents();
     
     // Автоподстановка в модальном окне
     const childInput = document.getElementById('child-article');
@@ -652,8 +753,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const confirmBtn = document.getElementById('confirmDeleteBtn');
     if (confirmBtn) confirmBtn.onclick = confirmDelete;
-    
-    console.log('Доступные команды:');
-    console.log('  filterTable() - фильтрация');
-    console.log('  clearSearch() - очистить поиск');
 });
