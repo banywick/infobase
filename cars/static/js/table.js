@@ -36,7 +36,7 @@ function showToast(message, type = 'info') {
 }
 
 function updateStats() {
-    const visibleRows = document.querySelectorAll('#table-body tr[data-id]:not([style*="display: none"])');
+    const visibleRows = document.querySelectorAll('#table-body > tr[data-id]:not([style*="display: none"])');
     const totalCount = visibleRows.length;
     let totalQuantity = 0;
     visibleRows.forEach(row => {
@@ -70,32 +70,6 @@ window.toggleChildren = function(parentId) {
         btn.className = isHidden ? 'fas fa-chevron-down' : 'fas fa-chevron-right';
     }
     updateStats();
-};
-
-window.expandAll = function() {
-    document.querySelectorAll('.expand-btn').forEach(btn => {
-        const row = btn.closest('tr');
-        if (row) {
-            const parentId = row.getAttribute('data-id');
-            const children = document.querySelectorAll(`.child-row.parent-${parentId}`);
-            children.forEach(child => child.style.display = '');
-            const icon = btn.querySelector('i');
-            if (icon) icon.className = 'fas fa-chevron-down';
-        }
-    });
-};
-
-window.collapseAll = function() {
-    document.querySelectorAll('.expand-btn').forEach(btn => {
-        const row = btn.closest('tr');
-        if (row) {
-            const parentId = row.getAttribute('data-id');
-            const children = document.querySelectorAll(`.child-row.parent-${parentId}`);
-            children.forEach(child => child.style.display = 'none');
-            const icon = btn.querySelector('i');
-            if (icon) icon.className = 'fas fa-chevron-right';
-        }
-    });
 };
 
 // ========== СОХРАНЕНИЕ НА СЕРВЕР ==========
@@ -267,6 +241,10 @@ window.autoSaveComment = async function(input, rowId) {
 // ========== ДОБАВЛЕНИЕ ДОЧЕРНЕЙ ПОЗИЦИИ ==========
 
 window.showAddChildModal = function(parentId, parentName) {
+    if (parentId.toString().startsWith('new_')) {
+        showToast('Сначала сохраните основную позицию', 'error');
+        return;
+    }
     pendingParentId = parentId;
     currentChildData = null;
     document.getElementById('parent-name').textContent = parentName || 'этой позиции';
@@ -299,17 +277,27 @@ async function searchChildArticle(article) {
             const data = await response.json();
             currentChildData = data;
             previewDiv.innerHTML = `
-                <div style="background: #d1fae5; border: 1px solid #10b981; border-radius: 8px; padding: 10px;">
+                <div style="background: #d1fae5; border: 1px solid #10b981; border-radius: 8px; padding: 8px 12px; margin-top: 4px;">
                     <i class="fas fa-check-circle" style="color: #10b981;"></i> 
                     Найдено: <strong>${escapeHtml(data.title)}</strong>
                 </div>
             `;
         } else {
             currentChildData = null;
-            previewDiv.innerHTML = `<div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 10px;">Артикул не найден</div>`;
+            previewDiv.innerHTML = `
+                <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 8px 12px; margin-top: 4px;">
+                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> 
+                    Артикул не найден
+                </div>
+            `;
         }
     } catch (error) {
-        previewDiv.innerHTML = `<div style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 8px; padding: 10px;">Ошибка поиска</div>`;
+        previewDiv.innerHTML = `
+            <div style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 8px; padding: 8px 12px; margin-top: 4px;">
+                <i class="fas fa-times-circle" style="color: #ef4444;"></i> 
+                Ошибка поиска
+            </div>
+        `;
     }
 }
 
@@ -379,11 +367,11 @@ window.addNewRow = function() {
         <td><input type="text" class="number-input" placeholder="Введите №"></td>
         <td><input type="date" class="date-input"></td>
         <td><input type="text" class="article-input" placeholder="Введите артикул" oninput="autoFillName(this, '${newId}')"></td>
-        <td><input type="text" class="name-input" readonly style="background:#f9fafb" placeholder="Наименование"></td>
+        <td><input type="text" class="name-input" readonly style="background:#f9fafb; width:100%; min-width:100px;" placeholder="Наименование"></td>
         <td><select class="location-input">${locationOptions}</select></td>
         <td><input type="number" class="quantity-input" placeholder="0"></td>
         <td><input type="text" class="comment-input" placeholder="Комментарий"></td>
-        <td class="action-cell">
+        <td class="delete-cell">
             <div class="action-buttons">
                 <button class="add-child-btn" onclick="showAddChildModal('${newId}', '')" title="Добавить комплектующую">
                     <i class="fas fa-plus-circle"></i>
@@ -470,23 +458,40 @@ window.confirmDelete = async function() {
     closeDeleteModal();
 };
 
-// ========== ФИЛЬТРАЦИЯ ==========
+// ========== ФИЛЬТРАЦИЯ (ПОИСК) ==========
 
 window.filterTable = function() {
-    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const searchInput = document.getElementById('search-input');
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const clearBtn = document.querySelector('.search-clear');
+    
+    if (clearBtn) {
+        clearBtn.style.display = searchTerm ? 'flex' : 'none';
+    }
+    
     const rows = document.querySelectorAll('#table-body > tr[data-id]');
     let visibleCount = 0;
     
+    // Сначала скрываем все дочерние
+    document.querySelectorAll('.child-row').forEach(child => {
+        child.style.display = 'none';
+    });
+    
     rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        if (searchTerm === '' || text.includes(searchTerm)) {
+        const text = row.textContent.toLowerCase();
+        const matches = searchTerm === '' || text.includes(searchTerm);
+        
+        if (matches) {
             row.style.display = '';
             visibleCount++;
+            
+            // Показываем всех родителей для найденных детей
             let parentId = row.getAttribute('data-parent');
             while (parentId && parentId !== '') {
                 const parentRow = document.querySelector(`tr[data-id="${parentId}"]`);
                 if (parentRow) {
                     parentRow.style.display = '';
+                    // Раскрываем родителя
                     const children = document.querySelectorAll(`.child-row.parent-${parentId}`);
                     children.forEach(child => child.style.display = '');
                     const btn = parentRow.querySelector('.expand-btn i');
@@ -495,18 +500,48 @@ window.filterTable = function() {
                 parentId = parentRow?.getAttribute('data-parent');
             }
         } else {
-            row.style.display = 'none';
+            // Не скрываем родителя, если у него есть дети, которые подходят
+            const hasVisibleChildren = row.querySelectorAll('.child-row:not([style*="display: none"])').length > 0;
+            if (!hasVisibleChildren) {
+                row.style.display = 'none';
+            }
         }
     });
     
-    const clearBtn = document.querySelector('.search-clear');
-    if (clearBtn) clearBtn.style.display = searchTerm ? 'flex' : 'none';
+    // Если ничего не найдено и есть строки, показываем сообщение
+    const noDataRow = document.getElementById('no-data-row');
+    const searchNoData = document.getElementById('search-no-data');
+    
+    if (visibleCount === 0 && rows.length > 0) {
+        if (!searchNoData) {
+            const tbody = document.getElementById('table-body');
+            const emptyRow = document.createElement('tr');
+            emptyRow.id = 'search-no-data';
+            emptyRow.innerHTML = `
+                <td colspan="9">
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>Ничего не найдено</p>
+                        <p style="font-size: 12px;">Попробуйте изменить поисковый запрос</p>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(emptyRow);
+        }
+    } else {
+        if (searchNoData) searchNoData.remove();
+    }
+    
     updateStats();
 };
 
 window.clearSearch = function() {
-    document.getElementById('search-input').value = '';
-    filterTable();
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.value = '';
+        filterTable();
+        searchInput.focus();
+    }
 };
 
 // ========== ЗАГРУЗКА ЛОКАЦИЙ ==========
@@ -530,6 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadLocations();
     updateStats();
     
+    // Настраиваем автосохранение для существующих строк
     document.querySelectorAll('#table-body > tr[data-id]').forEach(row => {
         const rowId = row.getAttribute('data-id');
         if (!rowId.toString().startsWith('new_')) {
@@ -544,6 +580,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Автоподстановка в модальном окне
     const childInput = document.getElementById('child-article');
     if (childInput) {
         childInput.addEventListener('input', function() {
@@ -552,19 +589,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Модальные окна
     const deleteModal = document.getElementById('deleteModal');
     if (deleteModal) {
-        deleteModal.addEventListener('click', e => { if (e.target === deleteModal) closeDeleteModal(); });
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
     }
     
     const childModal = document.getElementById('addChildModal');
     if (childModal) {
-        childModal.addEventListener('click', e => { if (e.target === childModal) closeChildModal(); });
+        childModal.addEventListener('click', function(e) {
+            if (e.target === this) closeChildModal();
+        });
     }
     
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeDeleteModal(); closeChildModal(); }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+            closeChildModal();
+        }
     });
     
-    document.getElementById('confirmDeleteBtn').onclick = confirmDelete;
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) confirmBtn.onclick = confirmDelete;
+    
+    console.log('Доступные команды:');
+    console.log('  filterTable() - фильтрация');
+    console.log('  clearSearch() - очистить поиск');
 });

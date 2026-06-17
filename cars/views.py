@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 def table_view(request):
     """Главная страница с таблицей"""
-    items = InventoryItem.objects.filter(parent__isnull=True).order_by('-id')
+    # Сортировка по дате создания (новые в конце)
+    items = InventoryItem.objects.filter(parent__isnull=True).order_by('created_at')
     
     # Получаем уникальные места хранения
     locations = InventoryItem.objects.exclude(location__isnull=True).exclude(location='').values_list('location', flat=True).distinct()

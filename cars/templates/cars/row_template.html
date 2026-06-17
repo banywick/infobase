@@ -19,7 +19,7 @@
                placeholder="Введите артикул"
                oninput="autoFillName(this, {{ item.id }})">
     </td>
-    <td><input type="text" class="name-input" value="{{ item.name }}" readonly style="background:#f9fafb"></td>
+    <td><input type="text" class="name-input" value="{{ item.name }}" readonly style="background:#f9fafb; width:100%; min-width:100px;"></td>
     <td>
         <select class="location-input" onchange="autoSaveLocation(this, {{ item.id }})">
             <option value="">-- Выберите место --</option>
@@ -32,7 +32,7 @@
     <td><input type="text" class="comment-input" value="{{ item.comment }}" placeholder="Комментарий" oninput="autoSaveComment(this, {{ item.id }})"></td>
     <td class="delete-cell">
         <div class="action-buttons">
-            <button class="add-child-btn" onclick="showAddChildModal({{ item.id }}, '{{ item.name|escapejs }}')" title="Добавить вложенную позицию">
+            <button class="add-child-btn" onclick="showAddChildModal({{ item.id }}, '{{ item.name|escapejs }}')" title="Добавить комплектующую">
                 <i class="fas fa-plus-circle"></i>
             </button>
             <button class="delete-btn" onclick="showDeleteModal({{ item.id }})">

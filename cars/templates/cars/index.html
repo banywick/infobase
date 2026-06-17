@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,15 +8,20 @@
     <title>Техника</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    {% load static %}
     <link rel="stylesheet" href="{% static 'css/cars/style.css' %}">
 </head>
 <body>
     <div class="app-container">
+        <!-- ХЕДЕР С ЛОГОТИПОМ -->
         <div class="header">
             <div class="logo-section">
-                <h1><i class="fas fa-boxes"></i> Техника в мачулищах</h1>
-                <p>Управление складскими запасами и инвентаризация</p>
+                <div class="logo-wrapper">
+                    <img src="{% static 'finder/icon/logo_white.svg' %}" alt="Логотип" class="logo-icon">
+                    <div>
+                        <h1>Инвентаризация готовой продукции</h1>
+                        <p>Расположении техники в мачулищах</p>
+                    </div>
+                </div>
             </div>
             
             <div class="search-section">
@@ -30,32 +36,44 @@
             
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Всего позиций</div>
+                    <div class="stat-label">Позиций</div>
                     <div class="stat-value" id="total-count">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Общее кол-во</div>
+                    <div class="stat-label">Кол-во</div>
                     <div class="stat-value" id="total-quantity">0</div>
                 </div>
             </div>
             <button class="btn btn-primary" onclick="addNewRow()">
-                <i class="fas fa-plus"></i> Добавить строку
+                <i class="fas fa-plus"></i> Добавить
             </button>
         </div>
 
+        <!-- ТАБЛИЦА -->
         <div class="table-wrapper">
             <table class="inventory-table">
+                <colgroup>
+                    <col style="width: 28px; min-width: 28px; max-width: 28px;">
+                    <col style="width: 5%; min-width: 70px; max-width: 100px;">
+                    <col style="width: 8%; min-width: 80px; max-width: 110px;">
+                    <col style="width: 8%; min-width: 90px; max-width: 130px;">
+                    <col style="width: 40%; min-width: 180px; max-width: 400px;">
+                    <col style="width: 12%; min-width: 120px; max-width: 180px;">
+                    <col style="width: 5%; min-width: 50px; max-width: 70px;">
+                    <col style="width: 15%; min-width: 100px; max-width: 200px;">
+                    <col style="width: 65px; min-width: 65px; max-width: 65px;">
+                </colgroup>
                 <thead>
                     <tr>
-                        <th style="width: 3%"></th>
-                        <th style="width: 10%"><i class="fas fa-hashtag"></i> №ТН, ТТН</th>
-                        <th style="width: 8%"><i class="fas fa-calendar"></i> Дата</th>
-                        <th style="width: 10%"><i class="fas fa-barcode"></i> Артикул</th>
-                        <th style="width: 17%"><i class="fas fa-tag"></i> Наименование</th>
-                        <th style="width: 12%"><i class="fas fa-location-dot"></i> Место хранения</th>
-                        <th style="width: 6%"><i class="fas fa-cubes"></i> Кол-во</th>
-                        <th style="width: 13%"><i class="fas fa-comment"></i> Комментарии</th>
-                        <th style="width: 5%"></th>
+                        <th style="text-align: center;"></th>
+                        <th><i class="fas fa-hashtag"></i> №ТН, ТТН</th>
+                        <th><i class="fas fa-calendar"></i> Дата</th>
+                        <th><i class="fas fa-barcode"></i> Артикул</th>
+                        <th><i class="fas fa-tag"></i> Наименование</th>
+                        <th><i class="fas fa-location-dot"></i> Место</th>
+                        <th><i class="fas fa-cubes"></i> Кол-во</th>
+                        <th><i class="fas fa-comment"></i> Комментарий</th>
+                        <th style="text-align: center;"></th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
@@ -67,7 +85,7 @@
                             <div class="empty-state">
                                 <i class="fas fa-inbox"></i>
                                 <p>Нет данных</p>
-                                <p style="font-size: 12px; margin-top: 8px;">Нажмите кнопку "Добавить строку" чтобы начать</p>
+                                <p style="font-size: 12px; margin-top: 8px;">Нажмите кнопку "Добавить" чтобы начать</p>
                             </div>
                         </td>
                     </tr>
@@ -77,7 +95,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно для подтверждения удаления -->
+    <!-- МОДАЛЬНОЕ ОКНО УДАЛЕНИЯ -->
     <div id="deleteModal" class="modal-overlay" style="display: none;">
         <div class="modal">
             <div class="modal-icon">
@@ -92,23 +110,23 @@
         </div>
     </div>
 
-    <!-- Модальное окно для добавления дочерней позиции -->
+    <!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ДОЧЕРНЕЙ ПОЗИЦИИ -->
     <div id="addChildModal" class="modal-overlay" style="display: none;">
-        <div class="modal" style="max-width: 500px;">
+        <div class="modal" style="max-width: 450px;">
             <div class="modal-icon">
                 <i class="fas fa-plus-circle"></i>
             </div>
             <h3>Добавить комплектующую</h3>
             <p>Добавить комплектующую для <strong id="parent-name"></strong></p>
             <div style="margin: 20px 0;">
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Артикул</label>
-                    <input type="text" id="child-article" class="form-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Введите артикул">
+                <div class="form-group">
+                    <label>Артикул</label>
+                    <input type="text" id="child-article" placeholder="Введите артикул">
                     <div id="child-article-preview" style="margin-top: 8px;"></div>
                 </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Количество</label>
-                    <input type="number" id="child-quantity" class="form-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" placeholder="1" value="1" min="1">
+                <div class="form-group">
+                    <label>Количество</label>
+                    <input type="number" id="child-quantity" placeholder="1" value="1" min="1">
                 </div>
             </div>
             <div class="modal-buttons">
@@ -118,6 +136,6 @@
         </div>
     </div>
 
-    <script src="{% static 'js/table.js' %}"></script>
+    <script src="{% static 'js/cars/table.js' %}"></script>
 </body>
 </html>
