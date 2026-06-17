@@ -16,7 +16,9 @@
         <div class="header">
             <div class="logo-section">
                 <div class="logo-wrapper">
+                    <a href="{% url 'home_finder' %}">
                     <img src="{% static 'finder/icon/logo_white.svg' %}" alt="Логотип" class="logo-icon">
+                    </a>
                     <div>
                         <h1>Инвентаризация готовой продукции</h1>
                         <p>Расположении техники в мачулищах</p>
@@ -136,6 +138,6 @@
         </div>
     </div>
 
-    <script src="{% static 'js/cars/table.js' %}"></script>
+    <script src="{% static 'js/table.js' %}"></script>
 </body>
 </html>

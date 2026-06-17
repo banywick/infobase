@@ -5,7 +5,7 @@ let pendingParentId = null;
 let childPreviewTimer = null;
 let currentChildData = null;
 
-// Базовый URL для API
+// Базовый URL для API - исправлено для вашего приложения
 const API_BASE = '/special_cars/';
 const ARTICLE_SEARCH_URL = '/finder/get_details/article_id/';
 const MIN_ARTICLE_LENGTH = 2;
@@ -458,49 +458,89 @@ window.confirmDelete = async function() {
     closeDeleteModal();
 };
 
-// ========== ФИЛЬТРАЦИЯ (ПОИСК) ==========
+// ========== ФИЛЬТРАЦИЯ (ПОИСК) - ИСПРАВЛЕННАЯ ==========
 
 window.filterTable = function() {
     const searchInput = document.getElementById('search-input');
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    const clearBtn = document.querySelector('.search-clear');
+    if (!searchInput) {
+        console.error('❌ search-input не найден');
+        return;
+    }
     
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    console.log(`🔍 Поиск: "${searchTerm}"`);
+    
+    const clearBtn = document.querySelector('.search-clear');
     if (clearBtn) {
         clearBtn.style.display = searchTerm ? 'flex' : 'none';
     }
     
-    const rows = document.querySelectorAll('#table-body > tr[data-id]');
-    let visibleCount = 0;
+    const allRows = document.querySelectorAll('#table-body > tr[data-id]');
     
-    // Сначала скрываем все дочерние
+    // Если поиск пустой - показываем все
+    if (searchTerm === '') {
+        allRows.forEach(row => row.style.display = '');
+        document.querySelectorAll('.child-row').forEach(child => child.style.display = 'none');
+        document.querySelectorAll('.expand-btn i').forEach(icon => {
+            icon.className = 'fas fa-chevron-right';
+        });
+        const searchNoData = document.getElementById('search-no-data');
+        if (searchNoData) searchNoData.remove();
+        updateStats();
+        return;
+    }
+    
+    // Скрываем все дочерние
     document.querySelectorAll('.child-row').forEach(child => {
         child.style.display = 'none';
     });
     
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        const matches = searchTerm === '' || text.includes(searchTerm);
+    let visibleCount = 0;
+    let foundIds = new Set();
+    
+    allRows.forEach(row => {
+        // Получаем значения из всех полей
+        const number = row.querySelector('.number-input')?.value || '';
+        const article = row.querySelector('.article-input')?.value || '';
+        const name = row.querySelector('.name-input')?.value || '';
+        const location = row.querySelector('.location-input')?.value || '';
+        const comment = row.querySelector('.comment-input')?.value || '';
+        
+        // Объединяем все поля для поиска
+        const fullText = `${number} ${article} ${name} ${location} ${comment}`.toLowerCase();
+        const matches = fullText.includes(searchTerm);
+        
+        const rowId = row.getAttribute('data-id');
+        
+        console.log(`  Строка ${rowId}: "${name}" -> совпадение: ${matches}`);
         
         if (matches) {
             row.style.display = '';
             visibleCount++;
+            foundIds.add(rowId);
             
-            // Показываем всех родителей для найденных детей
+            // Показываем родителей
             let parentId = row.getAttribute('data-parent');
-            while (parentId && parentId !== '') {
+            while (parentId && parentId !== '' && parentId !== 'null') {
                 const parentRow = document.querySelector(`tr[data-id="${parentId}"]`);
                 if (parentRow) {
                     parentRow.style.display = '';
+                    foundIds.add(parentId);
+                    
                     // Раскрываем родителя
                     const children = document.querySelectorAll(`.child-row.parent-${parentId}`);
-                    children.forEach(child => child.style.display = '');
+                    children.forEach(child => {
+                        child.style.display = '';
+                        foundIds.add(child.getAttribute('data-id'));
+                    });
+                    
                     const btn = parentRow.querySelector('.expand-btn i');
                     if (btn) btn.className = 'fas fa-chevron-down';
                 }
                 parentId = parentRow?.getAttribute('data-parent');
             }
-        } else {
-            // Не скрываем родителя, если у него есть дети, которые подходят
+        } else if (!row.classList.contains('child-row')) {
+            // Скрываем родителя, если у него нет видимых детей
             const hasVisibleChildren = row.querySelectorAll('.child-row:not([style*="display: none"])').length > 0;
             if (!hasVisibleChildren) {
                 row.style.display = 'none';
@@ -508,28 +548,27 @@ window.filterTable = function() {
         }
     });
     
-    // Если ничего не найдено и есть строки, показываем сообщение
-    const noDataRow = document.getElementById('no-data-row');
-    const searchNoData = document.getElementById('search-no-data');
+    console.log(`✅ Найдено совпадений: ${visibleCount}`);
     
-    if (visibleCount === 0 && rows.length > 0) {
-        if (!searchNoData) {
-            const tbody = document.getElementById('table-body');
-            const emptyRow = document.createElement('tr');
-            emptyRow.id = 'search-no-data';
-            emptyRow.innerHTML = `
-                <td colspan="9">
-                    <div class="empty-state">
-                        <i class="fas fa-search"></i>
-                        <p>Ничего не найдено</p>
-                        <p style="font-size: 12px;">Попробуйте изменить поисковый запрос</p>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(emptyRow);
-        }
-    } else {
-        if (searchNoData) searchNoData.remove();
+    // Удаляем старое сообщение
+    const searchNoData = document.getElementById('search-no-data');
+    if (searchNoData) searchNoData.remove();
+    
+    // Если ничего не найдено
+    if (visibleCount === 0 && allRows.length > 0) {
+        const tbody = document.getElementById('table-body');
+        const emptyRow = document.createElement('tr');
+        emptyRow.id = 'search-no-data';
+        emptyRow.innerHTML = `
+            <td colspan="9">
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <p>Ничего не найдено по запросу "<strong>${searchTerm}</strong>"</p>
+                    <p style="font-size: 12px;">Попробуйте изменить поисковый запрос</p>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(emptyRow);
     }
     
     updateStats();
