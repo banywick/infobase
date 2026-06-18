@@ -19,17 +19,23 @@
                placeholder="Введите артикул"
                oninput="autoFillName(this, {{ item.id }})">
     </td>
-    <td><input type="text" class="name-input" value="{{ item.name }}" readonly style="background:#f9fafb; width:100%; min-width:100px;"></td>
     <td>
-        <select class="location-input" onchange="autoSaveLocation(this, {{ item.id }})">
+        <textarea class="name-input" 
+                  readonly 
+                  style="background:#f9fafb; width:100%; min-width:100px; min-height:32px; resize:vertical; font-family:inherit; font-size:13px; padding:4px 8px; border:1px solid #e5e7eb; border-radius:6px; line-height:1.4;">{{ item.name }}</textarea>
+    </td>
+    <td>
+        <select class="location-input" data-location-id="{{ item.location.id|default:'' }}" onchange="autoSaveLocation(this, {{ item.id }})">
             <option value="">-- Выберите место --</option>
             {% for loc in locations %}
-            <option value="{{ loc }}" {% if item.location == loc %}selected{% endif %}>{{ loc }}</option>
+            <option value="{{ loc.id }}" {% if item.location.id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
             {% endfor %}
         </select>
     </td>
     <td><input type="number" class="quantity-input" value="{{ item.quantity }}" placeholder="0" oninput="autoSaveQuantity(this, {{ item.id }})"></td>
-    <td><input type="text" class="comment-input" value="{{ item.comment }}" placeholder="Комментарий" oninput="autoSaveComment(this, {{ item.id }})"></td>
+    <td>
+        <input type="text" class="comment-input" value="{{ item.comment }}" placeholder="Комментарий" style="width:100%; min-width:80px; min-height:28px; font-family:inherit; font-size:12px; padding:4px 8px; border:1px solid #e5e7eb; border-radius:6px; background:white;">
+    </td>
     <td class="delete-cell">
         <div class="action-buttons">
             <button class="add-child-btn" onclick="showAddChildModal({{ item.id }}, '{{ item.name|escapejs }}')" title="Добавить комплектующую">

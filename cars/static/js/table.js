@@ -102,7 +102,7 @@ async function createNewRow(data, parentId = null) {
             arrival_date: data.arrival_date || null,
             article: data.article || '',
             name: data.name || '',
-            location: data.location || '',
+            location: data.location || null,
             quantity: data.quantity || null,
             comment: data.comment || ''
         };
@@ -130,21 +130,30 @@ async function createNewRow(data, parentId = null) {
     }
 }
 
-// ========== СОХРАНЕНИЕ ВСЕЙ СТРОКИ ==========
+// ========== ПОЛУЧЕНИЕ ДАННЫХ СТРОКИ ==========
 
-async function saveFullRow(rowId, showSaveToast = false) {
-    const row = document.querySelector(`tr[data-id="${rowId}"]`);
-    if (!row) return false;
+function getRowData(row) {
+    const locationSelect = row.querySelector('.location-input');
+    const locationId = locationSelect ? locationSelect.value : null;
     
-    const data = {
+    return {
         number: row.querySelector('.number-input')?.value || '',
         arrival_date: row.querySelector('.date-input')?.value || null,
         article: row.querySelector('.article-input')?.value || '',
         name: row.querySelector('.name-input')?.value || '',
-        location: row.querySelector('.location-input')?.value || '',
+        location: locationId,
         quantity: row.querySelector('.quantity-input')?.value || null,
         comment: row.querySelector('.comment-input')?.value || ''
     };
+}
+
+// ========== СОХРАНЕНИЕ СТРОКИ (ОСНОВНАЯ ФУНКЦИЯ) ==========
+
+async function saveRowData(rowId, showToastMessage = false) {
+    const row = document.querySelector(`tr[data-id="${rowId}"]`);
+    if (!row) return false;
+    
+    const data = getRowData(row);
     
     const hasData = data.article || data.name || data.number || data.location || data.quantity || data.comment;
     if (!hasData) return false;
@@ -156,7 +165,8 @@ async function saveFullRow(rowId, showSaveToast = false) {
             row.setAttribute('data-id', newId);
             row.classList.remove('new-row');
             flashRowGreen(row);
-            if (showSaveToast) showToast('✓ Строка создана', 'success');
+            if (showToastMessage) showToast('✓ Строка создана', 'success');
+            updateRowId(rowId, newId);
             return true;
         }
         return false;
@@ -165,7 +175,7 @@ async function saveFullRow(rowId, showSaveToast = false) {
     const success = await saveRowToServer(rowId, data);
     if (success) {
         flashRowGreen(row);
-        if (showSaveToast) showToast('✓ Сохранено', 'success');
+        if (showToastMessage) showToast('✓ Сохранено', 'success');
     }
     return success;
 }
@@ -191,7 +201,7 @@ function flashFieldGreen(input) {
     }, 600);
 }
 
-// ========== ПОЛУЧЕНИЕ ID СТРОКИ ИЗ ЭЛЕМЕНТА ==========
+// ========== ПОЛУЧЕНИЕ ID СТРОКИ ==========
 
 function getRowId(element) {
     const row = element.closest('tr[data-id]');
@@ -199,41 +209,60 @@ function getRowId(element) {
     return row.getAttribute('data-id');
 }
 
-// ========== СОХРАНЕНИЕ ПОЛЯ (ЕДИНАЯ ФУНКЦИЯ) ==========
+// ========== ОБНОВЛЕНИЕ ID СТРОКИ ==========
+
+function updateRowId(oldId, newId) {
+    // Обновляем строку
+    const row = document.querySelector(`tr[data-id="${oldId}"]`);
+    if (row) {
+        row.setAttribute('data-id', newId);
+    }
+    
+    // Обновляем строки-дети
+    const childRows = document.querySelectorAll(`tr[data-parent="${oldId}"]`);
+    childRows.forEach(child => {
+        child.setAttribute('data-parent', newId);
+    });
+    
+    // Обновляем обработчики на кнопках
+    const buttons = document.querySelectorAll(`.add-child-btn, .delete-btn`);
+    buttons.forEach(btn => {
+        const onclick = btn.getAttribute('onclick');
+        if (onclick && onclick.includes(oldId)) {
+            btn.setAttribute('onclick', onclick.replace(oldId, newId));
+        }
+    });
+    
+    // Обновляем обработчики на полях ввода артикула
+    const inputs = document.querySelectorAll(`.article-input`);
+    inputs.forEach(input => {
+        const oninput = input.getAttribute('oninput');
+        if (oninput && oninput.includes(oldId)) {
+            input.setAttribute('oninput', oninput.replace(oldId, newId));
+        }
+    });
+    
+    // Обновляем кнопку "Добавить комплектующую" в строке комплектующих
+    const compRow = document.querySelector(`.components-row[data-parent-id="${oldId}"]`);
+    if (compRow) {
+        compRow.setAttribute('data-parent-id', newId);
+        const addBtn = compRow.querySelector('.btn-add-component');
+        if (addBtn) {
+            const onclick = addBtn.getAttribute('onclick');
+            if (onclick && onclick.includes(oldId)) {
+                addBtn.setAttribute('onclick', onclick.replace(oldId, newId));
+            }
+        }
+    }
+}
+
+// ========== СОХРАНЕНИЕ ПОЛЯ (ДЛЯ СОБЫТИЙ) ==========
 
 async function saveFieldHandler(input) {
     const rowId = getRowId(input);
     if (!rowId) return;
     
-    const row = document.querySelector(`tr[data-id="${rowId}"]`);
-    if (!row) return;
-    
-    const data = {
-        number: row.querySelector('.number-input')?.value || '',
-        arrival_date: row.querySelector('.date-input')?.value || null,
-        article: row.querySelector('.article-input')?.value || '',
-        name: row.querySelector('.name-input')?.value || '',
-        location: row.querySelector('.location-input')?.value || '',
-        quantity: row.querySelector('.quantity-input')?.value || null,
-        comment: row.querySelector('.comment-input')?.value || ''
-    };
-    
-    const hasData = data.article || data.name || data.number || data.location || data.quantity || data.comment;
-    if (!hasData) return;
-    
-    if (rowId.startsWith('new_')) {
-        const parentId = row.getAttribute('data-parent');
-        const newId = await createNewRow(data, parentId);
-        if (newId) {
-            row.setAttribute('data-id', newId);
-            row.classList.remove('new-row');
-            flashFieldGreen(input);
-            showToast('✓ Строка создана', 'success');
-        }
-        return;
-    }
-    
-    const success = await saveRowToServer(rowId, data);
+    const success = await saveRowData(rowId, false);
     if (success) {
         flashFieldGreen(input);
     }
@@ -241,12 +270,11 @@ async function saveFieldHandler(input) {
 
 // ========== ДЕЛЕГИРОВАНИЕ СОБЫТИЙ ==========
 
-// Настраиваем делегирование для всех полей ввода
 function setupDelegatedEvents() {
     const tableBody = document.getElementById('table-body');
     if (!tableBody) return;
     
-    // Обработка ввода для всех полей (кроме date)
+    // Обработка ввода для всех полей
     tableBody.addEventListener('input', function(e) {
         const target = e.target;
         if (!target.matches('input:not([type="date"]), textarea')) return;
@@ -254,12 +282,10 @@ function setupDelegatedEvents() {
         const rowId = getRowId(target);
         if (!rowId) return;
         
-        // Очищаем предыдущий таймер для этой строки
         if (saveTimers[rowId]) {
             clearTimeout(saveTimers[rowId]);
         }
         
-        // Устанавливаем таймер с debounce
         saveTimers[rowId] = setTimeout(async () => {
             await saveFieldHandler(target);
         }, 500);
@@ -272,7 +298,7 @@ function setupDelegatedEvents() {
         saveFieldHandler(target);
     });
     
-    // Обработка для select
+    // Обработка для select (локации)
     tableBody.addEventListener('change', function(e) {
         const target = e.target;
         if (!target.matches('select')) return;
@@ -280,7 +306,7 @@ function setupDelegatedEvents() {
         showToast('✓ Место сохранено', 'success');
     });
     
-    // Обработка blur для всех полей
+    // Обработка blur
     tableBody.addEventListener('blur', function(e) {
         const target = e.target;
         if (!target.matches('input, select, textarea')) return;
@@ -288,13 +314,12 @@ function setupDelegatedEvents() {
         const rowId = getRowId(target);
         if (!rowId) return;
         
-        // Очищаем таймер и сохраняем сразу
         if (saveTimers[rowId]) {
             clearTimeout(saveTimers[rowId]);
             delete saveTimers[rowId];
         }
         saveFieldHandler(target);
-    }, true); // capture фаза для blur
+    }, true);
     
     // Обработка Enter
     tableBody.addEventListener('keydown', function(e) {
@@ -305,12 +330,46 @@ function setupDelegatedEvents() {
         e.preventDefault();
         saveFieldHandler(target);
         
-        // Переход на следующее поле
         const inputs = Array.from(document.querySelectorAll('.inventory-table input:not([readonly]), .inventory-table select'));
         const currentIndex = inputs.indexOf(target);
         if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
             inputs[currentIndex + 1].focus();
         }
+    });
+}
+
+// ========== ЗАГРУЗКА ЛОКАЦИЙ ==========
+
+async function loadLocations() {
+    try {
+        const response = await fetch(`${API_BASE}api/get-locations/`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                locationsList = data.locations;
+                console.log('Загружено локаций:', locationsList.length);
+                updateAllLocationSelects();
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки локаций:', error);
+    }
+}
+
+function updateAllLocationSelects() {
+    const selects = document.querySelectorAll('.location-input');
+    selects.forEach(select => {
+        const currentValue = select.getAttribute('data-location-id') || select.value;
+        select.innerHTML = '<option value="">-- Выберите место --</option>';
+        locationsList.forEach(loc => {
+            const option = document.createElement('option');
+            option.value = loc.id;
+            option.textContent = loc.name;
+            if (currentValue == loc.id) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
     });
 }
 
@@ -322,7 +381,12 @@ window.autoFillName = async function(articleInput, rowId) {
     const nameInput = row.querySelector('.name-input');
     const currentRowId = rowId.toString();
     
-    if (debounceTimers[currentRowId]) clearTimeout(debounceTimers[currentRowId]);
+    console.log('autoFillName вызван:', { article, rowId: currentRowId });
+    
+    if (debounceTimers[currentRowId]) {
+        clearTimeout(debounceTimers[currentRowId]);
+    }
+    
     if (!article) {
         nameInput.value = '';
         nameInput.setAttribute('readonly', 'readonly');
@@ -330,7 +394,11 @@ window.autoFillName = async function(articleInput, rowId) {
         nameInput.style.background = '#f9fafb';
         return;
     }
-    if (article.length < MIN_ARTICLE_LENGTH) return;
+    
+    if (article.length < MIN_ARTICLE_LENGTH) {
+        nameInput.placeholder = `Введите минимум ${MIN_ARTICLE_LENGTH} символа...`;
+        return;
+    }
     
     articleInput.classList.add('loading');
     nameInput.placeholder = 'Поиск...';
@@ -339,8 +407,11 @@ window.autoFillName = async function(articleInput, rowId) {
     debounceTimers[currentRowId] = setTimeout(async () => {
         try {
             const response = await fetch(`${ARTICLE_SEARCH_URL}${encodeURIComponent(article)}/`);
+            console.log('API ответ:', response.status);
+            
             if (response.ok) {
                 const data = await response.json();
+                console.log('Данные от API:', data);
                 if (data && data.title) {
                     nameInput.value = data.title;
                     nameInput.classList.add('auto-filled');
@@ -350,11 +421,12 @@ window.autoFillName = async function(articleInput, rowId) {
                     nameInput.style.background = '#f9fafb';
                     showToast(`✓ Найдено: ${data.title}`, 'success');
                     
-                    // Сохраняем через общий обработчик
+                    // Сохраняем строку после подстановки
                     await saveFieldHandler(articleInput);
                     flashFieldGreen(nameInput);
                 }
             } else {
+                // Артикул не найден
                 nameInput.value = '';
                 nameInput.placeholder = 'Артикул не найден, введите вручную';
                 nameInput.removeAttribute('readonly');
@@ -362,6 +434,7 @@ window.autoFillName = async function(articleInput, rowId) {
                 nameInput.style.border = '1px solid #ff9800';
                 showToast(`⚠ Артикул "${article}" не найден. Введите наименование вручную.`, 'info');
                 
+                // Сохраняем даже если артикул не найден
                 await saveFieldHandler(articleInput);
             }
         } catch (error) {
@@ -370,13 +443,15 @@ window.autoFillName = async function(articleInput, rowId) {
             nameInput.removeAttribute('readonly');
             nameInput.style.background = '#fff3e0';
             showToast('❌ Ошибка поиска. Введите наименование вручную.', 'error');
+            
+            // Сохраняем при ошибке
+            await saveFieldHandler(articleInput);
         } finally {
             articleInput.classList.remove('loading');
             updateStats();
         }
     }, 1000);
 };
-
 // ========== ДОБАВЛЕНИЕ ДОЧЕРНЕЙ ПОЗИЦИИ ==========
 
 window.showAddChildModal = function(parentId, parentName) {
@@ -504,29 +579,57 @@ window.addNewRow = function() {
     
     let locationOptions = '<option value="">-- Выберите место --</option>';
     locationsList.forEach(loc => { 
-        locationOptions += `<option value="${loc}">${loc}</option>`; 
+        locationOptions += `<option value="${loc.id}">${loc.name}</option>`; 
     });
     
     newRow.innerHTML = `
-        <td class="expand-cell" style="text-align: center;"></td>
-        <td><input type="text" class="number-input" placeholder="Введите №" data-field="number"></td>
-        <td><input type="date" class="date-input" placeholder="дд.мм.гггг" data-field="arrival_date"></td>
-        <td><input type="text" class="article-input" placeholder="Введите артикул" data-field="article" oninput="autoFillName(this, '${newId}')"></td>
-        <td><input type="text" class="name-input" readonly style="background:#f9fafb; width:100%; min-width:100px;" placeholder="Наименование" data-field="name"></td>
-        <td><select class="location-input" data-field="location">${locationOptions}</select></td>
-        <td><input type="number" class="quantity-input" placeholder="0" data-field="quantity"></td>
-        <td><input type="text" class="comment-input" placeholder="Комментарий" data-field="comment"></td>
-        <td class="delete-cell">
-            <div class="action-buttons">
-                <button class="add-child-btn" onclick="showAddChildModal('${newId}', '')" title="Добавить комплектующую">
-                    <i class="fas fa-plus-circle"></i>
-                </button>
-                <button class="delete-btn" onclick="showDeleteModal('${newId}')">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        </td>
-    `;
+    <td class="expand-cell" style="text-align: center;"></td>
+    <td><input type="text" class="number-input" placeholder="Введите №" data-field="number"></td>
+    <td><input type="date" class="date-input" placeholder="дд.мм.гггг" data-field="arrival_date"></td>
+    <td>
+        <input type="text" 
+               class="article-input" 
+               placeholder="Введите артикул" 
+               data-field="article"
+               oninput="autoFillName(this, '${newId}')">
+    </td>
+    <td>
+        <textarea class="name-input" 
+                  readonly 
+                  style="background:#f9fafb;
+                   width:100%; 
+                   min-width:100px;
+                    min-height:32px;
+                     resize:vertical;
+                      font-family:inherit;
+                       font-size:13px;
+                        padding:4px 8px;
+                         border:1px solid transparent;
+                          border-radius:4px;
+                           line-height:1.4;
+                            overflow:hidden;" 
+                  placeholder="Наименование" 
+                  data-field="name"></textarea>
+    </td>
+    <td><select class="location-input" data-field="location">${locationOptions}</select></td>
+    <td><input type="number" class="quantity-input" placeholder="0" data-field="quantity"></td>
+    <td>
+        <textarea class="comment-input" 
+                  style="width:100%; min-width:80px; min-height:28px; resize:vertical; font-family:inherit; font-size:12px; padding:3px 6px; border:1px solid var(--secondary-blue); border-radius:4px; line-height:1.4; background:white;" 
+                  placeholder="Комментарий" 
+                  data-field="comment"></textarea>
+    </td>
+    <td class="delete-cell">
+        <div class="action-buttons">
+            <button class="add-child-btn" onclick="showAddChildModal('${newId}', '')" title="Добавить комплектующую">
+                <i class="fas fa-plus-circle"></i>
+            </button>
+            <button class="delete-btn" onclick="showDeleteModal('${newId}')">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </td>
+`;
     
     tbody.appendChild(newRow);
     
@@ -612,10 +715,11 @@ window.filterTable = function() {
         const number = row.querySelector('.number-input')?.value || '';
         const article = row.querySelector('.article-input')?.value || '';
         const name = row.querySelector('.name-input')?.value || '';
-        const location = row.querySelector('.location-input')?.value || '';
+        const locationSelect = row.querySelector('.location-input');
+        const locationText = locationSelect ? locationSelect.options[locationSelect.selectedIndex]?.text || '' : '';
         const comment = row.querySelector('.comment-input')?.value || '';
         
-        const fullText = `${number} ${article} ${name} ${location} ${comment}`.toLowerCase();
+        const fullText = `${number} ${article} ${name} ${locationText} ${comment}`.toLowerCase();
         const matches = fullText.includes(searchTerm);
         const rowId = row.getAttribute('data-id');
         
@@ -681,20 +785,6 @@ window.clearSearch = function() {
     }
 };
 
-// ========== ЗАГРУЗКА ЛОКАЦИЙ ==========
-
-async function loadLocations() {
-    try {
-        const response = await fetch(`${API_BASE}api/get-locations/`);
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success) locationsList = data.locations;
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки локаций:', error);
-    }
-}
-
 // ========== ЭКСПОРТ ОТЧЕТА ==========
 
 function exportReport() {
@@ -714,6 +804,8 @@ function exportReport() {
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('=== СТРАНИЦА ЗАГРУЖЕНА ===');
+    
+    // Загружаем локации
     loadLocations();
     updateStats();
     

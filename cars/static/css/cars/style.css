@@ -373,17 +373,14 @@ body {
 
 /* Поле наименование - видно весь текст */
 .inventory-table .name-input {
-    white-space: normal;
-    word-wrap: break-word;
-    overflow: visible;
-    height: auto;
-    min-height: 28px;
-    line-height: 1.3;
-    background: var(--primary-light);
-    padding: 4px 6px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-dark);
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 32px;
+    line-height: 1.4;
+    resize: vertical;
+    
 }
 
 /* ========== КНОПКА РАСКРЫТИЯ ========== */
@@ -830,6 +827,7 @@ tr[data-level="0"]:not(.has-children) {
     .inventory-table th,
     .inventory-table td {
         padding: 3px 3px;
+        
     }
     
     .inventory-table input,
@@ -837,5 +835,42 @@ tr[data-level="0"]:not(.has-children) {
         font-size: 11px;
         padding: 3px 4px;
         min-height: 24px;
+    }
+}
+
+/* ========== КНОПКИ В ХЕДЕРЕ ========== */
+.action-buttons-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #1F3A55 0%, #10b981 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(31, 58, 85, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.btn-success i {
+    color: #9EECA0;
+}
+
+/* Адаптив для кнопок */
+@media (max-width: 768px) {
+    .action-buttons-header {
+        width: 100%;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-success,
+    .btn-primary {
+        padding: 8px 12px;
+        font-size: 12px;
     }
 }
