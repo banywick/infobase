@@ -1,0 +1,148 @@
+{% extends 'workwear/base.html' %}
+{% load static %}
+
+{% block title %}Спецодежда - Учет спецодежды{% endblock %}
+
+{% block content %}
+<div class="workwear-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tshirt me-2"></i>Спецодежда</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWorkwearModal">
+            <i class="fas fa-plus"></i> Добавить спецодежду
+        </button>
+    </div>
+    
+    <!-- Фильтры -->
+    <div class="filter-section">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Поиск</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Наименование, сотрудник...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Статус</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">Все</option>
+                    <option value="active">Активные</option>
+                    <option value="expiring">Истекает срок</option>
+                    <option value="expired">Просрочены</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Категория</label>
+                <select class="form-select" id="categoryFilter">
+                    <option value="">Все</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Срок истечения с</label>
+                <input type="date" class="form-control" id="expirationFrom">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">по</label>
+                <input type="date" class="form-control" id="expirationTo">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                    <i class="fas fa-undo"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Таблица спецодежды -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-workwear" id="workwearTable">
+                    <thead>
+                        <tr>
+                            <th>Сотрудник</th>
+                            <th>Наименование</th>
+                            <th>Категория</th>
+                            <th>Размер</th>
+                            <th>Дата выдачи</th>
+                            <th>Срок истечения</th>
+                            <th>Статус</th>
+                            <th>Дней до</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workwearTableBody">
+                        <tr>
+                            <td colspan="9" class="text-center py-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Загрузка...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-container" id="paginationContainer"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления спецодежды -->
+<div class="modal fade" id="addWorkwearModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить спецодежду</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addWorkwearForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Сотрудник *</label>
+                            <select class="form-select" name="employee" required id="employeeSelect">
+                                <option value="">Выберите сотрудника</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Категория *</label>
+                            <select class="form-select" name="category" required id="categorySelect">
+                                <option value="">Выберите категорию</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Наименование *</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Серийный номер</label>
+                            <input type="text" class="form-control" name="serial_number">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Размер</label>
+                            <input type="text" class="form-control" name="size">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Цвет</label>
+                            <input type="text" class="form-control" name="color">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Дата выдачи *</label>
+                            <input type="date" class="form-control" name="issue_date" required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Примечания</label>
+                            <textarea class="form-control" name="notes" rows="2"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveWorkwearBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workwear/js/workwear.js' %}"></script>
+{% endblock %}

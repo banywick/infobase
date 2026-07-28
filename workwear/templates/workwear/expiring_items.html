@@ -1,0 +1,209 @@
+{% extends 'workwear/base.html' %}
+{% load static %}
+
+{% block title %}Истекает срок - Учет спецодежды{% endblock %}
+
+{% block content %}
+<div class="expiring-page">
+    <h2 class="mb-4"><i class="fas fa-clock text-warning me-2"></i>Спецодежда с истекающим сроком</h2>
+    
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Показаны предметы спецодежды, срок эксплуатации которых истекает в ближайшие 30 дней.
+    </div>
+    
+    <!-- Фильтры -->
+    <div class="filter-section">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Отдел</label>
+                <input type="text" class="form-control" id="departmentFilter" placeholder="Фильтр по отделу">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Сортировка</label>
+                <select class="form-select" id="sortFilter">
+                    <option value="expiration_date">По дате истечения</option>
+                    <option value="employee__department">По отделу</option>
+                    <option value="employee__user__last_name">По сотруднику</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                    <i class="fas fa-undo"></i> Сбросить
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Карточки -->
+    <div class="row g-4" id="expiringContainer">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted">Загрузка данных...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const container = document.getElementById('expiringContainer');
+    const departmentFilter = document.getElementById('departmentFilter');
+    const sortFilter = document.getElementById('sortFilter');
+    const resetBtn = document.getElementById('resetFilters');
+    
+    let currentData = [];
+    
+    async function loadData() {
+        try {
+            const params = {};
+            const department = departmentFilter.value.trim();
+            if (department) {
+                params.department = department;
+            }
+            
+            const items = await API.getExpiringItems(params);
+            currentData = items;
+            renderItems(items);
+        } catch (error) {
+            console.error('Error loading expiring items:', error);
+            container.innerHTML = `
+                <div class="col-12 text-center py-5 text-danger">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    <p class="mt-2">Ошибка загрузки данных</p>
+                </div>
+            `;
+        }
+    }
+    
+    function renderItems(items) {
+        if (items.length === 0) {
+            container.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                    <h5>Все в порядке!</h5>
+                    <p class="text-muted">Нет предметов с истекающим сроком</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Сортировка
+        const sortBy = sortFilter.value;
+        items.sort((a, b) => {
+            if (sortBy === 'expiration_date') {
+                return new Date(a.expiration_date) - new Date(b.expiration_date);
+            } else if (sortBy === 'employee__department') {
+                return (a.employee_name || '').localeCompare(b.employee_name || '');
+            } else {
+                return (a.employee_name || '').localeCompare(b.employee_name || '');
+            }
+        });
+        
+        let html = '';
+        items.forEach(item => {
+            const days = item.days_until_expiration || 0;
+            const urgencyClass = days <= 7 ? 'border-danger' : days <= 15 ? 'border-warning' : 'border-info';
+            const bgClass = days <= 7 ? 'bg-danger' : days <= 15 ? 'bg-warning' : 'bg-info';
+            
+            html += `
+                <div class="col-md-4 col-lg-3">
+                    <div class="card h-100 ${urgencyClass} border-3 fade-in">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">${item.name}</h5>
+                                <span class="badge ${bgClass} text-white">${days} дней</span>
+                            </div>
+                            <p class="card-text">
+                                <small class="text-muted">Сотрудник:</small><br>
+                                <strong>
+                                    <a href="/workwear/employees/${item.employee}/" class="text-decoration-none">
+                                        ${item.employee_name}
+                                    </a>
+                                </strong>
+                            </p>
+                            <p class="card-text">
+                                <small class="text-muted">Категория:</small><br>
+                                ${item.category_name}
+                            </p>
+                            <p class="card-text">
+                                <small class="text-muted">Срок истечения:</small><br>
+                                <span class="fw-bold">${item.expiration_date}</span>
+                            </p>
+                            ${item.serial_number ? `
+                                <p class="card-text">
+                                    <small class="text-muted">Серийный номер:</small><br>
+                                    ${item.serial_number}
+                                </p>
+                            ` : ''}
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-danger" onclick="returnItem(${item.id})">
+                                    <i class="fas fa-undo"></i> Вернуть
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="viewEmployee(${item.employee})">
+                                    <i class="fas fa-user"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    // Глобальные функции для кнопок
+    window.returnItem = async function(id) {
+        if (!confirm('Вернуть эту спецодежду?')) return;
+        try {
+            await API.returnWorkwearItem(id);
+            await loadData();
+            showNotification('Спецодежда возвращена', 'success');
+        } catch (error) {
+            console.error('Error returning item:', error);
+            showNotification('Ошибка при возврате', 'danger');
+        }
+    };
+    
+    window.viewEmployee = function(id) {
+        window.location.href = `/workwear/employees/${id}/`;
+    };
+    
+    function showNotification(message, type) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        alert.style.zIndex = '9999';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 5000);
+    }
+    
+    // Обработчики событий
+    let timeoutId;
+    departmentFilter.addEventListener('input', () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(loadData, 300);
+    });
+    
+    sortFilter.addEventListener('change', () => {
+        renderItems(currentData);
+    });
+    
+    resetBtn.addEventListener('click', () => {
+        departmentFilter.value = '';
+        sortFilter.value = 'expiration_date';
+        loadData();
+    });
+    
+    // Загрузка данных
+    await loadData();
+});
+</script>
+{% endblock %}

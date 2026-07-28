@@ -1,0 +1,88 @@
+{% extends 'workwear/base.html' %}
+{% load static %}
+
+{% block title %}Дашборд - Учет спецодежды{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2 class="mb-4"><i class="fas fa-chart-pie me-2"></i>Дашборд</h2>
+    
+    <!-- Статистика -->
+    <div class="row g-4 mb-4" id="statsContainer">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card card text-center p-3">
+                <div class="card-body">
+                    <div class="stat-icon text-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number" id="totalEmployees">0</div>
+                    <div class="stat-label">Всего сотрудников</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card card text-center p-3">
+                <div class="card-body">
+                    <div class="stat-icon text-info">
+                        <i class="fas fa-tshirt"></i>
+                    </div>
+                    <div class="stat-number" id="totalWorkwear">0</div>
+                    <div class="stat-label">Всего спецодежды</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card card text-center p-3 border-warning">
+                <div class="card-body">
+                    <div class="stat-icon text-warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number" id="expiringItems">0</div>
+                    <div class="stat-label">Истекает срок (30 дней)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card card text-center p-3 border-danger">
+                <div class="card-body">
+                    <div class="stat-icon text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-number" id="expiredItems">0</div>
+                    <div class="stat-label">Просрочено</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Графики -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Статус спецодежды</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Сотрудники с истекающим сроком</h5>
+                </div>
+                <div class="card-body" id="expiringEmployeesList">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin"></i> Загрузка...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workwear/js/dashboard.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,537 @@
+{% extends 'workwear/base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Редактировать{% else %}Добавить{% endif %} спецодежду - Учет спецодежды{% endblock %}
+
+{% block content %}
+<div class="workwear-form-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-tshirt me-2"></i>
+            {% if form.instance.pk %}Редактирование спецодежды{% else %}Добавление спецодежды{% endif %}
+        </h2>
+        <a href="{% url 'workwear:workwear_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form id="workwearForm" method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Сотрудник -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.employee.id_for_label }}" class="form-label required-field">
+                            Сотрудник <span class="text-danger">*</span>
+                        </label>
+                        <select name="{{ form.employee.name }}" 
+                                id="{{ form.employee.id_for_label }}" 
+                                class="form-select {% if form.employee.errors %}is-invalid{% endif %}"
+                                required>
+                            <option value="">Выберите сотрудника</option>
+                            {% for employee in employees %}
+                                <option value="{{ employee.id }}" 
+                                        {% if form.employee.value == employee.id %}selected{% endif %}>
+                                    {{ employee.get_full_name }} ({{ employee.department }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.employee.errors %}
+                            <div class="invalid-feedback">{{ form.employee.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Категория -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label required-field">
+                            Категория <span class="text-danger">*</span>
+                        </label>
+                        <select name="{{ form.category.name }}" 
+                                id="{{ form.category.id_for_label }}" 
+                                class="form-select {% if form.category.errors %}is-invalid{% endif %}"
+                                required>
+                            <option value="">Выберите категорию</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        data-lifespan="{{ category.standard_lifespan }}"
+                                        {% if form.category.value == category.id %}selected{% endif %}>
+                                    {{ category.name }} ({{ category.standard_lifespan }} дней)
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.category.errors %}
+                            <div class="invalid-feedback">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Наименование -->
+                    <div class="col-md-8 mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label required-field">
+                            Наименование <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               name="{{ form.name.name }}" 
+                               id="{{ form.name.id_for_label }}" 
+                               class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                               value="{{ form.name.value|default:'' }}"
+                               placeholder="Введите наименование спецодежды"
+                               required>
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Серийный номер -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.serial_number.id_for_label }}" class="form-label">
+                            Серийный номер
+                        </label>
+                        <input type="text" 
+                               name="{{ form.serial_number.name }}" 
+                               id="{{ form.serial_number.id_for_label }}" 
+                               class="form-control {% if form.serial_number.errors %}is-invalid{% endif %}"
+                               value="{{ form.serial_number.value|default:'' }}"
+                               placeholder="Серийный номер">
+                        {% if form.serial_number.errors %}
+                            <div class="invalid-feedback">{{ form.serial_number.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Размер -->
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.size.id_for_label }}" class="form-label">
+                            Размер
+                        </label>
+                        <input type="text" 
+                               name="{{ form.size.name }}" 
+                               id="{{ form.size.id_for_label }}" 
+                               class="form-control {% if form.size.errors %}is-invalid{% endif %}"
+                               value="{{ form.size.value|default:'' }}"
+                               placeholder="Например: M, L, XL, 42-44">
+                        {% if form.size.errors %}
+                            <div class="invalid-feedback">{{ form.size.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Цвет -->
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.color.id_for_label }}" class="form-label">
+                            Цвет
+                        </label>
+                        <div class="input-group">
+                            <input type="text" 
+                                   name="{{ form.color.name }}" 
+                                   id="{{ form.color.id_for_label }}" 
+                                   class="form-control {% if form.color.errors %}is-invalid{% endif %}"
+                                   value="{{ form.color.value|default:'' }}"
+                                   placeholder="Цвет">
+                            <span class="input-group-text" style="padding: 3px;">
+                                <input type="color" 
+                                       id="colorPicker" 
+                                       value="{{ form.color.value|default:'#000000' }}"
+                                       style="width: 30px; height: 30px; padding: 0; border: none; cursor: pointer;">
+                            </span>
+                        </div>
+                        {% if form.color.errors %}
+                            <div class="invalid-feedback">{{ form.color.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Дата выдачи -->
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.issue_date.id_for_label }}" class="form-label required-field">
+                            Дата выдачи <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" 
+                               name="{{ form.issue_date.name }}" 
+                               id="{{ form.issue_date.id_for_label }}" 
+                               class="form-control {% if form.issue_date.errors %}is-invalid{% endif %}"
+                               value="{{ form.issue_date.value|date:'Y-m-d'|default:'' }}"
+                               required>
+                        {% if form.issue_date.errors %}
+                            <div class="invalid-feedback">{{ form.issue_date.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Дата истечения -->
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.expiration_date.id_for_label }}" class="form-label">
+                            Дата истечения срока
+                        </label>
+                        <div class="input-group">
+                            <input type="date" 
+                                   name="{{ form.expiration_date.name }}" 
+                                   id="{{ form.expiration_date.id_for_label }}" 
+                                   class="form-control {% if form.expiration_date.errors %}is-invalid{% endif %}"
+                                   value="{{ form.expiration_date.value|date:'Y-m-d'|default:'' }}">
+                            <button type="button" class="btn btn-outline-secondary" id="calcExpirationBtn" title="Рассчитать автоматически">
+                                <i class="fas fa-calculator"></i>
+                            </button>
+                        </div>
+                        {% if form.expiration_date.errors %}
+                            <div class="invalid-feedback">{{ form.expiration_date.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Оставьте пустым для автоматического расчета на основе категории
+                        </small>
+                    </div>
+
+                    <!-- Статус активности -->
+                    <div class="col-md-12 mb-3">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" 
+                                   name="{{ form.is_active.name }}" 
+                                   id="{{ form.is_active.id_for_label }}" 
+                                   class="form-check-input {% if form.is_active.errors %}is-invalid{% endif %}"
+                                   {% if form.is_active.value %}checked{% endif %}>
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Активен
+                            </label>
+                            {% if form.is_active.errors %}
+                                <div class="invalid-feedback">{{ form.is_active.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Примечания -->
+                    <div class="col-md-12 mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            Примечания
+                        </label>
+                        <textarea name="{{ form.notes.name }}" 
+                                  id="{{ form.notes.id_for_label }}" 
+                                  class="form-control {% if form.notes.errors %}is-invalid{% endif %}"
+                                  rows="3"
+                                  placeholder="Дополнительная информация о спецодежде">{{ form.notes.value|default:'' }}</textarea>
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Кнопки действий -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        {% if form.instance.pk %}
+                            <button type="button" class="btn btn-danger" id="deleteWorkwearBtn">
+                                <i class="fas fa-trash"></i> Списать
+                            </button>
+                            <button type="button" class="btn btn-warning" id="returnWorkwearBtn">
+                                <i class="fas fa-undo"></i> Вернуть
+                            </button>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{% url 'workwear:workwear_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="saveWorkwearBtn">
+                            <i class="fas fa-save"></i> 
+                            {% if form.instance.pk %}Сохранить{% else %}Добавить{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Информация о категории -->
+    <div class="card mt-3" id="categoryInfo" style="display: none;">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Информация о категории</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Категория:</strong> <span id="categoryInfoName">-</span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Стандартный срок эксплуатации:</strong> <span id="categoryInfoLifespan">-</span>
+                </div>
+                <div class="col-md-12 mt-2">
+                    <strong>Описание:</strong> <span id="categoryInfoDescription">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение действия</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                Вы уверены, что хотите выполнить это действие?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmModalBtn">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('workwearForm');
+    const categorySelect = document.getElementById('{{ form.category.id_for_label }}');
+    const issueDateInput = document.getElementById('{{ form.issue_date.id_for_label }}');
+    const expirationDateInput = document.getElementById('{{ form.expiration_date.id_for_label }}');
+    const calcExpirationBtn = document.getElementById('calcExpirationBtn');
+    const colorInput = document.getElementById('{{ form.color.id_for_label }}');
+    const colorPicker = document.getElementById('colorPicker');
+    const categoryInfo = document.getElementById('categoryInfo');
+    const categoryInfoName = document.getElementById('categoryInfoName');
+    const categoryInfoLifespan = document.getElementById('categoryInfoLifespan');
+    const categoryInfoDescription = document.getElementById('categoryInfoDescription');
+    const deleteBtn = document.getElementById('deleteWorkwearBtn');
+    const returnBtn = document.getElementById('returnWorkwearBtn');
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const confirmModalBtn = document.getElementById('confirmModalBtn');
+    const confirmModalBody = document.getElementById('confirmModalBody');
+
+    // Данные категорий с бэкенда
+    const categoriesData = {
+        {% for category in categories %}
+            {{ category.id }}: {
+                name: "{{ category.name|escapejs }}",
+                lifespan: {{ category.standard_lifespan }},
+                description: "{{ category.description|escapejs }}"
+            },
+        {% endfor %}
+    };
+
+    // Обновление информации о категории
+    function updateCategoryInfo() {
+        const selectedId = parseInt(categorySelect.value);
+        if (selectedId && categoriesData[selectedId]) {
+            const data = categoriesData[selectedId];
+            categoryInfoName.textContent = data.name;
+            categoryInfoLifespan.textContent = data.lifespan + ' дней';
+            categoryInfoDescription.textContent = data.description || 'Нет описания';
+            categoryInfo.style.display = 'block';
+        } else {
+            categoryInfo.style.display = 'none';
+        }
+    }
+
+    // Автоматический расчет даты истечения
+    function calculateExpirationDate() {
+        const selectedId = parseInt(categorySelect.value);
+        const issueDate = issueDateInput.value;
+        
+        if (selectedId && categoriesData[selectedId] && issueDate) {
+            const lifespan = categoriesData[selectedId].lifespan;
+            const date = new Date(issueDate);
+            date.setDate(date.getDate() + lifespan);
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            expirationDateInput.value = `${year}-${month}-${day}`;
+            
+            // Подсветка
+            expirationDateInput.style.borderColor = '#28a745';
+            setTimeout(() => {
+                expirationDateInput.style.borderColor = '';
+            }, 2000);
+        }
+    }
+
+    // Синхронизация цвета
+    colorPicker.addEventListener('input', function() {
+        colorInput.value = this.value;
+    });
+
+    colorInput.addEventListener('input', function() {
+        colorPicker.value = this.value;
+    });
+
+    // Обработчики событий
+    categorySelect.addEventListener('change', function() {
+        updateCategoryInfo();
+        // Автоматически рассчитываем дату, если есть дата выдачи
+        if (issueDateInput.value) {
+            calculateExpirationDate();
+        }
+    });
+
+    issueDateInput.addEventListener('change', function() {
+        if (categorySelect.value) {
+            calculateExpirationDate();
+        }
+    });
+
+    calcExpirationBtn.addEventListener('click', function() {
+        if (!categorySelect.value) {
+            showNotification('Сначала выберите категорию', 'warning');
+            return;
+        }
+        if (!issueDateInput.value) {
+            showNotification('Сначала укажите дату выдачи', 'warning');
+            return;
+        }
+        calculateExpirationDate();
+        showNotification('Дата истечения рассчитана автоматически', 'success');
+    });
+
+    // Валидация формы
+    form.addEventListener('submit', function(e) {
+        const expirationDate = expirationDateInput.value;
+        const issueDate = issueDateInput.value;
+        
+        if (issueDate && expirationDate) {
+            if (new Date(expirationDate) < new Date(issueDate)) {
+                e.preventDefault();
+                showNotification('Дата истечения не может быть раньше даты выдачи!', 'danger');
+                expirationDateInput.classList.add('is-invalid');
+                return false;
+            }
+        }
+        return true;
+    });
+
+    // Удаление/списание
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            confirmModalBody.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3"></i>
+                    <p><strong>Вы уверены, что хотите списать эту спецодежду?</strong></p>
+                    <p class="text-muted">Это действие нельзя отменить.</p>
+                </div>
+            `;
+            confirmModalBtn.className = 'btn btn-danger';
+            confirmModalBtn.textContent = 'Списать';
+            confirmModal.show();
+            
+            confirmModalBtn.onclick = function() {
+                deleteWorkwear();
+            };
+        });
+    }
+
+    // Возврат
+    if (returnBtn) {
+        returnBtn.addEventListener('click', function() {
+            confirmModalBody.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-undo text-warning fa-3x mb-3"></i>
+                    <p><strong>Вы уверены, что хотите вернуть эту спецодежду?</strong></p>
+                    <p class="text-muted">Спецодежда будет помечена как возвращенная.</p>
+                </div>
+            `;
+            confirmModalBtn.className = 'btn btn-warning';
+            confirmModalBtn.textContent = 'Вернуть';
+            confirmModal.show();
+            
+            confirmModalBtn.onclick = function() {
+                returnWorkwear();
+            };
+        });
+    }
+
+    // Функции API
+    async function deleteWorkwear() {
+        const id = {{ form.instance.pk|default:'null' }};
+        if (!id) return;
+        
+        try {
+            const btn = confirmModalBtn;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Загрузка...';
+            
+            await API.deleteWorkwearItem(id);
+            confirmModal.hide();
+            showNotification('Спецодежда списана', 'success');
+            setTimeout(() => {
+                window.location.href = "{% url 'workwear:workwear_list' %}";
+            }, 1500);
+        } catch (error) {
+            console.error('Error deleting workwear:', error);
+            showNotification('Ошибка при списании', 'danger');
+            confirmModal.hide();
+        }
+    }
+
+    async function returnWorkwear() {
+        const id = {{ form.instance.pk|default:'null' }};
+        if (!id) return;
+        
+        try {
+            const btn = confirmModalBtn;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Загрузка...';
+            
+            await API.returnWorkwearItem(id);
+            confirmModal.hide();
+            showNotification('Спецодежда возвращена', 'success');
+            setTimeout(() => {
+                window.location.href = "{% url 'workwear:workwear_list' %}";
+            }, 1500);
+        } catch (error) {
+            console.error('Error returning workwear:', error);
+            showNotification('Ошибка при возврате', 'danger');
+            confirmModal.hide();
+        }
+    }
+
+    // Уведомления
+    function showNotification(message, type = 'info') {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        alert.style.zIndex = '9999';
+        alert.style.maxWidth = '400px';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 5000);
+    }
+
+    // Инициализация
+    updateCategoryInfo();
+    
+    // Если есть дата выдачи и категория, но нет даты истечения - рассчитываем
+    if (issueDateInput.value && categorySelect.value && !expirationDateInput.value) {
+        calculateExpirationDate();
+    }
+});
+
+// Добавляем стили для обязательных полей
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .required-field::after {
+            content: '';
+        }
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+        #colorPicker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        #colorPicker::-webkit-color-swatch {
+            border: none;
+            border-radius: 4px;
+        }
+        #colorPicker::-moz-color-swatch {
+            border: none;
+            border-radius: 4px;
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

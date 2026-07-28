@@ -1,0 +1,248 @@
+/* Основные стили */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --info-color: #1abc9c;
+    --light-bg: #f8f9fa;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+}
+
+/* Карточки сотрудников */
+.employee-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    cursor: pointer;
+    background: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.employee-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.employee-card .card-img-top {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 20px auto 10px;
+    border: 3px solid #e9ecef;
+}
+
+.employee-card .card-body {
+    text-align: center;
+    padding: 15px;
+}
+
+.employee-card .employee-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.employee-card .employee-department {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.employee-card .employee-position {
+    color: #495057;
+    font-size: 0.85rem;
+}
+
+/* Статусные индикаторы */
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-expired {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-expiring {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* Карточка сотрудника с цветовой индикацией */
+.employee-card.status-expired {
+    border-left: 5px solid var(--danger-color);
+    background-color: #fff5f5;
+}
+
+.employee-card.status-expiring {
+    border-left: 5px solid var(--warning-color);
+    background-color: #fffbee;
+}
+
+.employee-card.status-ok {
+    border-left: 5px solid var(--success-color);
+}
+
+/* Статистика дашборда */
+.stat-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: scale(1.02);
+}
+
+.stat-card .stat-icon {
+    font-size: 2.5rem;
+    opacity: 0.7;
+}
+
+.stat-card .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.stat-card .stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Кастомная пагинация */
+.pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Фильтры */
+.filter-section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
+}
+
+.filter-section .form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    .employee-card .card-img-top {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .stat-card .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .filter-section {
+        padding: 15px;
+    }
+}
+
+/* Спецодежда в виде сетки */
+.workwear-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.workwear-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    background: white;
+    transition: all 0.2s;
+}
+
+.workwear-card:hover {
+    box-shadow: var(--card-shadow);
+}
+
+.workwear-card .workwear-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.workwear-card .workwear-detail {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Тултипы и подсказки */
+.tooltip-inner {
+    max-width: 300px;
+}
+
+/* Загрузка */
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 50px;
+}
+
+.loading-spinner.show {
+    display: block;
+}
+
+/* Badge для количества */
+.badge-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.7rem;
+    padding: 3px 6px;
+}
+
+/* Таблицы */
+.table-workwear td {
+    vertical-align: middle;
+}
+
+.table-workwear .employee-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
