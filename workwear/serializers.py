@@ -8,6 +8,8 @@ from django.utils import timezone
 
 class EmployeeSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
+    # Убираем expiring_count и expired_count, если они не нужны
+    # Или оставляем, но с защитой
     expiring_count = serializers.SerializerMethodField()
     expired_count = serializers.SerializerMethodField()
     
@@ -24,10 +26,28 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return obj.get_full_name()
     
     def get_expiring_count(self, obj):
-        return obj.get_expiring_items().count()
+        """Безопасное получение количества истекающих предметов"""
+        if hasattr(obj, 'get_expiring_items'):
+            return obj.get_expiring_items().count()
+        # Альтернативный способ - напрямую через related_name
+        today = timezone.now().date()
+        threshold = today + timedelta(days=30)
+        return obj.workwear_items.filter(
+            expiration_date__gte=today,
+            expiration_date__lte=threshold,
+            is_active=True
+        ).count()
     
     def get_expired_count(self, obj):
-        return obj.get_expired_items().count()
+        """Безопасное получение количества просроченных предметов"""
+        if hasattr(obj, 'get_expired_items'):
+            return obj.get_expired_items().count()
+        # Альтернативный способ
+        today = timezone.now().date()
+        return obj.workwear_items.filter(
+            expiration_date__lt=today,
+            is_active=True
+        ).count()
 
 
 class EmployeeCreateUpdateSerializer(serializers.ModelSerializer):
@@ -86,7 +106,6 @@ class WorkwearCreateUpdateSerializer(serializers.ModelSerializer):
         ]
     
     def create(self, validated_data):
-        # Автоматически вычисляем дату истечения срока если не указана
         if 'expiration_date' not in validated_data and 'issue_date' in validated_data:
             category = validated_data.get('category')
             if category:

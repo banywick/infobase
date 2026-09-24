@@ -1,7 +1,8 @@
+# backend/workwear/urls.py
+
 from django.urls import path
 from .views import *
 
-# ЭТО ОЧЕНЬ ВАЖНО - добавляем app_name
 app_name = 'workwear'
 
 urlpatterns = [
@@ -10,8 +11,11 @@ urlpatterns = [
     path('employees/', EmployeeListView.as_view(), name='employees'),
     path('employees/<int:pk>/', EmployeeDetailView.as_view(), name='employee_detail'),
     path('workwear/', WorkwearListView.as_view(), name='workwear_list'),
-    path('workwear/add/', WorkwearFormView.as_view(), name='workwear_add'),
-    path('workwear/<int:pk>/edit/', WorkwearFormView.as_view(), name='workwear_edit'),
+    
+    # ========== Формы спецодежды ==========
+    path('workwear/add/', WorkwearFormView.as_view(), name='workwear_add'),      # <-- ДОБАВИТЬ
+    path('workwear/<int:pk>/edit/', WorkwearFormView.as_view(), name='workwear_edit'),  # <-- ДОБАВИТЬ
+    
     path('expiring/', ExpiringItemsView.as_view(), name='expiring_items'),
     
     # ========== API endpoints ==========

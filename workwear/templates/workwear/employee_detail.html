@@ -1,70 +1,104 @@
 {% extends 'workwear/base.html' %}
 {% load static %}
 
-{% block title %}Спецодежда - Учет спецодежды{% endblock %}
+{% block title %}Сотрудник - Учет спецодежды{% endblock %}
 
 {% block content %}
-<div class="workwear-page">
+<div id="employeeDetailApp" data-employee-id="{{ employee_id }}">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-tshirt me-2"></i>Спецодежда</h2>
-        <a href="{% url 'workwear:workwear_add' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Добавить спецодежду
-        </a>
+        <h2><i class="fas fa-user me-2"></i><span id="employeeName">Загрузка...</span></h2>
+        <div>
+            <a href="{% url 'workwear:employees' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Назад
+            </a>
+            <button class="btn btn-outline-primary" onclick="window.location.reload()">
+                <i class="fas fa-sync"></i> Обновить
+            </button>
+        </div>
     </div>
-    
-    <!-- Фильтры -->
-    <div class="filter-section">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label">Поиск</label>
-                <input type="text" class="form-control" id="searchInput" placeholder="Наименование, сотрудник...">
+
+    <!-- Информация о сотруднике -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" 
+                             style="width:120px;height:120px;font-size:3rem;color:#6c757d;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <h4 id="employeeFullName">-</h4>
+                    <p class="text-muted mb-1" id="employeeDepartment">-</p>
+                    <p class="text-muted mb-1" id="employeePosition">-</p>
+                    <span class="badge bg-success" id="employeeStatus">-</span>
+                </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label">Статус</label>
-                <select class="form-select" id="statusFilter">
-                    <option value="">Все</option>
-                    <option value="active">Активные</option>
-                    <option value="expiring">Истекает срок</option>
-                    <option value="expired">Просрочены</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Категория</label>
-                <select class="form-select" id="categoryFilter">
-                    <option value="">Все</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Срок истечения с</label>
-                <input type="date" class="form-control" id="expirationFrom">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">по</label>
-                <input type="date" class="form-control" id="expirationTo">
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button class="btn btn-outline-secondary w-100" id="resetFilters" title="Сбросить фильтры">
-                    <i class="fas fa-undo"></i>
-                </button>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Всего спецодежды</h6>
+                            <h3 id="totalWorkwear" class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Истекает срок</h6>
+                            <h3 id="expiringWorkwear" class="mb-0 text-warning">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Просрочено</h6>
+                            <h3 id="expiredWorkwear" class="mb-0 text-danger">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">В порядке</h6>
+                            <h3 id="activeWorkwear" class="mb-0 text-success">0</h3>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Таблица спецодежды -->
+
+    <!-- Спецодежда сотрудника -->
     <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-tshirt me-2"></i>Спецодежда сотрудника</h5>
+            <div>
+                <select class="form-select form-select-sm" id="workwearStatusFilter" style="width:auto;display:inline-block;">
+                    <option value="">Все</option>
+                    <option value="active">Активные</option>
+                    <option value="expiring_soon">Истекает срок</option>
+                    <option value="expired">Просрочены</option>
+                </select>
+            </div>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover table-workwear" id="workwearTable">
+                <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Сотрудник</th>
                             <th>Наименование</th>
                             <th>Категория</th>
                             <th>Размер</th>
+                            <th>Цвет</th>
                             <th>Дата выдачи</th>
                             <th>Срок истечения</th>
                             <th>Статус</th>
-                            <th>Дней до</th>
+                            <th>Дней</th>
                             <th>Действия</th>
                         </tr>
                     </thead>
@@ -79,12 +113,216 @@
                     </tbody>
                 </table>
             </div>
-            <div class="pagination-container" id="paginationContainer"></div>
+        </div>
+    </div>
+
+    <!-- История -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-history me-2"></i>История изменений</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Действие</th>
+                            <th>Предмет</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="4" class="text-center py-3 text-muted">Нет истории</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workwear/js/workwear.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const app = document.getElementById('employeeDetailApp');
+    const employeeId = app.dataset.employeeId;
+    
+    console.log('🔍 Employee ID from data attribute:', employeeId);
+    
+    if (!employeeId) {
+        console.error('❌ Employee ID не найден');
+        return;
+    }
+    
+    const statusFilter = document.getElementById('workwearStatusFilter');
+    
+    // ========== Загрузка сотрудника ==========
+    async function loadEmployee() {
+        try {
+            console.log('📡 Запрос сотрудника:', `/workwear/api/employees/${employeeId}/`);
+            const response = await fetch(`/workwear/api/employees/${employeeId}/`);
+            const employee = await response.json();
+            
+            console.log('✅ Сотрудник:', employee);
+            
+            document.getElementById('employeeName').textContent = employee.full_name;
+            document.getElementById('employeeFullName').textContent = employee.full_name;
+            document.getElementById('employeeDepartment').textContent = employee.department || 'Отдел не указан';
+            document.getElementById('employeePosition').textContent = employee.position || 'Должность не указана';
+            document.getElementById('employeeStatus').textContent = employee.is_active ? 'Активен' : 'Деактивирован';
+            document.getElementById('employeeStatus').className = `badge ${employee.is_active ? 'bg-success' : 'bg-danger'}`;
+        } catch (error) {
+            console.error('❌ Error loading employee:', error);
+        }
+    }
+    
+    // ========== Загрузка спецодежды ==========
+    async function loadWorkwear(status = '') {
+        try {
+            let url = `/workwear/api/employees/${employeeId}/workwear/`;
+            if (status) url += `?status=${status}`;
+            
+            console.log('📡 Запрос спецодежды:', url);
+            const response = await fetch(url);
+            const items = await response.json();
+            
+            console.log('✅ Спецодежда:', items);
+            
+            // Статистика
+            const total = items.length;
+            const expiring = items.filter(i => i.status === 'expiring_soon').length;
+            const expired = items.filter(i => i.status === 'expired').length;
+            const active = items.filter(i => i.status === 'active').length;
+            
+            document.getElementById('totalWorkwear').textContent = total;
+            document.getElementById('expiringWorkwear').textContent = expiring;
+            document.getElementById('expiredWorkwear').textContent = expired;
+            document.getElementById('activeWorkwear').textContent = active;
+            
+            renderWorkwear(items);
+        } catch (error) {
+            console.error('❌ Error loading workwear:', error);
+            document.getElementById('workwearTableBody').innerHTML = `
+                <tr><td colspan="9" class="text-center text-danger py-3">
+                    Ошибка загрузки спецодежды: ${error.message}
+                </td></tr>
+            `;
+        }
+    }
+    
+    function renderWorkwear(items) {
+        const tbody = document.getElementById('workwearTableBody');
+        
+        if (items.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center py-3 text-muted">
+                        <i class="fas fa-tshirt fa-2x d-block mb-2"></i>
+                        Нет спецодежды у этого сотрудника
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        items.forEach(item => {
+            const statusMap = {
+                'active': { class: 'status-active', text: '✅ Активна' },
+                'expiring_soon': { class: 'status-expiring', text: '⏰ Истекает' },
+                'expired': { class: 'status-expired', text: '❌ Просрочена' }
+            };
+            const status = statusMap[item.status] || statusMap.active;
+            const days = item.days_until_expiration || 0;
+            
+            html += `
+                <tr class="${item.status === 'expired' ? 'table-danger' : item.status === 'expiring_soon' ? 'table-warning' : ''}">
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.category_name}</td>
+                    <td>${item.size || '-'}</td>
+                    <td>${item.color || '-'}</td>
+                    <td>${item.issue_date}</td>
+                    <td>${item.expiration_date}</td>
+                    <td><span class="status-badge ${status.class}">${status.text}</span></td>
+                    <td>${days > 0 ? days : '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="returnItem(${item.id})">
+                            <i class="fas fa-undo"></i> Вернуть
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+    
+    // ========== Загрузка истории ==========
+    async function loadHistory() {
+        try {
+            console.log('📡 Запрос истории:', `/workwear/api/employees/${employeeId}/history/`);
+            const response = await fetch(`/workwear/api/employees/${employeeId}/history/`);
+            const history = await response.json();
+            
+            console.log('✅ История:', history);
+            
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (!history || history.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="4" class="text-center py-3 text-muted">Нет истории</td></tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            history.slice(0, 20).forEach(h => {
+                html += `
+                    <tr>
+                        <td>${new Date(h.created_at).toLocaleDateString('ru-RU')}</td>
+                        <td><span class="badge bg-info">${h.action_display}</span></td>
+                        <td>${h.workwear_item_name}</td>
+                        <td>${h.description || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        } catch (error) {
+            console.error('❌ Error loading history:', error);
+        }
+    }
+    
+    // ========== Действия ==========
+    window.returnItem = async function(id) {
+        if (!confirm('Вернуть эту спецодежду?')) return;
+        try {
+            await fetch(`/workwear/api/workwear-items/${id}/return/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            await loadWorkwear(statusFilter.value);
+            alert('✅ Спецодежда возвращена');
+        } catch (error) {
+            console.error('❌ Error returning item:', error);
+            alert('Ошибка при возврате');
+        }
+    };
+    
+    // ========== Обработчики ==========
+    statusFilter.addEventListener('change', () => {
+        loadWorkwear(statusFilter.value);
+    });
+    
+    // ========== Загрузка данных ==========
+    await loadEmployee();
+    await loadWorkwear();
+    await loadHistory();
+});
+</script>
 {% endblock %}
