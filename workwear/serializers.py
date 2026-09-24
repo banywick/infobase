@@ -1,16 +1,12 @@
+# backend/workwear/serializers.py
+
 from rest_framework import serializers
-from django.contrib.auth.models import User
 from .models import Employee, WorkwearCategory, WorkwearItem, WorkwearHistory
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.utils import timezone
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email']
 
 class EmployeeSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
     full_name = serializers.SerializerMethodField()
     expiring_count = serializers.SerializerMethodField()
     expired_count = serializers.SerializerMethodField()
@@ -18,8 +14,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = [
-            'id', 'user', 'employee_id', 'department', 'position', 
-            'phone', 'email', 'photo', 'ldap_dn', 'is_active',
+            'id', 'first_name', 'last_name', 'patronymic',
+            'department', 'position', 'is_active',
             'full_name', 'expiring_count', 'expired_count',
             'created_at', 'updated_at'
         ]
@@ -33,33 +29,21 @@ class EmployeeSerializer(serializers.ModelSerializer):
     def get_expired_count(self, obj):
         return obj.get_expired_items().count()
 
+
 class EmployeeCreateUpdateSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(write_only=True, required=True)
-    
     class Meta:
         model = Employee
         fields = [
-            'id', 'user_id', 'employee_id', 'department', 'position', 
-            'phone', 'email', 'photo', 'ldap_dn', 'is_active'
+            'first_name', 'last_name', 'patronymic',
+            'department', 'position', 'is_active'
         ]
-    
-    def create(self, validated_data):
-        user_id = validated_data.pop('user_id')
-        user = User.objects.get(id=user_id)
-        employee = Employee.objects.create(user=user, **validated_data)
-        return employee
-    
-    def update(self, instance, validated_data):
-        if 'user_id' in validated_data:
-            user_id = validated_data.pop('user_id')
-            user = User.objects.get(id=user_id)
-            instance.user = user
-        return super().update(instance, validated_data)
+
 
 class WorkwearCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkwearCategory
         fields = ['id', 'name', 'description', 'standard_lifespan', 'is_active']
+
 
 class WorkwearItemSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
@@ -71,7 +55,7 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
         model = WorkwearItem
         fields = [
             'id', 'employee', 'employee_name', 'category', 'category_name',
-            'name', 'serial_number', 'size', 'color', 'issue_date',
+            'name', 'size', 'color', 'issue_date',
             'expiration_date', 'is_active', 'notes', 'status',
             'days_until_expiration', 'created_at', 'updated_at'
         ]
@@ -91,11 +75,12 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
             return (obj.expiration_date - today).days
         return 0
 
+
 class WorkwearCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkwearItem
         fields = [
-            'employee', 'category', 'name', 'serial_number', 
+            'employee', 'category', 'name', 
             'size', 'color', 'issue_date', 'expiration_date', 
             'is_active', 'notes'
         ]
@@ -111,11 +96,11 @@ class WorkwearCreateUpdateSerializer(serializers.ModelSerializer):
         
         return super().create(validated_data)
 
+
 class WorkwearHistorySerializer(serializers.ModelSerializer):
     workwear_item_name = serializers.SerializerMethodField()
     previous_employee_name = serializers.SerializerMethodField()
     new_employee_name = serializers.SerializerMethodField()
-    created_by_name = serializers.SerializerMethodField()
     action_display = serializers.SerializerMethodField()
     
     class Meta:
@@ -124,7 +109,7 @@ class WorkwearHistorySerializer(serializers.ModelSerializer):
             'id', 'workwear_item', 'workwear_item_name', 'action',
             'action_display', 'previous_employee', 'previous_employee_name',
             'new_employee', 'new_employee_name', 'description',
-            'created_at', 'created_by', 'created_by_name'
+            'created_at'
         ]
     
     def get_workwear_item_name(self, obj):
@@ -140,10 +125,5 @@ class WorkwearHistorySerializer(serializers.ModelSerializer):
             return obj.new_employee.get_full_name()
         return None
     
-    def get_created_by_name(self, obj):
-        if obj.created_by:
-            return f"{obj.created_by.first_name} {obj.created_by.last_name}"
-        return None
-    
     def get_action_display(self, obj):
-        return dict(self.ACTION_CHOICES).get(obj.action, obj.action)
+        return obj.get_action_display()

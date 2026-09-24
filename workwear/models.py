@@ -1,22 +1,32 @@
+# backend/workwear/models.py
+
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
 
+
+# backend/workwear/models.py
+
 class Employee(models.Model):
     """Модель сотрудника"""
-    user = models.OneToOneField(
-        User, 
-        on_delete=models.CASCADE,
-        related_name='employee_profile'
+    first_name = models.CharField(max_length=150, verbose_name="Имя")
+    last_name = models.CharField(max_length=150, verbose_name="Фамилия")
+    patronymic = models.CharField(
+        max_length=150, 
+        blank=True, 
+        null=True,
+        verbose_name="Отчество"
     )
-    employee_id = models.CharField(max_length=20, unique=True, verbose_name="Табельный номер")
-    department = models.CharField(max_length=100, verbose_name="Отдел")
-    position = models.CharField(max_length=100, verbose_name="Должность")
-    phone = models.CharField(max_length=20, blank=True, verbose_name="Телефон")
-    email = models.EmailField(verbose_name="Email")
-    photo = models.URLField(blank=True, null=True, verbose_name="Фото (URL из LDAP)")
-    ldap_dn = models.CharField(max_length=255, blank=True, verbose_name="LDAP DN")
+    department = models.CharField(
+        max_length=255,  # <-- Увеличили со 100 до 255
+        blank=True,
+        verbose_name="Отдел"
+    )
+    position = models.CharField(
+        max_length=255,  # <-- Увеличили со 100 до 255
+        blank=True,
+        verbose_name="Должность"
+    )
     is_active = models.BooleanField(default=True, verbose_name="Активен")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -24,31 +34,20 @@ class Employee(models.Model):
     class Meta:
         verbose_name = "Сотрудник"
         verbose_name_plural = "Сотрудники"
-        ordering = ['user__last_name', 'user__first_name']
+        ordering = ['last_name', 'first_name']
+        unique_together = [['last_name', 'first_name', 'patronymic']]
 
     def __str__(self):
-        return f"{self.user.last_name} {self.user.first_name}"
+        return self.get_full_name()
 
     def get_full_name(self):
-        return f"{self.user.last_name} {self.user.first_name} {self.user.patronymic}" if hasattr(self.user, 'patronymic') else f"{self.user.last_name} {self.user.first_name}"
+        parts = [self.last_name, self.first_name]
+        if self.patronymic:
+            parts.append(self.patronymic)
+        return ' '.join(parts)
+    
+    # ... остальные методы
 
-    def get_expiring_items(self):
-        """Получить спецодежду с истекающим сроком"""
-        today = timezone.now().date()
-        threshold = today + timedelta(days=30)  # Уведомление за 30 дней
-        return self.workwear_items.filter(
-            expiration_date__gte=today,
-            expiration_date__lte=threshold,
-            is_active=True
-        )
-
-    def get_expired_items(self):
-        """Получить просроченную спецодежду"""
-        today = timezone.now().date()
-        return self.workwear_items.filter(
-            expiration_date__lt=today,
-            is_active=True
-        )
 
 class WorkwearCategory(models.Model):
     """Категория спецодежды"""
@@ -68,6 +67,7 @@ class WorkwearCategory(models.Model):
     def __str__(self):
         return self.name
 
+
 class WorkwearItem(models.Model):
     """Предмет спецодежды"""
     employee = models.ForeignKey(
@@ -83,7 +83,6 @@ class WorkwearItem(models.Model):
         verbose_name="Категория"
     )
     name = models.CharField(max_length=200, verbose_name="Наименование")
-    serial_number = models.CharField(max_length=50, blank=True, verbose_name="Серийный номер")
     size = models.CharField(max_length=20, blank=True, verbose_name="Размер")
     color = models.CharField(max_length=30, blank=True, verbose_name="Цвет")
     issue_date = models.DateField(verbose_name="Дата выдачи")
@@ -117,6 +116,7 @@ class WorkwearItem(models.Model):
     def is_expiring_soon(self):
         today = timezone.now().date()
         return self.expiration_date <= today + timedelta(days=30) and not self.is_expired()
+
 
 class WorkwearHistory(models.Model):
     """История изменений спецодежды"""
@@ -153,15 +153,11 @@ class WorkwearHistory(models.Model):
     )
     description = models.TextField(blank=True, verbose_name="Описание")
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='workwear_history_created',
-        verbose_name="Кем создано"
-    )
 
     class Meta:
         verbose_name = "История спецодежды"
         verbose_name_plural = "История спецодежды"
         ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.workwear_item.name} - {self.get_action_display()}"
