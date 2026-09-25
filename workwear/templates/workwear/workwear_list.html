@@ -95,11 +95,19 @@
             <div class="modal-body">
                 <form id="addWorkwearForm">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-3 position-relative">
                             <label class="form-label">Сотрудник *</label>
-                            <select class="form-select" name="employee" required id="employeeSelect">
-                                <option value="">Выберите сотрудника</option>
-                            </select>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="employeeSearch" 
+                                placeholder="Начните вводить ФИО сотрудника..." 
+                                autocomplete="off"
+                            >
+                            <input type="hidden" name="employee" id="employeeId">
+                            <div id="employeeSuggestions" class="list-group position-absolute w-100" 
+                                 style="z-index: 1000; max-height: 250px; overflow-y: auto; display: none;"></div>
+                            <div id="employeeSelected" class="form-text text-success" style="display:none;"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Категория *</label>
@@ -112,10 +120,6 @@
                             <input type="text" class="form-control" name="name" required>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Серийный номер</label>
-                            <input type="text" class="form-control" name="serial_number">
-                        </div>
-                        <div class="col-md-4 mb-3">
                             <label class="form-label">Размер</label>
                             <input type="text" class="form-control" name="size">
                         </div>
@@ -123,9 +127,26 @@
                             <label class="form-label">Цвет</label>
                             <input type="text" class="form-control" name="color">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Дата выдачи *</label>
-                            <input type="date" class="form-control" name="issue_date" required>
+                        <div class="row">
+                            <!-- Дата выдачи -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Дата выдачи *</label>
+                                <input type="date" class="form-control" name="issue_date" required>
+                            </div>
+                            
+                            <!-- Дата истечения (СДЕЛАТЬ ОБЯЗАТЕЛЬНОЙ) -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Дата истечения *</label>
+                                <input type="date" class="form-control" name="expiration_date" required>
+                            </div>
+                            
+                            <!-- Активна -->
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check form-switch mt-4">
+                                    <input type="checkbox" class="form-check-input" name="is_active" id="isActive" checked>
+                                    <label class="form-check-label" for="isActive">Активна</label>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Примечания</label>

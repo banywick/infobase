@@ -97,6 +97,9 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
 
 
 class WorkwearCreateUpdateSerializer(serializers.ModelSerializer):
+    # ✅ Делаем expiration_date обязательным
+    expiration_date = serializers.DateField(required=True, allow_null=False)
+    
     class Meta:
         model = WorkwearItem
         fields = [
@@ -105,15 +108,18 @@ class WorkwearCreateUpdateSerializer(serializers.ModelSerializer):
             'is_active', 'notes'
         ]
     
-    def create(self, validated_data):
-        if 'expiration_date' not in validated_data and 'issue_date' in validated_data:
-            category = validated_data.get('category')
-            if category:
-                issue_date = validated_data.get('issue_date')
-                expiration_date = issue_date + timedelta(days=category.standard_lifespan)
-                validated_data['expiration_date'] = expiration_date
+    def validate(self, data):
+        """Проверяем, что дата истечения позже даты выдачи"""
+        issue_date = data.get('issue_date')
+        expiration_date = data.get('expiration_date')
         
-        return super().create(validated_data)
+        if issue_date and expiration_date:
+            if expiration_date < issue_date:
+                raise serializers.ValidationError({
+                    'expiration_date': 'Дата истечения не может быть раньше даты выдачи'
+                })
+        
+        return data
 
 
 class WorkwearHistorySerializer(serializers.ModelSerializer):

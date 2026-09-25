@@ -246,3 +246,32 @@ body {
     border-radius: 50%;
     object-fit: cover;
 }
+
+#employeeSuggestions {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-top: -1px;
+}
+#employeeSuggestions .list-group-item {
+    cursor: pointer;
+    padding: 10px 15px;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+}
+#employeeSuggestions .list-group-item:hover,
+#employeeSuggestions .list-group-item.active {
+    background-color: #e8f0fe;
+    color: #1a237e;
+}
+#employeeSuggestions .list-group-item:last-child {
+    border-bottom: none;
+}
+#employeeSuggestions .emp-name {
+    font-weight: 600;
+}
+#employeeSuggestions .emp-dept {
+    font-size: 12px;
+    color: #888;
+}

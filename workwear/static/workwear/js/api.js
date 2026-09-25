@@ -47,7 +47,16 @@ const API = {
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            // ✅ Показываем детали ошибки
+            const errorText = await response.text();
+            let errorData;
+            try {
+                errorData = JSON.parse(errorText);
+            } catch (e) {
+                errorData = errorText;
+            }
+            console.error(`❌ Ошибка ${response.status}:`, errorData);
+            throw new Error(`HTTP ${response.status}: ${JSON.stringify(errorData)}`);
         }
         return response.json();
     },
