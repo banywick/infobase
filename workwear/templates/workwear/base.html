@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,14 +18,19 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1F3A55;">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'workwear:dashboard' %}">
-                <i class="fas fa-tshirt me-2"></i>Учет спецодежды
-            </a>
+            <!-- Логотип со ссылкой на home_finder -->
+            <a href="{% url 'home_finder' %}" class="navbar-brand d-flex align-items-center">
+                <img src="{% static 'finder/icon/logo_finder.svg' %}" 
+                     alt="Логотип" 
+                     class="logo-icon me-2">
+                    </a>
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -54,16 +60,10 @@
                             <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
                         </span>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">
-                            <i class="fas fa-sign-out-alt"></i> Выйти
-                        </a>
-                    </li>
                 </ul>
             </div>
         </div>
     </nav>
-
     <!-- Main Content -->
     <div class="container-fluid mt-3">
         {% block content %}{% endblock %}

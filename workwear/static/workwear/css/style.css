@@ -275,3 +275,13 @@ body {
     font-size: 12px;
     color: #888;
 }
+
+.logo-icon {
+    height: 85px;
+    width: auto;
+    transition: transform 0.2s;
+}
+
+.logo-icon:hover {
+    transform: scale(1.05);
+}
