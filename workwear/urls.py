@@ -19,6 +19,7 @@ urlpatterns = [
     path('expiring/', ExpiringItemsView.as_view(), name='expiring_items'),
     
     # ========== API endpoints ==========
+     path('api/employees/search/', EmployeeSearchAPIView.as_view(), name='api_employee_search'),
     path('api/employees/', EmployeeListAPIView.as_view(), name='api_employee_list'),
     path('api/employees/<int:pk>/', EmployeeDetailAPIView.as_view(), name='api_employee_detail'),
     path('api/employees/<int:pk>/workwear/', EmployeeWorkwearAPIView.as_view(), name='api_employee_workwear'),

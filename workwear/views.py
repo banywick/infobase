@@ -11,6 +11,8 @@ from django.db.models import Q
 from django.views import View
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
+from common.utils.access_mixin import UserGroupRequiredMixin
+from django.views.generic import TemplateView
 
 from .models import Employee, WorkwearCategory, WorkwearItem, WorkwearHistory
 from .serializers import (
@@ -27,10 +29,10 @@ from .serializers import (
 # ========== ШАБЛОННЫЕ ПРЕДСТАВЛЕНИЯ (HTML страницы) ==========
 # ============================================================
 
-class DashboardView(View):
+class DashboardView(UserGroupRequiredMixin, TemplateView):
     """Дашборд"""
-    def get(self, request):
-        return render(request, 'workwear/dashboard.html')
+    template_name = 'workwear/dashboard.html'
+    group_required = ['aho']
 
 
 class EmployeeListView(View):
@@ -501,3 +503,41 @@ class DashboardStatsAPIView(APIView):
         }
 
         return Response(stats)
+
+class EmployeeSearchAPIView(APIView):
+    """Быстрый поиск сотрудников по ФИО, отделу, должности"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        
+        if len(query) < 2:
+            return Response({
+                'results': [],
+                'count': 0,
+                'message': 'Введите минимум 2 символа'
+            })
+        
+        # Ищем по ФИО, отделу, должности
+        queryset = Employee.objects.filter(is_active=True).filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(patronymic__icontains=query) |
+            Q(department__icontains=query) |
+            Q(position__icontains=query)
+        ).order_by('last_name', 'first_name')[:20]  # максимум 20 результатов
+        
+        results = [
+            {
+                'id': emp.id,
+                'full_name': emp.get_full_name(),
+                'department': emp.department or '',
+                'position': emp.position or '',
+            }
+            for emp in queryset
+        ]
+        
+        return Response({
+            'results': results,
+            'count': len(results)
+        })

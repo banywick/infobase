@@ -11,23 +11,26 @@ class WorkwearPage {
             expiration_to: ''
         };
         this.categories = [];
-        this.allEmployees = [];  // кэш сотрудников
         this.selectedEmployeeId = null;
+        this.searchAbortController = null;
         this.init();
     }
     
     async init() {
         this.bindEvents();
         await this.loadCategories();
-        await this.preloadEmployees();  // загружаем сотрудников в кэш
         await this.loadWorkwear();
-        this.initEmployeeSearch();  // инициализируем поиск
+        this.initEmployeeSearch();
+        this.initDateAutoFill();
     }
+    
+    // ============================================================
+    // ========== ОБРАБОТЧИКИ СОБЫТИЙ =============================
+    // ============================================================
     
     bindEvents() {
         let searchTimeout;
         
-        // Фильтры таблицы
         document.getElementById('searchInput')?.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
@@ -72,19 +75,20 @@ class WorkwearPage {
             this.loadWorkwear();
         });
         
-        // Кнопка сохранения
         document.getElementById('saveWorkwearBtn')?.addEventListener('click', () => {
             this.saveWorkwear();
         });
     }
     
-    // ========== Загрузка категорий ==========
+    // ============================================================
+    // ========== ЗАГРУЗКА КАТЕГОРИЙ ==============================
+    // ============================================================
+    
     async loadCategories() {
         try {
             const categories = await API.getCategories();
             this.categories = categories;
             
-            // Заполняем фильтр категорий
             const filterSelect = document.getElementById('categoryFilter');
             if (filterSelect) {
                 categories.forEach(cat => {
@@ -97,37 +101,27 @@ class WorkwearPage {
                 });
             }
             
-            // Заполняем селект категорий в форме
             const formSelect = document.getElementById('categorySelect');
             if (formSelect) {
                 categories.forEach(cat => {
                     if (cat.is_active) {
                         const opt = document.createElement('option');
                         opt.value = cat.id;
-                        opt.textContent = cat.name;
+                        opt.textContent = `${cat.name} (${cat.standard_lifespan} дней)`;
+                        opt.dataset.lifespan = cat.standard_lifespan;
                         formSelect.appendChild(opt);
                     }
                 });
             }
         } catch (error) {
-            console.error('Error loading categories:', error);
+            console.error('❌ Error loading categories:', error);
         }
     }
     
-    // ========== Предзагрузка ВСЕХ сотрудников ==========
-    async preloadEmployees() {
-        try {
-            const response = await fetch('/workwear/api/employees/?page_size=2000');
-            const data = await response.json();
-            this.allEmployees = data.results || data;
-            console.log(`✅ Загружено ${this.allEmployees.length} сотрудников в кэш`);
-        } catch (error) {
-            console.error('❌ Ошибка предзагрузки сотрудников:', error);
-            this.allEmployees = [];
-        }
-    }
+    // ============================================================
+    // ========== ПОИСК СОТРУДНИКОВ ЧЕРЕЗ API ====================
+    // ============================================================
     
-    // ========== Инициализация поиска сотрудников ==========
     initEmployeeSearch() {
         const searchInput = document.getElementById('employeeSearch');
         const hiddenInput = document.getElementById('employeeId');
@@ -141,23 +135,52 @@ class WorkwearPage {
         
         let searchTimeout = null;
         
-        // Фильтрация сотрудников по совпадению
-        const filterEmployees = (query) => {
-            if (!query || query.length < 2) return [];
+        const searchEmployees = async (query) => {
+            if (!query || query.length < 2) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
             
-            const q = query.toLowerCase().trim();
-            return this.allEmployees.filter(emp => {
-                const fullName = (emp.full_name || '').toLowerCase();
-                const dept = (emp.department || '').toLowerCase();
-                const pos = (emp.position || '').toLowerCase();
-                return fullName.includes(q) || dept.includes(q) || pos.includes(q);
-            }).slice(0, 10);
+            if (this.searchAbortController) {
+                this.searchAbortController.abort();
+            }
+            this.searchAbortController = new AbortController();
+            
+            try {
+                suggestionsBox.innerHTML = `
+                    <div class="list-group-item text-center text-muted">
+                        <span class="spinner-border spinner-border-sm"></span> Поиск...
+                    </div>
+                `;
+                suggestionsBox.style.display = 'block';
+                
+                const response = await fetch(
+                    `/workwear/api/employees/search/?q=${encodeURIComponent(query)}`,
+                    { signal: this.searchAbortController.signal }
+                );
+                const data = await response.json();
+                
+                console.log(`🔍 Найдено ${data.count || 0} сотрудников по запросу "${query}"`);
+                renderSuggestions(data.results || []);
+            } catch (error) {
+                if (error.name === 'AbortError') return;
+                console.error('❌ Ошибка поиска сотрудников:', error);
+                suggestionsBox.innerHTML = `
+                    <div class="list-group-item text-danger text-center">
+                        Ошибка поиска. Попробуйте ещё раз.
+                    </div>
+                `;
+            }
         };
         
-        // Рендер подсказок
         const renderSuggestions = (items) => {
             if (!items.length) {
-                suggestionsBox.style.display = 'none';
+                suggestionsBox.innerHTML = `
+                    <div class="list-group-item text-muted text-center">
+                        Ничего не найдено
+                    </div>
+                `;
+                suggestionsBox.style.display = 'block';
                 return;
             }
             
@@ -166,7 +189,10 @@ class WorkwearPage {
                 html += `
                     <div class="list-group-item" data-id="${emp.id}" data-name="${emp.full_name}">
                         <div class="emp-name">${emp.full_name}</div>
-                        <div class="emp-dept">${emp.department || 'Отдел не указан'} ${emp.position ? '• ' + emp.position : ''}</div>
+                        <div class="emp-dept">
+                            ${emp.department || 'Отдел не указан'}
+                            ${emp.position ? '• ' + emp.position : ''}
+                        </div>
                     </div>
                 `;
             });
@@ -174,14 +200,13 @@ class WorkwearPage {
             suggestionsBox.innerHTML = html;
             suggestionsBox.style.display = 'block';
             
-            suggestionsBox.querySelectorAll('.list-group-item').forEach(item => {
+            suggestionsBox.querySelectorAll('.list-group-item[data-id]').forEach(item => {
                 item.addEventListener('click', () => {
                     this.selectEmployee(item.dataset.id, item.dataset.name);
                 });
             });
         };
         
-        // Обработчик ввода
         searchInput.addEventListener('input', function() {
             const query = this.value.trim();
             
@@ -193,16 +218,18 @@ class WorkwearPage {
                 return;
             }
             
+            hiddenInput.value = '';
+            searchInput.classList.remove('is-valid');
+            selectedInfo.style.display = 'none';
+            
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                const matches = filterEmployees(query);
-                renderSuggestions(matches);
-            }, 150);
+                searchEmployees(query);
+            }, 250);
         });
         
-        // Клавиатурная навигация
         searchInput.addEventListener('keydown', function(e) {
-            const items = suggestionsBox.querySelectorAll('.list-group-item');
+            const items = suggestionsBox.querySelectorAll('.list-group-item[data-id]');
             const active = suggestionsBox.querySelector('.list-group-item.active');
             
             if (e.key === 'ArrowDown') {
@@ -229,7 +256,6 @@ class WorkwearPage {
             }
         });
         
-        // Скрытие при клике вне
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#employeeSearch') && 
                 !e.target.closest('#employeeSuggestions')) {
@@ -238,7 +264,10 @@ class WorkwearPage {
         });
     }
     
-    // ========== Выбор сотрудника ==========
+    // ============================================================
+    // ========== ВЫБОР СОТРУДНИКА ================================
+    // ============================================================
+    
     selectEmployee(id, name) {
         this.selectedEmployeeId = id;
         
@@ -254,9 +283,63 @@ class WorkwearPage {
         selectedInfo.style.display = 'block';
         searchInput.classList.remove('is-invalid');
         searchInput.classList.add('is-valid');
+        
+        console.log(`✅ Сотрудник выбран: ${name} (ID: ${id})`);
     }
     
-    // ========== Загрузка списка спецодежды ==========
+    // ============================================================
+    // ========== АВТО-ЗАПОЛНЕНИЕ ДАТЫ ИСТЕЧЕНИЯ ==================
+    // ============================================================
+    
+    initDateAutoFill() {
+        const categorySelect = document.getElementById('categorySelect');
+        const form = document.getElementById('addWorkwearForm');
+        if (!form) return;
+        
+        const issueDateInput = form.querySelector('input[name="issue_date"]');
+        const expirationDateInput = form.querySelector('input[name="expiration_date"]');
+        
+        if (!categorySelect || !issueDateInput || !expirationDateInput) return;
+        
+        const calculateExpiration = () => {
+            const categoryId = parseInt(categorySelect.value);
+            const issueDate = issueDateInput.value;
+            
+            if (!categoryId || !issueDate) return;
+            
+            const category = this.categories.find(c => c.id === categoryId);
+            if (!category || !category.standard_lifespan) return;
+            
+            if (expirationDateInput.value && expirationDateInput.dataset.manual === 'true') {
+                return;
+            }
+            
+            const date = new Date(issueDate);
+            date.setDate(date.getDate() + category.standard_lifespan);
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            expirationDateInput.value = `${year}-${month}-${day}`;
+            expirationDateInput.style.borderColor = '#28a745';
+            setTimeout(() => {
+                expirationDateInput.style.borderColor = '';
+            }, 1500);
+        };
+        
+        expirationDateInput.addEventListener('change', () => {
+            expirationDateInput.dataset.manual = 'true';
+        });
+        
+        categorySelect.addEventListener('change', calculateExpiration);
+        issueDateInput.addEventListener('change', calculateExpiration);
+    }
+    
+    // ============================================================
+    // ========== ЗАГРУЗКА СПИСКА СПЕЦОДЕЖДЫ ======================
+    // ============================================================
+    
     async loadWorkwear() {
         try {
             const params = {
@@ -273,7 +356,7 @@ class WorkwearPage {
             this.renderWorkwear(response.results || []);
             this.renderPagination(response);
         } catch (error) {
-            console.error('Error loading workwear:', error);
+            console.error('❌ Error loading workwear:', error);
             const tbody = document.getElementById('workwearTableBody');
             if (tbody) {
                 tbody.innerHTML = `
@@ -286,6 +369,10 @@ class WorkwearPage {
             }
         }
     }
+    
+    // ============================================================
+    // ========== РЕНДЕР ТАБЛИЦЫ ==================================
+    // ============================================================
     
     renderWorkwear(items) {
         const container = document.getElementById('workwearTableBody');
@@ -347,6 +434,10 @@ class WorkwearPage {
         container.innerHTML = html;
     }
     
+    // ============================================================
+    // ========== ПАГИНАЦИЯ =======================================
+    // ============================================================
+    
     renderPagination(data) {
         const container = document.getElementById('paginationContainer');
         if (!container) return;
@@ -405,12 +496,14 @@ class WorkwearPage {
         });
     }
     
-    // ========== Сохранение спецодежды ==========
+    // ============================================================
+    // ========== СОХРАНЕНИЕ СПЕЦОДЕЖДЫ ===========================
+    // ============================================================
+    
     async saveWorkwear() {
         const form = document.getElementById('addWorkwearForm');
         if (!form) return;
         
-        // Проверяем, что сотрудник выбран
         const hiddenEmployeeId = document.getElementById('employeeId');
         if (!hiddenEmployeeId || !hiddenEmployeeId.value) {
             alert('⚠️ Пожалуйста, выберите сотрудника из списка подсказок');
@@ -425,12 +518,10 @@ class WorkwearPage {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
         
-        // Преобразуем типы
         data.employee = parseInt(hiddenEmployeeId.value);
         data.category = parseInt(data.category);
         data.is_active = data.is_active === 'on' || data.is_active === 'true';
         
-        // ✅ Проверка обязательных полей
         const requiredFields = {
             'employee': 'Сотрудник',
             'category': 'Категория',
@@ -451,7 +542,6 @@ class WorkwearPage {
             return;
         }
         
-        // ✅ Проверка, что дата истечения позже даты выдачи
         const issueDate = new Date(data.issue_date);
         const expirationDate = new Date(data.expiration_date);
         
@@ -471,29 +561,33 @@ class WorkwearPage {
             
             await API.createWorkwearItem(data);
             
-            // Закрываем модалку
             const modalEl = document.getElementById('addWorkwearModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
             
-            // Сбрасываем форму
             form.reset();
             if (hiddenEmployeeId) hiddenEmployeeId.value = '';
+            
             const searchInput = document.getElementById('employeeSearch');
             if (searchInput) {
                 searchInput.classList.remove('is-valid', 'is-invalid');
             }
+            
             const selectedInfo = document.getElementById('employeeSelected');
             if (selectedInfo) selectedInfo.style.display = 'none';
             
-            // Обновляем таблицу
+            const expirationInput = form.querySelector('input[name="expiration_date"]');
+            if (expirationInput) {
+                delete expirationInput.dataset.manual;
+            }
+            
             this.currentPage = 1;
             await this.loadWorkwear();
             
             this.showNotification('✅ Спецодежда успешно добавлена', 'success');
             
         } catch (error) {
-            console.error('Error saving workwear:', error);
+            console.error('❌ Error saving workwear:', error);
             
             let errorMsg = 'Ошибка при добавлении спецодежды';
             if (error.message) {
@@ -510,35 +604,44 @@ class WorkwearPage {
         }
     }
     
-    // ========== Возврат ==========
+    // ============================================================
+    // ========== ВОЗВРАТ =========================================
+    // ============================================================
+    
     async returnItem(id) {
         if (!confirm('Вы уверены, что хотите вернуть эту спецодежду?')) return;
         
         try {
             await API.returnWorkwearItem(id);
             await this.loadWorkwear();
-            this.showNotification('Спецодежда возвращена', 'success');
+            this.showNotification('✅ Спецодежда возвращена', 'success');
         } catch (error) {
-            console.error('Error returning workwear:', error);
+            console.error('❌ Error returning workwear:', error);
             this.showNotification('Ошибка при возврате спецодежды', 'danger');
         }
     }
     
-    // ========== Списание ==========
+    // ============================================================
+    // ========== СПИСАНИЕ ========================================
+    // ============================================================
+    
     async deleteItem(id) {
         if (!confirm('Вы уверены, что хотите списать эту спецодежду?')) return;
         
         try {
             await API.deleteWorkwearItem(id);
             await this.loadWorkwear();
-            this.showNotification('Спецодежда списана', 'success');
+            this.showNotification('✅ Спецодежда списана', 'success');
         } catch (error) {
-            console.error('Error deleting workwear:', error);
+            console.error('❌ Error deleting workwear:', error);
             this.showNotification('Ошибка при списании спецодежды', 'danger');
         }
     }
     
-    // ========== Уведомления ==========
+    // ============================================================
+    // ========== УВЕДОМЛЕНИЯ =====================================
+    // ============================================================
+    
     showNotification(message, type = 'info') {
         const alert = document.createElement('div');
         alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
@@ -553,7 +656,10 @@ class WorkwearPage {
     }
 }
 
-// Инициализация
+// ============================================================
+// ========== ИНИЦИАЛИЗАЦИЯ ===================================
+// ============================================================
+
 let workwearPage;
 document.addEventListener('DOMContentLoaded', () => {
     workwearPage = new WorkwearPage();
