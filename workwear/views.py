@@ -166,6 +166,16 @@ class EmployeeListAPIView(APIView):
         result_page = paginator.paginate_queryset(queryset, request)
         serializer = EmployeeSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
+    # ✅ ДОБАВИТЬ ЭТОТ МЕТОД
+    def post(self, request):
+        """Создать нового сотрудника"""
+        from .serializers import EmployeeCreateUpdateSerializer
+        
+        serializer = EmployeeCreateUpdateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class EmployeeDetailAPIView(APIView):

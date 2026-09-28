@@ -381,7 +381,7 @@ class WorkwearPage {
         if (items.length === 0) {
             container.innerHTML = `
                 <tr>
-                    <td colspan="9" class="text-center py-3 text-muted">
+                    <td colspan="10" class="text-center py-3 text-muted">
                         <i class="fas fa-tshirt fa-2x d-block mb-2"></i>
                         Спецодежда не найдена
                     </td>
@@ -403,6 +403,12 @@ class WorkwearPage {
             const days = item.days_until_expiration || 0;
             const daysColor = days <= 7 ? 'text-danger' : days <= 15 ? 'text-warning' : 'text-success';
             
+            // ✅ Показываем полный текст примечаний
+            const notes = item.notes ? item.notes.trim() : '';
+            const notesHtml = notes 
+                ? `<div class="notes-cell">${notes}</div>`
+                : '<span class="text-muted">—</span>';
+            
             html += `
                 <tr class="${item.status === 'expired' ? 'table-danger' : item.status === 'expiring' || item.status === 'expiring_soon' ? 'table-warning' : ''}">
                     <td>
@@ -415,6 +421,7 @@ class WorkwearPage {
                     <td>${item.size || '-'}</td>
                     <td>${item.issue_date}</td>
                     <td>${item.expiration_date}</td>
+                    <td>${notesHtml}</td>
                     <td><span class="status-badge ${status.class}">${status.text}</span></td>
                     <td class="${daysColor}">${days > 0 ? days + ' дн.' : '-'}</td>
                     <td>

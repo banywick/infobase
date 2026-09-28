@@ -1,4 +1,25 @@
 // Employees page logic
+// ============================================================
+// ========== CSRF-ТОКЕН ======================================
+// ============================================================
+
+function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
 class EmployeesPage {
     constructor() {
         this.currentPage = 1;
@@ -53,6 +74,37 @@ class EmployeesPage {
         document.getElementById('saveEmployeeBtn').addEventListener('click', () => {
             this.saveEmployee();
         });
+    }
+
+    async deleteEmployee(id, name) {
+        if (!confirm(`Вы уверены, что хотите удалить сотрудника "${name}"?\n\nСотрудник будет помечен как неактивный (soft delete).`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/workwear/api/employees/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'include',
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(JSON.stringify(errorData));
+            }
+            
+            // Обновляем список
+            await this.loadEmployees();
+            
+            this.showNotification(`✅ Сотрудник "${name}" удалён`, 'success');
+            
+        } catch (error) {
+            console.error('❌ Ошибка удаления:', error);
+            this.showNotification(`Ошибка: ${error.message}`, 'danger');
+        }
     }
     
     async loadEmployees() {
@@ -110,7 +162,6 @@ class EmployeesPage {
         
         let html = '';
         employees.forEach(emp => {
-            // Определяем статус
             let statusClass = 'status-ok';
             let statusText = 'В порядке';
             
@@ -124,19 +175,23 @@ class EmployeesPage {
             
             html += `
                 <div class="col-lg-3 col-md-4 col-sm-6">
-                    <div class="employee-card card ${statusClass} fade-in" 
-                         onclick="window.location.href='/workwear/employees/${emp.id}/'">
-                        <div class="card-body">
-                            ${emp.photo ? 
-                                `<img src="${emp.photo}" class="card-img-top" alt="${emp.full_name}">` :
-                                `<div class="card-img-top d-flex align-items-center justify-content-center bg-light rounded-circle mx-auto" 
-                                     style="width:100px;height:100px;font-size:3rem;color:#6c757d;">
-                                    <i class="fas fa-user"></i>
-                                </div>`
-                            }
+                    <div class="employee-card card ${statusClass} fade-in position-relative">
+                        <!-- Кнопка удаления (в правом верхнем углу) -->
+                        <button class="btn btn-sm btn-danger position-absolute" 
+                                style="top: 8px; right: 8px; z-index: 10; border-radius: 50%; width: 30px; height: 30px; padding: 0;"
+                                onclick="event.stopPropagation(); employeesPage.deleteEmployee(${emp.id}, '${emp.full_name.replace(/'/g, "\\'")}')"
+                                title="Удалить сотрудника">
+                            <i class="fas fa-times" style="font-size: 12px;"></i>
+                        </button>
+                        
+                        <div class="card-body" onclick="window.location.href='/workwear/employees/${emp.id}/'">
+                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light rounded-circle mx-auto" 
+                                 style="width:100px;height:100px;font-size:3rem;color:#6c757d;">
+                                <i class="fas fa-user"></i>
+                            </div>
                             <h5 class="employee-name">${emp.full_name}</h5>
-                            <div class="employee-department">${emp.department}</div>
-                            <div class="employee-position">${emp.position}</div>
+                            <div class="employee-department">${emp.department || 'Отдел не указан'}</div>
+                            <div class="employee-position">${emp.position || 'Должность не указана'}</div>
                             <div class="mt-2">
                                 <span class="status-badge ${statusClass}">
                                     ${statusText}
@@ -205,35 +260,67 @@ class EmployeesPage {
         });
     }
     
+    
     async saveEmployee() {
         const form = document.getElementById('addEmployeeForm');
+        if (!form) return;
+        
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
         
+        // Проверяем обязательные поля
+        if (!data.first_name || !data.last_name) {
+            alert('⚠️ Заполните обязательные поля: Имя, Фамилия');
+            return;
+        }
+        
+        // ✅ Преобразуем чекбокс
+        data.is_active = data.is_active === 'on' || data.is_active === 'true';
+        
+        console.log('📤 Отправка сотрудника:', data);
+        
+        const saveBtn = document.getElementById('saveEmployeeBtn');
+        
         try {
-            document.getElementById('saveEmployeeBtn').disabled = true;
-            document.getElementById('saveEmployeeBtn').innerHTML = 
-                '<span class="spinner-border spinner-border-sm"></span> Сохранение...';
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Сохранение...';
             
-            await API.createEmployee(data);
+            // ✅ Используем API для создания сотрудника
+            const response = await fetch('/workwear/api/employees/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'include',
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(JSON.stringify(errorData));
+            }
             
             // Закрываем модалку
             const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
-            modal.hide();
+            if (modal) modal.hide();
             
-            // Перезагружаем список
+            // Сбрасываем форму
+            form.reset();
+            document.getElementById('isActiveAdd').checked = true;
+            
+            // Обновляем список
             this.currentPage = 1;
-            this.loadEmployees();
+            await this.loadEmployees();
             
-            // Показываем уведомление
-            this.showNotification('Сотрудник успешно добавлен', 'success');
+            this.showNotification('✅ Сотрудник успешно добавлен', 'success');
             
         } catch (error) {
-            console.error('Error saving employee:', error);
-            this.showNotification('Ошибка при добавлении сотрудника', 'danger');
+            console.error('❌ Error:', error);
+            this.showNotification(`Ошибка: ${error.message}`, 'danger');
         } finally {
-            document.getElementById('saveEmployeeBtn').disabled = false;
-            document.getElementById('saveEmployeeBtn').innerHTML = 'Сохранить';
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Сохранить';
         }
     }
     
@@ -251,6 +338,7 @@ class EmployeesPage {
 }
 
 // Инициализация
+let employeesPage;
 document.addEventListener('DOMContentLoaded', () => {
-    new EmployeesPage();
+    employeesPage = new EmployeesPage();
 });

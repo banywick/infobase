@@ -5,9 +5,16 @@
 
 {% block content %}
 <div id="employeeDetailApp" data-employee-id="{{ employee_id }}">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-user me-2"></i><span id="employeeName">Загрузка...</span></h2>
-        <div>
+    <!-- Заголовок с кнопками -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="mb-0">
+            <i class="fas fa-user me-2"></i>
+            <span id="employeeName">Загрузка...</span>
+        </h2>
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#issueWorkwearModal">
+                <i class="fas fa-plus-circle"></i> Выдать спецодежду
+            </button>
             <a href="{% url 'workwear:employees' %}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Назад
             </a>
@@ -77,14 +84,12 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="fas fa-tshirt me-2"></i>Спецодежда сотрудника</h5>
-            <div>
-                <select class="form-select form-select-sm" id="workwearStatusFilter" style="width:auto;display:inline-block;">
-                    <option value="">Все</option>
-                    <option value="active">Активные</option>
-                    <option value="expiring_soon">Истекает срок</option>
-                    <option value="expired">Просрочены</option>
-                </select>
-            </div>
+            <select class="form-select form-select-sm" id="workwearStatusFilter" style="width:auto;">
+                <option value="">Все</option>
+                <option value="active">Активные</option>
+                <option value="expiring_soon">Истекает срок</option>
+                <option value="expired">Просрочены</option>
+            </select>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -105,9 +110,7 @@
                     <tbody id="workwearTableBody">
                         <tr>
                             <td colspan="9" class="text-center py-3">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Загрузка...</span>
-                                </div>
+                                <div class="spinner-border text-primary" role="status"></div>
                             </td>
                         </tr>
                     </tbody>
@@ -142,6 +145,119 @@
         </div>
     </div>
 </div>
+
+<!-- ========== МОДАЛЬНОЕ ОКНО: ВЫДАТЬ СПЕЦОДЕЖДУ ========== -->
+<div class="modal fade" id="issueWorkwearModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle text-success me-2"></i>
+                    Выдать спецодежду
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Информация о сотруднике -->
+                <div class="alert alert-info d-flex align-items-center mb-3">
+                    <i class="fas fa-user me-2"></i>
+                    <div>
+                        <strong id="modalEmployeeName">Сотрудник</strong>
+                        <div class="small" id="modalEmployeeDept"></div>
+                    </div>
+                </div>
+
+                <form id="issueWorkwearForm">
+                    <!-- Скрытое поле с ID сотрудника -->
+                    <input type="hidden" name="employee" id="modalEmployeeId">
+
+                    <div class="row">
+                        <!-- Категория -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Категория <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" name="category" id="modalCategorySelect" required>
+                                <option value="">Выберите категорию</option>
+                            </select>
+                        </div>
+
+                        <!-- Наименование -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Наименование <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" name="name" 
+                                   placeholder="Например: Куртка зимняя" required>
+                        </div>
+
+                        <!-- Размер -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Размер</label>
+                            <input type="text" class="form-control" name="size" 
+                                   placeholder="M, L, XL, 42-44">
+                        </div>
+
+                        <!-- Цвет -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Цвет</label>
+                            <input type="text" class="form-control" name="color" 
+                                   placeholder="Синий">
+                        </div>
+
+                        <!-- Дата выдачи -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                Дата выдачи <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" name="issue_date" 
+                                   id="modalIssueDate" required>
+                        </div>
+
+                        <!-- Дата истечения -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Дата истечения <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" name="expiration_date" 
+                                   id="modalExpirationDate" required>
+                            <small class="text-muted">
+                                Рассчитывается автоматически по категории
+                            </small>
+                        </div>
+
+                        <!-- Активна -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="form-check form-switch mt-2">
+                                <input type="checkbox" class="form-check-input" 
+                                       name="is_active" id="modalIsActive" checked>
+                                <label class="form-check-label" for="modalIsActive">
+                                    Активна (выдана)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Примечания -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Примечания</label>
+                            <textarea class="form-control" name="notes" rows="2" 
+                                      placeholder="Дополнительная информация"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+                <button type="button" class="btn btn-success" id="modalSaveBtn">
+                    <i class="fas fa-check"></i> Выдать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -150,7 +266,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const app = document.getElementById('employeeDetailApp');
     const employeeId = app.dataset.employeeId;
     
-    console.log('🔍 Employee ID from data attribute:', employeeId);
+    console.log('🔍 Employee ID:', employeeId);
     
     if (!employeeId) {
         console.error('❌ Employee ID не найден');
@@ -158,25 +274,104 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     const statusFilter = document.getElementById('workwearStatusFilter');
+    let categories = [];
+    let currentEmployee = null;
     
     // ========== Загрузка сотрудника ==========
     async function loadEmployee() {
         try {
-            console.log('📡 Запрос сотрудника:', `/workwear/api/employees/${employeeId}/`);
             const response = await fetch(`/workwear/api/employees/${employeeId}/`);
-            const employee = await response.json();
+            currentEmployee = await response.json();
+            console.log('✅ Сотрудник:', currentEmployee);
             
-            console.log('✅ Сотрудник:', employee);
+            document.getElementById('employeeName').textContent = currentEmployee.full_name;
+            document.getElementById('employeeFullName').textContent = currentEmployee.full_name;
+            document.getElementById('employeeDepartment').textContent = currentEmployee.department || 'Отдел не указан';
+            document.getElementById('employeePosition').textContent = currentEmployee.position || 'Должность не указана';
+            document.getElementById('employeeStatus').textContent = currentEmployee.is_active ? 'Активен' : 'Деактивирован';
+            document.getElementById('employeeStatus').className = `badge ${currentEmployee.is_active ? 'bg-success' : 'bg-danger'}`;
             
-            document.getElementById('employeeName').textContent = employee.full_name;
-            document.getElementById('employeeFullName').textContent = employee.full_name;
-            document.getElementById('employeeDepartment').textContent = employee.department || 'Отдел не указан';
-            document.getElementById('employeePosition').textContent = employee.position || 'Должность не указана';
-            document.getElementById('employeeStatus').textContent = employee.is_active ? 'Активен' : 'Деактивирован';
-            document.getElementById('employeeStatus').className = `badge ${employee.is_active ? 'bg-success' : 'bg-danger'}`;
+            // Заполняем информацию о сотруднике в модалке
+            document.getElementById('modalEmployeeName').textContent = currentEmployee.full_name;
+            document.getElementById('modalEmployeeDept').textContent = 
+                `${currentEmployee.department || 'Отдел не указан'} • ${currentEmployee.position || 'Должность не указана'}`;
+            document.getElementById('modalEmployeeId').value = employeeId;
         } catch (error) {
             console.error('❌ Error loading employee:', error);
         }
+    }
+    
+    // ========== Загрузка категорий ==========
+    async function loadCategories() {
+        try {
+            const response = await fetch('/workwear/api/categories/');
+            categories = await response.json();
+            console.log('✅ Категории:', categories);
+            
+            const select = document.getElementById('modalCategorySelect');
+            select.innerHTML = '<option value="">Выберите категорию</option>';
+            
+            categories.forEach(cat => {
+                if (cat.is_active) {
+                    const opt = document.createElement('option');
+                    opt.value = cat.id;
+                    opt.textContent = `${cat.name} (${cat.standard_lifespan} дней)`;
+                    opt.dataset.lifespan = cat.standard_lifespan;
+                    select.appendChild(opt);
+                }
+            });
+        } catch (error) {
+            console.error('❌ Error loading categories:', error);
+        }
+    }
+    
+    // ========== Авто-заполнение даты истечения ==========
+    function initAutoFill() {
+        const categorySelect = document.getElementById('modalCategorySelect');
+        const issueDateInput = document.getElementById('modalIssueDate');
+        const expirationDateInput = document.getElementById('modalExpirationDate');
+        
+        let manualExpiration = false;
+        
+        expirationDateInput.addEventListener('change', () => {
+            manualExpiration = true;
+        });
+        
+        const calculate = () => {
+            const categoryId = parseInt(categorySelect.value);
+            const issueDate = issueDateInput.value;
+            
+            if (!categoryId || !issueDate) return;
+            if (manualExpiration) return;
+            
+            const category = categories.find(c => c.id === categoryId);
+            if (!category || !category.standard_lifespan) return;
+            
+            const date = new Date(issueDate);
+            date.setDate(date.getDate() + category.standard_lifespan);
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            expirationDateInput.value = `${year}-${month}-${day}`;
+            expirationDateInput.style.borderColor = '#28a745';
+            setTimeout(() => {
+                expirationDateInput.style.borderColor = '';
+            }, 1500);
+        };
+        
+        categorySelect.addEventListener('change', calculate);
+        issueDateInput.addEventListener('change', calculate);
+    }
+    
+    // ========== Установить дату выдачи = сегодня ==========
+    function setIssueDateToday() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('modalIssueDate').value = `${year}-${month}-${day}`;
     }
     
     // ========== Загрузка спецодежды ==========
@@ -185,13 +380,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             let url = `/workwear/api/employees/${employeeId}/workwear/`;
             if (status) url += `?status=${status}`;
             
-            console.log('📡 Запрос спецодежды:', url);
             const response = await fetch(url);
             const items = await response.json();
             
             console.log('✅ Спецодежда:', items);
             
-            // Статистика
             const total = items.length;
             const expiring = items.filter(i => i.status === 'expiring_soon').length;
             const expired = items.filter(i => i.status === 'expired').length;
@@ -205,11 +398,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             renderWorkwear(items);
         } catch (error) {
             console.error('❌ Error loading workwear:', error);
-            document.getElementById('workwearTableBody').innerHTML = `
-                <tr><td colspan="9" class="text-center text-danger py-3">
-                    Ошибка загрузки спецодежды: ${error.message}
-                </td></tr>
-            `;
         }
     }
     
@@ -221,7 +409,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 <tr>
                     <td colspan="9" class="text-center py-3 text-muted">
                         <i class="fas fa-tshirt fa-2x d-block mb-2"></i>
-                        Нет спецодежды у этого сотрудника
+                        Нет спецодежды
                     </td>
                 </tr>
             `;
@@ -249,9 +437,18 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <td><span class="status-badge ${status.class}">${status.text}</span></td>
                     <td>${days > 0 ? days : '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-danger" onclick="returnItem(${item.id})">
-                            <i class="fas fa-undo"></i> Вернуть
-                        </button>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" 
+                                    onclick="returnItem(${item.id})" 
+                                    title="Вернуть на склад">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" 
+                                    onclick="deleteItem(${item.id}, '${item.name.replace(/'/g, "\\'")}')" 
+                                    title="Списать">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -260,14 +457,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         tbody.innerHTML = html;
     }
     
-    // ========== Загрузка истории ==========
+    // ========== История ==========
     async function loadHistory() {
         try {
-            console.log('📡 Запрос истории:', `/workwear/api/employees/${employeeId}/history/`);
             const response = await fetch(`/workwear/api/employees/${employeeId}/history/`);
             const history = await response.json();
-            
-            console.log('✅ История:', history);
             
             const tbody = document.getElementById('historyTableBody');
             
@@ -296,21 +490,114 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
-    // ========== Действия ==========
-    window.returnItem = async function(id) {
-        if (!confirm('Вернуть эту спецодежду?')) return;
+    // ========== Выдача спецодежды ==========
+    async function issueWorkwear() {
+        const form = document.getElementById('issueWorkwearForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        data.employee = parseInt(employeeId);
+        data.category = parseInt(data.category);
+        data.is_active = data.is_active === 'on' || data.is_active === 'true';
+        
+        // Валидация
+        const requiredFields = {
+            'employee': 'Сотрудник',
+            'category': 'Категория',
+            'name': 'Наименование',
+            'issue_date': 'Дата выдачи',
+            'expiration_date': 'Дата истечения'
+        };
+        
+        const missing = [];
+        for (const [field, label] of Object.entries(requiredFields)) {
+            if (!data[field] || data[field] === '') {
+                missing.push(label);
+            }
+        }
+        
+        if (missing.length > 0) {
+            alert(`⚠️ Заполните поля:\n• ${missing.join('\n• ')}`);
+            return;
+        }
+        
+        const issueDate = new Date(data.issue_date);
+        const expirationDate = new Date(data.expiration_date);
+        
+        if (expirationDate < issueDate) {
+            alert('⚠️ Дата истечения не может быть раньше даты выдачи');
+            return;
+        }
+        
+        console.log('📤 Выдача спецодежды:', data);
+        
+        const saveBtn = document.getElementById('modalSaveBtn');
+        
         try {
-            await fetch(`/workwear/api/workwear-items/${id}/return/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Выдача...';
+            
+            // ✅ ИСПОЛЬЗУЕМ API ВМЕСТО fetch
+            await API.createWorkwearItem(data);
+            
+            // Закрываем модалку
+            const modalEl = document.getElementById('issueWorkwearModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            
+            // Сбрасываем форму
+            form.reset();
+            document.getElementById('modalIsActive').checked = true;
+            
+            // Обновляем данные
             await loadWorkwear(statusFilter.value);
+            await loadHistory();
+            
+            alert('✅ Спецодежда успешно выдана!');
+            
+        } catch (error) {
+            console.error('❌ Ошибка:', error);
+            alert(`Ошибка при выдаче: ${error.message}`);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-check"></i> Выдать';
+        }
+    }
+    
+   // ========== Возврат на склад ==========
+    window.returnItem = async function(id) {
+        if (!confirm('Вернуть эту спецодежду на склад?')) return;
+        try {
+            await API.returnWorkwearItem(id, { description: 'Возврат спецодежды' });
+            
+            await loadWorkwear(statusFilter.value);
+            await loadHistory();
             alert('✅ Спецодежда возвращена');
         } catch (error) {
-            console.error('❌ Error returning item:', error);
+            console.error('❌ Error:', error);
             alert('Ошибка при возврате');
+        }
+    };
+
+    // ========== Списание спецодежды ==========
+    window.deleteItem = async function(id, name) {
+        if (!confirm(`Вы уверены, что хотите списать "${name}"?\n\nЭта запись будет помечена как списанная.`)) {
+            return;
+        }
+        
+        try {
+            // Вызываем DELETE метод — на бэкенде он ставит is_active = False
+            // и создаёт запись в истории с action='written_off'
+            await API.deleteWorkwearItem(id);
+            
+            // Обновляем таблицу и историю
+            await loadWorkwear(statusFilter.value);
+            await loadHistory();
+            
+            alert(`✅ "${name}" списана`);
+        } catch (error) {
+            console.error('❌ Ошибка списания:', error);
+            alert(`Ошибка при списании: ${error.message}`);
         }
     };
     
@@ -319,10 +606,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         loadWorkwear(statusFilter.value);
     });
     
-    // ========== Загрузка данных ==========
+    document.getElementById('modalSaveBtn').addEventListener('click', issueWorkwear);
+    
+    // При открытии модалки — ставим сегодняшнюю дату
+    document.getElementById('issueWorkwearModal').addEventListener('show.bs.modal', () => {
+        setIssueDateToday();
+    });
+    
+    // ========== Инициализация ==========
     await loadEmployee();
+    await loadCategories();
     await loadWorkwear();
     await loadHistory();
+    initAutoFill();
 });
 </script>
 {% endblock %}

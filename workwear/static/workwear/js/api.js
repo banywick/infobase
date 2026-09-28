@@ -100,7 +100,14 @@ const API = {
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            let errorData;
+            try {
+                errorData = JSON.parse(errorText);
+            } catch (e) {
+                errorData = errorText;
+            }
+            throw new Error(`HTTP ${response.status}: ${JSON.stringify(errorData)}`);
         }
         return response.json();
     },
