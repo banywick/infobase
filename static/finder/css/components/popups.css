@@ -428,13 +428,17 @@ animation-duration: 2.5s;
     opacity: 0.6;
     cursor: not-allowed;
 }
-
+/* 
 .error-message {
     color: #dc3545;
     font-size: 14px;
     margin-top: 5px;
     min-height: 20px;
-}
+    display: none;
+ } 
+.error-message.active {
+    display: block; /* показываем, когда есть ошибка */
+/* }   */
 
 .input_wrapper {
     margin-bottom: 10px;
