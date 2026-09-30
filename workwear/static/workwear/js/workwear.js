@@ -19,6 +19,7 @@ class WorkwearPage {
     async init() {
         this.bindEvents();
         await this.loadCategories();
+        await this.loadWorkwearNames();
         await this.loadWorkwear();
         this.initEmployeeSearch();
         this.initDateAutoFill();
@@ -335,6 +336,35 @@ class WorkwearPage {
         categorySelect.addEventListener('change', calculateExpiration);
         issueDateInput.addEventListener('change', calculateExpiration);
     }
+
+     // ===========================================================
+    // ========== Загрузка наименования ===========================
+    // ============================================================
+    async loadWorkwearNames() {
+        try {
+            const response = await fetch('/workwear/api/workwear-names/');
+            const names = await response.json();
+            console.log(`✅ Загружено ${names.length} наименований`);
+            
+            const select = document.getElementById('nameSelect');
+            if (select) {
+                select.innerHTML = '<option value="">Выберите наименование</option>';
+                names.forEach(n => {
+                    const opt = document.createElement('option');
+                    opt.value = n.id;
+                    opt.textContent = n.name;
+                    select.appendChild(opt);
+                });
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки наименований:', error);
+        }
+    }
+
+
+
+
+
     
     // ============================================================
     // ========== ЗАГРУЗКА СПИСКА СПЕЦОДЕЖДЫ ======================
@@ -416,7 +446,7 @@ class WorkwearPage {
                             ${item.employee_name}
                         </a>
                     </td>
-                    <td><strong>${item.name}</strong></td>
+                    <td><strong>${item.name_display || item.name}</strong></td>
                     <td>${item.category_name}</td>
                     <td>${item.size || '-'}</td>
                     <td>${item.issue_date}</td>

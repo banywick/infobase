@@ -46,7 +46,22 @@ class Employee(models.Model):
             parts.append(self.patronymic)
         return ' '.join(parts)
     
-    # ... остальные методы
+# backend/workwear/models.py
+
+class WorkwearName(models.Model):
+    """Справочник наименований спецодежды"""
+    name = models.CharField(max_length=200, unique=True, verbose_name="Наименование")
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Наименование спецодежды"
+        verbose_name_plural = "Наименования спецодежды"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name 
 
 
 class WorkwearCategory(models.Model):
@@ -82,7 +97,13 @@ class WorkwearItem(models.Model):
         related_name='workwear_items',
         verbose_name="Категория"
     )
-    name = models.CharField(max_length=200, verbose_name="Наименование")
+    # ✅ Меняем CharField на ForeignKey
+    name = models.ForeignKey(
+        WorkwearName,
+        on_delete=models.PROTECT,  # защита от удаления используемых наименований
+        related_name='workwear_items',
+        verbose_name="Наименование"
+    )
     size = models.CharField(max_length=20, blank=True, verbose_name="Размер")
     color = models.CharField(max_length=30, blank=True, verbose_name="Цвет")
     issue_date = models.DateField(verbose_name="Дата выдачи")
@@ -98,10 +119,9 @@ class WorkwearItem(models.Model):
         ordering = ['employee', 'category', 'name']
 
     def __str__(self):
-        return f"{self.name} - {self.employee.get_full_name()}"
+        return f"{self.name.name} - {self.employee.get_full_name()}"
 
     def get_status(self):
-        """Получить статус предмета"""
         today = timezone.now().date()
         if self.expiration_date < today:
             return 'expired'

@@ -187,8 +187,9 @@
                             <label class="form-label">
                                 Наименование <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control" name="name" 
-                                   placeholder="Например: Куртка зимняя" required>
+                            <select class="form-select" name="name" id="modalNameSelect" required>
+                                <option value="">Выберите наименование</option>
+                            </select>
                         </div>
 
                         <!-- Размер -->
@@ -428,7 +429,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             html += `
                 <tr class="${item.status === 'expired' ? 'table-danger' : item.status === 'expiring_soon' ? 'table-warning' : ''}">
-                    <td><strong>${item.name}</strong></td>
+                    <td><strong>${item.name_display || (item.name && item.name.name) || item.name}</strong></td>
                     <td>${item.category_name}</td>
                     <td>${item.size || '-'}</td>
                     <td>${item.color || '-'}</td>
@@ -444,7 +445,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 <i class="fas fa-undo"></i>
                             </button>
                             <button class="btn btn-outline-danger" 
-                                    onclick="deleteItem(${item.id}, '${item.name.replace(/'/g, "\\'")}')" 
+                            onclick="deleteItem(${item.id}, '${(item.name_display || item.name || '').replace(/'/g, "\\'")}')"
                                     title="Списать">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -455,6 +456,25 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
         
         tbody.innerHTML = html;
+    }
+
+    // ========== Загрузка наименования ==========
+    async function loadNames() {
+        try {
+            const response = await fetch('/workwear/api/workwear-names/');
+            const names = await response.json();
+            
+            const select = document.getElementById('modalNameSelect');
+            select.innerHTML = '<option value="">Выберите наименование</option>';
+            names.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n.id;
+                opt.textContent = n.name;
+                select.appendChild(opt);
+            });
+        } catch (error) {
+            console.error('❌ Ошибка загрузки наименований:', error);
+        }
     }
     
     // ========== История ==========
@@ -616,6 +636,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // ========== Инициализация ==========
     await loadEmployee();
     await loadCategories();
+    await loadNames();
     await loadWorkwear();
     await loadHistory();
     initAutoFill();

@@ -1,7 +1,7 @@
 # backend/workwear/serializers.py
 
 from rest_framework import serializers
-from .models import Employee, WorkwearCategory, WorkwearItem, WorkwearHistory
+from .models import *
 from datetime import timedelta
 from django.utils import timezone
 
@@ -65,9 +65,21 @@ class WorkwearCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'standard_lifespan', 'is_active']
 
 
+# backend/workwear/serializers.py
+
+from .models import Employee, WorkwearCategory, WorkwearItem, WorkwearHistory, WorkwearName
+
+
+class WorkwearNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkwearName
+        fields = ['id', 'name', 'is_active']
+
+
 class WorkwearItemSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
     category_name = serializers.SerializerMethodField()
+    name_display = serializers.CharField(source='name.name', read_only=True)  # <-- для отображения
     status = serializers.SerializerMethodField()
     days_until_expiration = serializers.SerializerMethodField()
     
@@ -75,7 +87,7 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
         model = WorkwearItem
         fields = [
             'id', 'employee', 'employee_name', 'category', 'category_name',
-            'name', 'size', 'color', 'issue_date',
+            'name', 'name_display', 'size', 'color', 'issue_date',
             'expiration_date', 'is_active', 'notes', 'status',
             'days_until_expiration', 'created_at', 'updated_at'
         ]
@@ -97,19 +109,17 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
 
 
 class WorkwearCreateUpdateSerializer(serializers.ModelSerializer):
-    # ✅ Делаем expiration_date обязательным
     expiration_date = serializers.DateField(required=True, allow_null=False)
     
     class Meta:
         model = WorkwearItem
         fields = [
-            'employee', 'category', 'name', 
+            'employee', 'category', 'name',  # name теперь FK
             'size', 'color', 'issue_date', 'expiration_date', 
             'is_active', 'notes'
         ]
     
     def validate(self, data):
-        """Проверяем, что дата истечения позже даты выдачи"""
         issue_date = data.get('issue_date')
         expiration_date = data.get('expiration_date')
         
@@ -138,7 +148,7 @@ class WorkwearHistorySerializer(serializers.ModelSerializer):
         ]
     
     def get_workwear_item_name(self, obj):
-        return obj.workwear_item.name
+        return obj.workwear_item.name.name
     
     def get_previous_employee_name(self, obj):
         if obj.previous_employee:

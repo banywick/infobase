@@ -24,7 +24,8 @@ urlpatterns = [
     path('api/employees/<int:pk>/', EmployeeDetailAPIView.as_view(), name='api_employee_detail'),
     path('api/employees/<int:pk>/workwear/', EmployeeWorkwearAPIView.as_view(), name='api_employee_workwear'),
     path('api/employees/<int:pk>/history/', EmployeeHistoryAPIView.as_view(), name='api_employee_history'),
-    
+
+    path('api/workwear-names/', WorkwearNameListAPIView.as_view(), name='api_workwear_names'),
     path('api/workwear-items/', WorkwearItemListAPIView.as_view(), name='api_workwear_list'),
     path('api/workwear-items/<int:pk>/', WorkwearItemDetailAPIView.as_view(), name='api_workwear_detail'),
     path('api/workwear-items/<int:pk>/return/', WorkwearItemReturnAPIView.as_view(), name='api_workwear_return'),

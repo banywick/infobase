@@ -14,15 +14,9 @@ from django.urls import reverse_lazy
 from common.utils.access_mixin import UserGroupRequiredMixin
 from django.views.generic import TemplateView
 
-from .models import Employee, WorkwearCategory, WorkwearItem, WorkwearHistory
-from .serializers import (
-    EmployeeSerializer,
-    EmployeeCreateUpdateSerializer,
-    WorkwearCategorySerializer,
-    WorkwearItemSerializer,
-    WorkwearCreateUpdateSerializer,
-    WorkwearHistorySerializer,
-)
+from .models import *
+from .serializers import *
+
 
 
 # ============================================================
@@ -240,6 +234,17 @@ class EmployeeHistoryAPIView(APIView):
 # ============================================================
 # ========== API: СПЕЦОДЕЖДА =================================
 # ============================================================
+
+class WorkwearNameListAPIView(APIView):
+    """Список наименований спецодежды"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        from .serializers import WorkwearNameSerializer
+        names = WorkwearName.objects.filter(is_active=True).order_by('name')
+        serializer = WorkwearNameSerializer(names, many=True)
+        return Response(serializer.data)
+
 
 class WorkwearItemListAPIView(APIView):
     """Получить список всех предметов спецодежды"""

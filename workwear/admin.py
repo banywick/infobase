@@ -6,11 +6,33 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import path
 from django.template.response import TemplateResponse
-from .models import Employee, WorkwearCategory, WorkwearItem, WorkwearHistory
+from .models import *
 import logging
 
 logger = logging.getLogger(__name__)
 
+
+# backend/workwear/admin.py
+
+
+@admin.register(WorkwearName)
+class WorkwearNameAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_active', 'created_at']
+    list_filter = ['is_active']
+    search_fields = ['name']
+    list_editable = ['is_active']
+    ordering = ['name']
+    
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'is_active')
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ['created_at', 'updated_at']
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
@@ -175,6 +197,9 @@ class EmployeeAdmin(admin.ModelAdmin):
         return redirect('admin:workwear_employee_changelist')
 
 
+
+
+
 @admin.register(WorkwearCategory)
 class WorkwearCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'standard_lifespan', 'is_active']
@@ -188,8 +213,8 @@ class WorkwearItemAdmin(admin.ModelAdmin):
         'name', 'employee', 'category', 
         'issue_date', 'expiration_date', 'get_status_display_colored'
     ]
-    list_filter = ['category', 'is_active', 'employee__department']
-    search_fields = ['name', 'employee__last_name', 'employee__first_name']
+    list_filter = ['category', 'is_active', 'employee__department', 'name']
+    search_fields = ['name__name', 'employee__last_name', 'employee__first_name']
     readonly_fields = ['created_at', 'updated_at']
     date_hierarchy = 'expiration_date'
     
