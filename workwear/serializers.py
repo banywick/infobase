@@ -65,11 +65,6 @@ class WorkwearCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'standard_lifespan', 'is_active']
 
 
-# backend/workwear/serializers.py
-
-from .models import Employee, WorkwearCategory, WorkwearItem, WorkwearHistory, WorkwearName
-
-
 class WorkwearNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkwearName
@@ -79,9 +74,11 @@ class WorkwearNameSerializer(serializers.ModelSerializer):
 class WorkwearItemSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
     category_name = serializers.SerializerMethodField()
-    name_display = serializers.CharField(source='name.name', read_only=True)  # <-- для отображения
+    name_display = serializers.CharField(source='name.name', read_only=True)
     status = serializers.SerializerMethodField()
     days_until_expiration = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()  # ✅ добавить
+    can_edit = serializers.SerializerMethodField()         # ✅ добавить
     
     class Meta:
         model = WorkwearItem
@@ -89,7 +86,9 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
             'id', 'employee', 'employee_name', 'category', 'category_name',
             'name', 'name_display', 'size', 'color', 'issue_date',
             'expiration_date', 'is_active', 'notes', 'status',
-            'days_until_expiration', 'created_at', 'updated_at'
+            'days_until_expiration',
+            'created_by', 'created_by_name', 'can_edit',  # ✅ добавить
+            'created_at', 'updated_at'
         ]
     
     def get_employee_name(self, obj):
@@ -106,6 +105,55 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
         if obj.expiration_date >= today:
             return (obj.expiration_date - today).days
         return 0
+    
+    # ✅ ДОБАВИТЬ ЭТИ ДВА МЕТОДА:
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            full_name = obj.created_by.get_full_name()
+            if full_name:
+                return full_name
+            return obj.created_by.username
+        return None
+    
+    def get_can_edit(self, obj):
+        request = self.context.get('request')
+        if request and request.user:
+            return obj.can_edit(request.user)
+        return False
+
+
+class OtherItemSerializer(serializers.ModelSerializer):
+    employee_name = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()  # ✅
+    can_edit = serializers.SerializerMethodField()         # ✅
+    
+    class Meta:
+        model = OtherItem
+        fields = [
+            'id', 'employee', 'employee_name', 'name', 'quantity',
+            'issue_date', 'notes', 'is_active',
+            'created_by', 'created_by_name', 'can_edit',  # ✅
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_by', 'created_at', 'updated_at']
+    
+    def get_employee_name(self, obj):
+        return obj.employee.get_full_name()
+    
+    # ✅ ДОБАВИТЬ ЭТИ ДВА МЕТОДА:
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            full_name = obj.created_by.get_full_name()
+            if full_name:
+                return full_name
+            return obj.created_by.username
+        return None
+    
+    def get_can_edit(self, obj):
+        request = self.context.get('request')
+        if request and request.user:
+            return obj.can_edit(request.user)
+        return False
 
 
 class WorkwearCreateUpdateSerializer(serializers.ModelSerializer):
@@ -162,3 +210,8 @@ class WorkwearHistorySerializer(serializers.ModelSerializer):
     
     def get_action_display(self, obj):
         return obj.get_action_display()
+
+class OtherItemCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OtherItem
+        fields = ['employee', 'name', 'quantity', 'issue_date', 'notes', 'is_active']        

@@ -29,6 +29,8 @@ urlpatterns = [
     path('api/workwear-items/', WorkwearItemListAPIView.as_view(), name='api_workwear_list'),
     path('api/workwear-items/<int:pk>/', WorkwearItemDetailAPIView.as_view(), name='api_workwear_detail'),
     path('api/workwear-items/<int:pk>/return/', WorkwearItemReturnAPIView.as_view(), name='api_workwear_return'),
+    path('api/other-items/', OtherItemListAPIView.as_view(), name='api_other_items'),
+    path('api/other-items/<int:pk>/', OtherItemDetailAPIView.as_view(), name='api_other_item_detail'),
     
     path('api/expiring-items/', ExpiringItemsAPIView.as_view(), name='api_expiring_items'),
     path('api/expired-items/', ExpiredItemsAPIView.as_view(), name='api_expired_items'),

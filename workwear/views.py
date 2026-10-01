@@ -26,7 +26,7 @@ from .serializers import *
 class DashboardView(UserGroupRequiredMixin, TemplateView):
     """Дашборд"""
     template_name = 'workwear/dashboard.html'
-    group_required = ['aho']
+    group_required = ['aho', 'aho_any']
 
 
 class EmployeeListView(View):
@@ -197,14 +197,12 @@ class EmployeeDetailAPIView(APIView):
 
 
 class EmployeeWorkwearAPIView(APIView):
-    """Получить всю спецодежду сотрудника"""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, pk):
         employee = get_object_or_404(Employee, pk=pk)
         items = employee.workwear_items.filter(is_active=True)
 
-        # Фильтр по статусу
         status_filter = request.query_params.get('status', None)
         if status_filter:
             today = timezone.now().date()
@@ -214,9 +212,9 @@ class EmployeeWorkwearAPIView(APIView):
                 threshold = today + timedelta(days=30)
                 items = items.filter(expiration_date__gte=today, expiration_date__lte=threshold)
 
-        serializer = WorkwearItemSerializer(items, many=True)
+        # ✅ ВАЖНО: передаём context с request
+        serializer = WorkwearItemSerializer(items, many=True, context={'request': request})
         return Response(serializer.data)
-
 
 class EmployeeHistoryAPIView(APIView):
     """Получить историю изменений спецодежды сотрудника"""
@@ -251,7 +249,7 @@ class WorkwearItemListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        queryset = WorkwearItem.objects.filter(is_active=True).select_related('employee', 'category')
+        queryset = WorkwearItem.objects.filter(is_active=True).select_related('employee', 'category', 'name', 'created_by')
 
         # Фильтр по сотруднику
         employee_id = request.query_params.get('employee_id', None)
@@ -307,16 +305,23 @@ class WorkwearItemListAPIView(APIView):
         paginator = PageNumberPagination()
         paginator.page_size = 50
         result_page = paginator.paginate_queryset(queryset, request)
-        serializer = WorkwearItemSerializer(result_page, many=True)
+        
+        # ✅ ВАЖНО: передаём context с request
+        serializer = WorkwearItemSerializer(
+            result_page, many=True, context={'request': request}
+        )
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         """Создать новый предмет спецодежды"""
         serializer = WorkwearCreateUpdateSerializer(data=request.data)
         if serializer.is_valid():
-            item = serializer.save()
+            # ✅ Сохраняем автора
+            item = serializer.save(
+                created_by=request.user if request.user.is_authenticated else None
+            )
 
-            # Создаем запись в истории
+            # Создаём запись в истории
             WorkwearHistory.objects.create(
                 workwear_item=item,
                 action='issued',
@@ -324,27 +329,36 @@ class WorkwearItemListAPIView(APIView):
                 description='Выдача спецодежды',
             )
 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # ✅ Возвращаем полный сериализатор с can_edit
+            return Response(
+                WorkwearItemSerializer(item, context={'request': request}).data,
+                status=status.HTTP_201_CREATED
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class WorkwearItemDetailAPIView(APIView):
-    """Получить, обновить, удалить предмет спецодежды"""
-    permission_classes = [permissions.AllowAny]
-
     def get(self, request, pk):
         item = get_object_or_404(WorkwearItem, pk=pk)
-        serializer = WorkwearItemSerializer(item)
+        # ✅ context
+        serializer = WorkwearItemSerializer(item, context={'request': request})
         return Response(serializer.data)
-
+    
     def put(self, request, pk):
         item = get_object_or_404(WorkwearItem, pk=pk)
+        
+        # ✅ Проверка прав
+        if request.user.is_authenticated and not item.can_edit(request.user):
+            return Response(
+                {'error': 'Вы не можете редактировать эту запись'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         old_employee = item.employee
         serializer = WorkwearCreateUpdateSerializer(item, data=request.data)
         if serializer.is_valid():
             updated_item = serializer.save()
 
-            # История — если сменился сотрудник
             if old_employee != updated_item.employee:
                 WorkwearHistory.objects.create(
                     workwear_item=updated_item,
@@ -354,8 +368,32 @@ class WorkwearItemDetailAPIView(APIView):
                     description='Передача спецодежды другому сотруднику',
                 )
 
-            return Response(serializer.data)
+            return Response(
+                WorkwearItemSerializer(updated_item, context={'request': request}).data
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        item = get_object_or_404(WorkwearItem, pk=pk)
+        
+        # ✅ Проверка прав
+        if request.user.is_authenticated and not item.can_edit(request.user):
+            return Response(
+                {'error': 'Вы не можете удалить эту запись'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        item.is_active = False
+        item.save()
+
+        WorkwearHistory.objects.create(
+            workwear_item=item,
+            action='written_off',
+            previous_employee=item.employee,
+            description='Списание спецодежды',
+        )
+
+        return Response({'status': 'success', 'message': 'Спецодежда списана'})
 
     def delete(self, request, pk):
         item = get_object_or_404(WorkwearItem, pk=pk)
@@ -373,11 +411,18 @@ class WorkwearItemDetailAPIView(APIView):
 
 
 class WorkwearItemReturnAPIView(APIView):
-    """Возврат спецодежды"""
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, pk):
         item = get_object_or_404(WorkwearItem, pk=pk)
+        
+        # ✅ Проверка прав
+        if request.user.is_authenticated and not item.can_edit(request.user):
+            return Response(
+                {'error': 'Вы не можете вернуть эту запись'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         item.is_active = False
         item.save()
 
@@ -556,3 +601,77 @@ class EmployeeSearchAPIView(APIView):
             'results': results,
             'count': len(results)
         })
+
+class OtherItemListAPIView(APIView):
+    """Список прочих предметов / Создание"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        queryset = OtherItem.objects.filter(is_active=True).select_related('employee', 'created_by')
+        
+        employee_id = request.query_params.get('employee_id')
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        
+        search = request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(employee__first_name__icontains=search) |
+                Q(employee__last_name__icontains=search)
+            )
+        
+        serializer = OtherItemSerializer(
+            queryset, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
+    
+    def post(self, request):
+        serializer = OtherItemCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            item = serializer.save(
+                created_by=request.user if request.user.is_authenticated else None
+            )
+            return Response(
+                OtherItemSerializer(item, context={'request': request}).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OtherItemDetailAPIView(APIView):
+    """Получить / обновить / удалить прочий предмет"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request, pk):
+        item = get_object_or_404(OtherItem, pk=pk)
+        serializer = OtherItemSerializer(item, context={'request': request})
+        return Response(serializer.data)
+    
+    def put(self, request, pk):
+        item = get_object_or_404(OtherItem, pk=pk)
+        
+        if request.user.is_authenticated and not item.can_edit(request.user):
+            return Response(
+                {'error': 'Вы не можете редактировать эту запись'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        serializer = OtherItemCreateSerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(OtherItemSerializer(item, context={'request': request}).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk):
+        item = get_object_or_404(OtherItem, pk=pk)
+        
+        if request.user.is_authenticated and not item.can_edit(request.user):
+            return Response(
+                {'error': 'Вы не можете удалить эту запись. Только автор может её удалить.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        item.is_active = False
+        item.save()
+        return Response({'status': 'success', 'message': 'Запись удалена'})        

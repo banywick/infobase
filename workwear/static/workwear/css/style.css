@@ -15,6 +15,29 @@ body {
     background-color: #f0f2f5;
 }
 
+
+.employee-delete-btn {
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.employee-delete-btn i {
+    font-size: 13px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* Карточки сотрудников */
 .employee-card {
     transition: transform 0.2s, box-shadow 0.2s;

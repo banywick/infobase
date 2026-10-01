@@ -176,13 +176,12 @@ class EmployeesPage {
             html += `
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <div class="employee-card card ${statusClass} fade-in position-relative">
-                        <!-- Кнопка удаления (в правом верхнем углу) -->
-                        <button class="btn btn-sm btn-danger position-absolute" 
-                                style="top: 8px; right: 8px; z-index: 10; border-radius: 50%; width: 30px; height: 30px; padding: 0;"
-                                onclick="event.stopPropagation(); employeesPage.deleteEmployee(${emp.id}, '${emp.full_name.replace(/'/g, "\\'")}')"
-                                title="Удалить сотрудника">
-                            <i class="fas fa-times" style="font-size: 12px;"></i>
-                        </button>
+                    <!-- Кнопка удаления (в правом верхнем углу) -->
+                    <button class="btn btn-sm btn-danger position-absolute employee-delete-btn" 
+                            onclick="event.stopPropagation(); employeesPage.deleteEmployee(${emp.id}, '${emp.full_name.replace(/'/g, "\\'")}')"
+                            title="Удалить сотрудника">
+                        <i class="fas fa-times"></i>
+                    </button>
                         
                         <div class="card-body" onclick="window.location.href='/workwear/employees/${emp.id}/'">
                             <div class="card-img-top d-flex align-items-center justify-content-center bg-light rounded-circle mx-auto" 

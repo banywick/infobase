@@ -3,6 +3,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth.models import User
 
 
 # backend/workwear/models.py
@@ -83,6 +84,52 @@ class WorkwearCategory(models.Model):
         return self.name
 
 
+# backend/workwear/models.py
+
+class OtherItem(models.Model):
+    """Прочие предметы, выданные сотруднику (очки, плащ и т.д.)"""
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name='other_items',
+        verbose_name="Сотрудник"
+    )
+    name = models.CharField(max_length=200, verbose_name="Наименование")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Количество")
+    issue_date = models.DateField(verbose_name="Дата выдачи")
+    notes = models.TextField(blank=True, verbose_name="Примечания")
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_other_items',
+        verbose_name="Кто создал"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Прочий предмет"
+        verbose_name_plural = "Прочие предметы"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.employee.get_full_name()}"
+
+    def can_edit(self, user):
+        """Права на редактирование на основном сайте (не в админке).
+        is_staff НЕ даёт прав — только superuser или автор."""
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superuser:  # ← только superuser может всё
+            return True
+        return self.created_by_id == user.id
+
+
 class WorkwearItem(models.Model):
     """Предмет спецодежды"""
     employee = models.ForeignKey(
@@ -113,10 +160,28 @@ class WorkwearItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "Предмет спецодежды"
-        verbose_name_plural = "Предметы спецодежды"
-        ordering = ['employee', 'category', 'name']
+    # ✅ Автор записи
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_workwear_items',
+        verbose_name="Кто создал"
+    )
+
+    def can_edit(self, user):
+        """Права на редактирование на основном сайте (не в админке)"""
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superuser:  # ← только superuser может всё
+            return True
+        return self.created_by_id == user.id
+
+        class Meta:
+            verbose_name = "Предмет спецодежды"
+            verbose_name_plural = "Предметы спецодежды"
+            ordering = ['employee', 'category', 'name']
 
     def __str__(self):
         return f"{self.name.name} - {self.employee.get_full_name()}"

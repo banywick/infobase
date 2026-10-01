@@ -13,13 +13,16 @@
         </h2>
         <div class="d-flex gap-2 flex-wrap">
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#issueWorkwearModal">
-                <i class="fas fa-plus-circle"></i> Выдать спецодежду
+                <i class="fas fa-tshirt"></i> Выдать спецодежду
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addOtherItemModal">
+                <i class="fas fa-box"></i> Добавить предмет
             </button>
             <a href="{% url 'workwear:employees' %}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Назад
             </a>
             <button class="btn btn-outline-primary" onclick="window.location.reload()">
-                <i class="fas fa-sync"></i> Обновить
+                <i class="fas fa-sync"></i>
             </button>
         </div>
     </div>
@@ -80,41 +83,98 @@
         </div>
     </div>
 
-    <!-- Спецодежда сотрудника -->
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-tshirt me-2"></i>Спецодежда сотрудника</h5>
-            <select class="form-select form-select-sm" id="workwearStatusFilter" style="width:auto;">
-                <option value="">Все</option>
-                <option value="active">Активные</option>
-                <option value="expiring_soon">Истекает срок</option>
-                <option value="expired">Просрочены</option>
-            </select>
+    <!-- Вкладки -->
+    <ul class="nav nav-tabs mb-3" id="itemsTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="workwear-tab" data-bs-toggle="tab" 
+                    data-bs-target="#workwear-pane" type="button" role="tab">
+                <i class="fas fa-tshirt me-1"></i>Спецодежда
+                <span class="badge bg-primary ms-1" id="workwearCount">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="other-tab" data-bs-toggle="tab" 
+                    data-bs-target="#other-pane" type="button" role="tab">
+                <i class="fas fa-box me-1"></i>Прочие предметы
+                <span class="badge bg-secondary ms-1" id="otherCount">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="itemsTabsContent">
+        <!-- СПЕЦОДЕЖДА -->
+        <div class="tab-pane fade show active" id="workwear-pane" role="tabpanel">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-tshirt me-2"></i>Спецодежда сотрудника</h5>
+                    <select class="form-select form-select-sm" id="workwearStatusFilter" style="width:auto;">
+                        <option value="">Все</option>
+                        <option value="active">Активные</option>
+                        <option value="expiring_soon">Истекает срок</option>
+                        <option value="expired">Просрочены</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Наименование</th>
+                                    <th>Категория</th>
+                                    <th>Размер</th>
+                                    <th>Цвет</th>
+                                    <th>Дата выдачи</th>
+                                    <th>Срок истечения</th>
+                                    <th>Статус</th>
+                                    <th>Автор</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workwearTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-3">
+                                        <div class="spinner-border text-primary" role="status"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Наименование</th>
-                            <th>Категория</th>
-                            <th>Размер</th>
-                            <th>Цвет</th>
-                            <th>Дата выдачи</th>
-                            <th>Срок истечения</th>
-                            <th>Статус</th>
-                            <th>Дней</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody id="workwearTableBody">
-                        <tr>
-                            <td colspan="9" class="text-center py-3">
-                                <div class="spinner-border text-primary" role="status"></div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        
+        <!-- ПРОЧИЕ ПРЕДМЕТЫ -->
+        <div class="tab-pane fade" id="other-pane" role="tabpanel">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-box me-2"></i>Прочие предметы</h5>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addOtherItemModal">
+                        <i class="fas fa-plus"></i> Добавить предмет
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Наименование</th>
+                                    <th>Количество</th>
+                                    <th>Дата выдачи</th>
+                                    <th>Примечания</th>
+                                    <th>Автор</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="otherItemsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-3">
+                                        <div class="spinner-border text-primary" role="status"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -158,7 +218,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Информация о сотруднике -->
                 <div class="alert alert-info d-flex align-items-center mb-3">
                     <i class="fas fa-user me-2"></i>
                     <div>
@@ -168,92 +227,103 @@
                 </div>
 
                 <form id="issueWorkwearForm">
-                    <!-- Скрытое поле с ID сотрудника -->
                     <input type="hidden" name="employee" id="modalEmployeeId">
 
                     <div class="row">
-                        <!-- Категория -->
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">
-                                Категория <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label">Категория <span class="text-danger">*</span></label>
                             <select class="form-select" name="category" id="modalCategorySelect" required>
                                 <option value="">Выберите категорию</option>
                             </select>
                         </div>
-
-                        <!-- Наименование -->
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">
-                                Наименование <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label">Наименование <span class="text-danger">*</span></label>
                             <select class="form-select" name="name" id="modalNameSelect" required>
                                 <option value="">Выберите наименование</option>
                             </select>
                         </div>
-
-                        <!-- Размер -->
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Размер</label>
-                            <input type="text" class="form-control" name="size" 
-                                   placeholder="M, L, XL, 42-44">
+                            <input type="text" class="form-control" name="size" placeholder="XL">
                         </div>
-
-                        <!-- Цвет -->
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Цвет</label>
-                            <input type="text" class="form-control" name="color" 
-                                   placeholder="Синий">
+                            <input type="text" class="form-control" name="color" placeholder="Синий">
                         </div>
-
-                        <!-- Дата выдачи -->
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">
-                                Дата выдачи <span class="text-danger">*</span>
-                            </label>
-                            <input type="date" class="form-control" name="issue_date" 
-                                   id="modalIssueDate" required>
+                            <label class="form-label">Дата выдачи <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="issue_date" id="modalIssueDate" required>
                         </div>
-
-                        <!-- Дата истечения -->
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">
-                                Дата истечения <span class="text-danger">*</span>
-                            </label>
-                            <input type="date" class="form-control" name="expiration_date" 
-                                   id="modalExpirationDate" required>
-                            <small class="text-muted">
-                                Рассчитывается автоматически по категории
-                            </small>
+                            <label class="form-label">Дата истечения <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="expiration_date" id="modalExpirationDate" required>
+                            <small class="text-muted">Рассчитывается автоматически</small>
                         </div>
-
-                        <!-- Активна -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">&nbsp;</label>
                             <div class="form-check form-switch mt-2">
-                                <input type="checkbox" class="form-check-input" 
-                                       name="is_active" id="modalIsActive" checked>
-                                <label class="form-check-label" for="modalIsActive">
-                                    Активна (выдана)
-                                </label>
+                                <input type="checkbox" class="form-check-input" name="is_active" id="modalIsActive" checked>
+                                <label class="form-check-label" for="modalIsActive">Активна</label>
                             </div>
                         </div>
-
-                        <!-- Примечания -->
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Примечания</label>
-                            <textarea class="form-control" name="notes" rows="2" 
-                                      placeholder="Дополнительная информация"></textarea>
+                            <textarea class="form-control" name="notes" rows="2"></textarea>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Отмена
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                 <button type="button" class="btn btn-success" id="modalSaveBtn">
                     <i class="fas fa-check"></i> Выдать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== МОДАЛЬНОЕ ОКНО: ДОБАВИТЬ/РЕДАКТИРОВАТЬ ПРОЧИЙ ПРЕДМЕТ ========== -->
+<div class="modal fade" id="addOtherItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="otherItemModalTitle">
+                    <i class="fas fa-box text-primary me-2"></i>
+                    Добавить предмет
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addOtherItemForm">
+                    <input type="hidden" name="employee" id="otherEmployeeId">
+                    <input type="hidden" name="item_id" id="otherItemId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Наименование <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" 
+                               placeholder="Например: Защитные очки" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Количество</label>
+                            <input type="number" class="form-control" name="quantity" value="1" min="1">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Дата выдачи <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="issue_date" id="otherIssueDate" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Примечания</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveOtherItemBtn">
+                    <i class="fas fa-save"></i> Сохранить
                 </button>
             </div>
         </div>
@@ -263,6 +333,25 @@
 
 {% block extra_js %}
 <script>
+// ============================================================
+// ========== CSRF-ТОКЕН ======================================
+// ============================================================
+function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     const app = document.getElementById('employeeDetailApp');
     const employeeId = app.dataset.employeeId;
@@ -276,9 +365,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     const statusFilter = document.getElementById('workwearStatusFilter');
     let categories = [];
+    let names = [];
     let currentEmployee = null;
     
-    // ========== Загрузка сотрудника ==========
+    // ============================================================
+    // ========== ЗАГРУЗКА СОТРУДНИКА =============================
+    // ============================================================
     async function loadEmployee() {
         try {
             const response = await fetch(`/workwear/api/employees/${employeeId}/`);
@@ -292,17 +384,19 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('employeeStatus').textContent = currentEmployee.is_active ? 'Активен' : 'Деактивирован';
             document.getElementById('employeeStatus').className = `badge ${currentEmployee.is_active ? 'bg-success' : 'bg-danger'}`;
             
-            // Заполняем информацию о сотруднике в модалке
             document.getElementById('modalEmployeeName').textContent = currentEmployee.full_name;
             document.getElementById('modalEmployeeDept').textContent = 
                 `${currentEmployee.department || 'Отдел не указан'} • ${currentEmployee.position || 'Должность не указана'}`;
             document.getElementById('modalEmployeeId').value = employeeId;
+            document.getElementById('otherEmployeeId').value = employeeId;
         } catch (error) {
             console.error('❌ Error loading employee:', error);
         }
     }
     
-    // ========== Загрузка категорий ==========
+    // ============================================================
+    // ========== ЗАГРУЗКА СПРАВОЧНИКОВ ==========================
+    // ============================================================
     async function loadCategories() {
         try {
             const response = await fetch('/workwear/api/categories/');
@@ -326,7 +420,31 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
-    // ========== Авто-заполнение даты истечения ==========
+    async function loadNames() {
+        try {
+            const response = await fetch('/workwear/api/workwear-names/');
+            names = await response.json();
+            console.log('✅ Наименования:', names);
+            
+            const select = document.getElementById('modalNameSelect');
+            select.innerHTML = '<option value="">Выберите наименование</option>';
+            
+            names.forEach(n => {
+                if (n.is_active) {
+                    const opt = document.createElement('option');
+                    opt.value = n.id;
+                    opt.textContent = n.name;
+                    select.appendChild(opt);
+                }
+            });
+        } catch (error) {
+            console.error('❌ Error loading names:', error);
+        }
+    }
+    
+    // ============================================================
+    // ========== АВТО-ЗАПОЛНЕНИЕ ДАТЫ ===========================
+    // ============================================================
     function initAutoFill() {
         const categorySelect = document.getElementById('modalCategorySelect');
         const issueDateInput = document.getElementById('modalIssueDate');
@@ -366,16 +484,18 @@ document.addEventListener('DOMContentLoaded', async function() {
         issueDateInput.addEventListener('change', calculate);
     }
     
-    // ========== Установить дату выдачи = сегодня ==========
-    function setIssueDateToday() {
+    function setToday(inputId) {
         const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        document.getElementById('modalIssueDate').value = `${year}-${month}-${day}`;
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        const el = document.getElementById(inputId);
+        if (el) el.value = `${y}-${m}-${d}`;
     }
     
-    // ========== Загрузка спецодежды ==========
+    // ============================================================
+    // ========== СПЕЦОДЕЖДА ======================================
+    // ============================================================
     async function loadWorkwear(status = '') {
         try {
             let url = `/workwear/api/employees/${employeeId}/workwear/`;
@@ -395,6 +515,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('expiringWorkwear').textContent = expiring;
             document.getElementById('expiredWorkwear').textContent = expired;
             document.getElementById('activeWorkwear').textContent = active;
+            document.getElementById('workwearCount').textContent = total;
             
             renderWorkwear(items);
         } catch (error) {
@@ -427,57 +548,110 @@ document.addEventListener('DOMContentLoaded', async function() {
             const status = statusMap[item.status] || statusMap.active;
             const days = item.days_until_expiration || 0;
             
+            const itemName = item.name_display || (item.name && item.name.name) || item.name || '';
+            const safeName = String(itemName).replace(/'/g, "\\'");
+            
+            const actionsHtml = item.can_edit ? `
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-success" onclick="returnItem(${item.id})" title="Вернуть">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="deleteItem(${item.id}, '${safeName}')" title="Списать">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            ` : '<span class="text-muted small">Нет прав</span>';
+            
             html += `
                 <tr class="${item.status === 'expired' ? 'table-danger' : item.status === 'expiring_soon' ? 'table-warning' : ''}">
-                    <td><strong>${item.name_display || (item.name && item.name.name) || item.name}</strong></td>
-                    <td>${item.category_name}</td>
+                    <td><strong>${itemName}</strong></td>
+                    <td>${item.category_name || '-'}</td>
                     <td>${item.size || '-'}</td>
                     <td>${item.color || '-'}</td>
                     <td>${item.issue_date}</td>
                     <td>${item.expiration_date}</td>
                     <td><span class="status-badge ${status.class}">${status.text}</span></td>
-                    <td>${days > 0 ? days : '-'}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-success" 
-                                    onclick="returnItem(${item.id})" 
-                                    title="Вернуть на склад">
-                                <i class="fas fa-undo"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" 
-                            onclick="deleteItem(${item.id}, '${(item.name_display || item.name || '').replace(/'/g, "\\'")}')"
-                                    title="Списать">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
+                    <td><span class="badge bg-info">${item.created_by_name || 'Система'}</span></td>
+                    <td>${actionsHtml}</td>
                 </tr>
             `;
         });
         
         tbody.innerHTML = html;
     }
-
-    // ========== Загрузка наименования ==========
-    async function loadNames() {
+    
+    // ============================================================
+    // ========== ПРОЧИЕ ПРЕДМЕТЫ =================================
+    // ============================================================
+    async function loadOtherItems() {
         try {
-            const response = await fetch('/workwear/api/workwear-names/');
-            const names = await response.json();
+            const response = await fetch(`/workwear/api/other-items/?employee_id=${employeeId}`);
+            const items = await response.json();
             
-            const select = document.getElementById('modalNameSelect');
-            select.innerHTML = '<option value="">Выберите наименование</option>';
-            names.forEach(n => {
-                const opt = document.createElement('option');
-                opt.value = n.id;
-                opt.textContent = n.name;
-                select.appendChild(opt);
-            });
+            console.log('✅ Прочие предметы:', items);
+            
+            document.getElementById('otherCount').textContent = items.length;
+            renderOtherItems(items);
         } catch (error) {
-            console.error('❌ Ошибка загрузки наименований:', error);
+            console.error('❌ Error loading other items:', error);
+            document.getElementById('otherItemsTableBody').innerHTML = `
+                <tr><td colspan="6" class="text-center text-danger py-3">Ошибка загрузки</td></tr>
+            `;
         }
     }
     
-    // ========== История ==========
+    function renderOtherItems(items) {
+        const tbody = document.getElementById('otherItemsTableBody');
+        
+        if (items.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-3 text-muted">
+                        <i class="fas fa-box fa-2x d-block mb-2"></i>
+                        Нет прочих предметов
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        items.forEach(item => {
+            const safeName = String(item.name || '').replace(/'/g, "\\'");
+            
+            const actionsHtml = item.can_edit ? `
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" 
+                            onclick="editOtherItem(${item.id})" 
+                            title="Редактировать">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" 
+                            onclick="deleteOtherItem(${item.id}, '${safeName}')" 
+                            title="Удалить">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            ` : '<span class="text-muted small">Нет прав</span>';
+            
+            html += `
+                <tr>
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.quantity}</td>
+                    <td>${item.issue_date}</td>
+                    <td>${item.notes || '-'}</td>
+                    <td><span class="badge bg-info">${item.created_by_name || 'Система'}</span></td>
+                    <td>${actionsHtml}</td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+    
+    // ============================================================
+    // ========== ИСТОРИЯ =========================================
+    // ============================================================
     async function loadHistory() {
         try {
             const response = await fetch(`/workwear/api/employees/${employeeId}/history/`);
@@ -498,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <tr>
                         <td>${new Date(h.created_at).toLocaleDateString('ru-RU')}</td>
                         <td><span class="badge bg-info">${h.action_display}</span></td>
-                        <td>${h.workwear_item_name}</td>
+                        <td>${h.workwear_item_name || '-'}</td>
                         <td>${h.description || '-'}</td>
                     </tr>
                 `;
@@ -510,7 +684,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
-    // ========== Выдача спецодежды ==========
+    // ============================================================
+    // ========== СОХРАНЕНИЕ СПЕЦОДЕЖДЫ ===========================
+    // ============================================================
     async function issueWorkwear() {
         const form = document.getElementById('issueWorkwearForm');
         const formData = new FormData(form);
@@ -518,9 +694,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         data.employee = parseInt(employeeId);
         data.category = parseInt(data.category);
+        data.name = parseInt(data.name);
         data.is_active = data.is_active === 'on' || data.is_active === 'true';
         
-        // Валидация
         const requiredFields = {
             'employee': 'Сотрудник',
             'category': 'Категория',
@@ -557,19 +733,27 @@ document.addEventListener('DOMContentLoaded', async function() {
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Выдача...';
             
-            // ✅ ИСПОЛЬЗУЕМ API ВМЕСТО fetch
-            await API.createWorkwearItem(data);
+            const response = await fetch('/workwear/api/workwear-items/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'include',
+                body: JSON.stringify(data)
+            });
             
-            // Закрываем модалку
-            const modalEl = document.getElementById('issueWorkwearModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(JSON.stringify(errorData));
+            }
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('issueWorkwearModal'));
             if (modal) modal.hide();
             
-            // Сбрасываем форму
             form.reset();
             document.getElementById('modalIsActive').checked = true;
             
-            // Обновляем данные
             await loadWorkwear(statusFilter.value);
             await loadHistory();
             
@@ -584,60 +768,236 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
-   // ========== Возврат на склад ==========
-    window.returnItem = async function(id) {
-        if (!confirm('Вернуть эту спецодежду на склад?')) return;
+    // ============================================================
+    // ========== СОХРАНЕНИЕ / РЕДАКТИРОВАНИЕ ПРОЧЕГО ПРЕДМЕТА ====
+    // ============================================================
+    async function saveOtherItem() {
+        const form = document.getElementById('addOtherItemForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        const itemId = data.item_id;
+        const isEdit = !!itemId;
+        
+        data.employee = parseInt(employeeId);
+        data.quantity = parseInt(data.quantity) || 1;
+        
+        delete data.item_id;
+        
+        if (!data.name || !data.issue_date) {
+            alert('⚠️ Заполните обязательные поля');
+            return;
+        }
+        
+        const btn = document.getElementById('saveOtherItemBtn');
+        const originalText = btn.innerHTML;
+        
         try {
-            await API.returnWorkwearItem(id, { description: 'Возврат спецодежды' });
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Сохранение...';
+            
+            const url = isEdit 
+                ? `/workwear/api/other-items/${itemId}/` 
+                : '/workwear/api/other-items/';
+            
+            const method = isEdit ? 'PUT' : 'POST';
+            
+            console.log(`📤 ${isEdit ? 'Редактирование' : 'Создание'} предмета:`, data);
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'include',
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(JSON.stringify(errorData));
+            }
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addOtherItemModal'));
+            if (modal) modal.hide();
+            
+            form.reset();
+            document.getElementById('otherItemId').value = '';
+            
+            await loadOtherItems();
+            alert(isEdit ? '✅ Предмет обновлён' : '✅ Предмет добавлен');
+            
+        } catch (error) {
+            console.error('❌ Ошибка:', error);
+            alert(`Ошибка: ${error.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+    
+    // ============================================================
+    // ========== РЕДАКТИРОВАНИЕ ПРОЧЕГО ПРЕДМЕТА =================
+    // ============================================================
+    window.editOtherItem = async function(id) {
+        try {
+            console.log('📝 Загрузка предмета для редактирования, ID:', id);
+            
+            const response = await fetch(`/workwear/api/other-items/${id}/`);
+            
+            if (!response.ok) {
+                throw new Error('Не удалось загрузить предмет');
+            }
+            
+            const item = await response.json();
+            console.log('✅ Предмет:', item);
+            
+            const form = document.getElementById('addOtherItemForm');
+            form.querySelector('input[name="name"]').value = item.name || '';
+            form.querySelector('input[name="quantity"]').value = item.quantity || 1;
+            form.querySelector('input[name="issue_date"]').value = item.issue_date || '';
+            form.querySelector('textarea[name="notes"]').value = item.notes || '';
+            
+            document.getElementById('otherItemId').value = item.id;
+            
+            const title = document.getElementById('otherItemModalTitle');
+            title.innerHTML = '<i class="fas fa-edit text-primary me-2"></i>Редактировать предмет';
+            
+            const btn = document.getElementById('saveOtherItemBtn');
+            btn.innerHTML = '<i class="fas fa-save"></i> Сохранить изменения';
+            
+            const modal = new bootstrap.Modal(document.getElementById('addOtherItemModal'));
+            modal.show();
+            
+        } catch (error) {
+            console.error('❌ Ошибка загрузки предмета:', error);
+            alert(`Ошибка: ${error.message}`);
+        }
+    };
+    
+    // ============================================================
+    // ========== УДАЛЕНИЕ / ВОЗВРАТ ==============================
+    // ============================================================
+    window.returnItem = async function(id) {
+        if (!confirm('Вернуть эту спецодежду?')) return;
+        try {
+            const response = await fetch(`/workwear/api/workwear-items/${id}/return/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'include',
+                body: JSON.stringify({ description: 'Возврат спецодежды' })
+            });
+            
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Ошибка');
+            }
             
             await loadWorkwear(statusFilter.value);
             await loadHistory();
             alert('✅ Спецодежда возвращена');
         } catch (error) {
             console.error('❌ Error:', error);
-            alert('Ошибка при возврате');
-        }
-    };
-
-    // ========== Списание спецодежды ==========
-    window.deleteItem = async function(id, name) {
-        if (!confirm(`Вы уверены, что хотите списать "${name}"?\n\nЭта запись будет помечена как списанная.`)) {
-            return;
-        }
-        
-        try {
-            // Вызываем DELETE метод — на бэкенде он ставит is_active = False
-            // и создаёт запись в истории с action='written_off'
-            await API.deleteWorkwearItem(id);
-            
-            // Обновляем таблицу и историю
-            await loadWorkwear(statusFilter.value);
-            await loadHistory();
-            
-            alert(`✅ "${name}" списана`);
-        } catch (error) {
-            console.error('❌ Ошибка списания:', error);
-            alert(`Ошибка при списании: ${error.message}`);
+            alert(`Ошибка: ${error.message}`);
         }
     };
     
-    // ========== Обработчики ==========
+    window.deleteItem = async function(id, name) {
+        if (!confirm(`Вы уверены, что хотите списать "${name}"?`)) return;
+        
+        try {
+            const response = await fetch(`/workwear/api/workwear-items/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Ошибка');
+            }
+            
+            await loadWorkwear(statusFilter.value);
+            await loadHistory();
+            alert(`✅ "${name}" списана`);
+        } catch (error) {
+            console.error('❌ Ошибка списания:', error);
+            alert(`Ошибка: ${error.message}`);
+        }
+    };
+    
+    window.deleteOtherItem = async function(id, name) {
+        if (!confirm(`Удалить "${name}"?`)) return;
+        
+        try {
+            const response = await fetch(`/workwear/api/other-items/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Ошибка');
+            }
+            
+            await loadOtherItems();
+            alert('✅ Предмет удалён');
+        } catch (error) {
+            console.error('❌ Ошибка:', error);
+            alert(`Ошибка: ${error.message}`);
+        }
+    };
+    
+    // ============================================================
+    // ========== ОБРАБОТЧИКИ =====================================
+    // ============================================================
     statusFilter.addEventListener('change', () => {
         loadWorkwear(statusFilter.value);
     });
     
     document.getElementById('modalSaveBtn').addEventListener('click', issueWorkwear);
+    document.getElementById('saveOtherItemBtn').addEventListener('click', saveOtherItem);
     
-    // При открытии модалки — ставим сегодняшнюю дату
     document.getElementById('issueWorkwearModal').addEventListener('show.bs.modal', () => {
-        setIssueDateToday();
+        setToday('modalIssueDate');
     });
     
-    // ========== Инициализация ==========
+    // ✅ Правильная обработка открытия модалки прочего предмета
+    document.getElementById('addOtherItemModal').addEventListener('show.bs.modal', (event) => {
+        const relatedTarget = event.relatedTarget;
+        const isFromButton = relatedTarget && relatedTarget.hasAttribute('data-bs-toggle');
+        
+        if (isFromButton) {
+            const form = document.getElementById('addOtherItemForm');
+            form.reset();
+            document.getElementById('otherItemId').value = '';
+            
+            document.getElementById('otherItemModalTitle').innerHTML = 
+                '<i class="fas fa-box text-primary me-2"></i>Добавить предмет';
+            document.getElementById('saveOtherItemBtn').innerHTML = 
+                '<i class="fas fa-save"></i> Сохранить';
+            
+            setToday('otherIssueDate');
+        }
+    });
+    
+    // ============================================================
+    // ========== ИНИЦИАЛИЗАЦИЯ ===================================
+    // ============================================================
     await loadEmployee();
     await loadCategories();
     await loadNames();
     await loadWorkwear();
+    await loadOtherItems();
     await loadHistory();
     initAutoFill();
 });

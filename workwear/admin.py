@@ -8,6 +8,7 @@ from django.urls import path
 from django.template.response import TemplateResponse
 from .models import *
 import logging
+from django.utils.html import format_html
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +198,103 @@ class EmployeeAdmin(admin.ModelAdmin):
         return redirect('admin:workwear_employee_changelist')
 
 
+# backend/workwear/admin.py
 
+@admin.register(OtherItem)
+class OtherItemAdmin(admin.ModelAdmin):
+    """Админка для прочих предметов"""
+    
+    list_display = [
+        'name', 
+        'employee_link', 
+        'quantity_display', 
+        'issue_date', 
+        'notes_display',        # ✅ Примечания
+        'created_by_name', 
+        'is_active_badge', 
+        'created_at'
+    ]
+    list_filter = [
+        'is_active', 
+        'issue_date',
+        'employee__department',
+        'created_by',
+    ]
+    search_fields = [
+        'name',
+        'employee__last_name',
+        'employee__first_name',
+        'employee__patronymic',
+        'notes',                 # ✅ Поиск по примечаниям
+        'created_by__username',
+    ]
+    readonly_fields = ['created_at', 'updated_at', 'created_by']
+    date_hierarchy = 'issue_date'
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('employee', 'name', 'quantity', 'issue_date')
+        }),
+        ('Дополнительно', {
+            'fields': ('notes', 'is_active')
+        }),
+        ('Служебная информация', {
+            'fields': ('created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def employee_link(self, obj):
+        from django.urls import reverse
+        url = reverse('admin:workwear_employee_change', args=[obj.employee.id])
+        return format_html('<a href="{}">{}</a>', url, obj.employee.get_full_name())
+    employee_link.short_description = 'Сотрудник'
+    employee_link.admin_order_field = 'employee__last_name'
+    
+    def quantity_display(self, obj):
+        return f"{obj.quantity} шт."
+    quantity_display.short_description = 'Кол-во'
+    quantity_display.admin_order_field = 'quantity'
+    
+    def notes_display(self, obj):
+        """Примечания с обрезкой"""
+        if not obj.notes:
+            return '—'
+        if len(obj.notes) > 50:
+            return format_html(
+                '<span title="{}" style="cursor: help;">{}…</span>',
+                obj.notes.replace('"', '&quot;'),
+                obj.notes[:50]
+            )
+        return obj.notes
+    notes_display.short_description = 'Примечания'
+    notes_display.admin_order_field = 'notes'
+    
+    def created_by_name(self, obj):
+        if obj.created_by:
+            full_name = obj.created_by.get_full_name()
+            return full_name if full_name else obj.created_by.username
+        return '—'
+    created_by_name.short_description = 'Кто создал'
+    created_by_name.admin_order_field = 'created_by'
+    
+    def is_active_badge(self, obj):
+        if obj.is_active:
+            return format_html(
+                '<span style="background:#28a745; color:white; padding:3px 8px; '
+                'border-radius:10px; font-size:11px;">✅ Активен</span>'
+            )
+        return format_html(
+            '<span style="background:#6c757d; color:white; padding:3px 8px; '
+            'border-radius:10px; font-size:11px;">❌ Неактивен</span>'
+        )
+    is_active_badge.short_description = 'Статус'
+    
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.created_by:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(WorkwearCategory)

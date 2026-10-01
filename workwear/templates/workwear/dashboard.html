@@ -55,15 +55,17 @@
         </div>
     </div>
     
-    <!-- Графики -->
-    <div class="row g-4">
+    <!-- Графики и список истекающих -->
+    <div class="row g-4 mb-4">
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Статус спецодежды</h5>
                 </div>
-                <div class="card-body">
-                    <canvas id="statusChart"></canvas>
+                <div class="card-body text-center">
+                    <div style="max-width: 280px; margin: 0 auto; position: relative;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -72,7 +74,7 @@
                 <div class="card-header">
                     <h5 class="card-title mb-0">Сотрудники с истекающим сроком</h5>
                 </div>
-                <div class="card-body" id="expiringEmployeesList">
+                <div class="card-body" id="expiringEmployeesList" style="max-height: 400px; overflow-y: auto;">
                     <div class="text-center text-muted py-3">
                         <i class="fas fa-spinner fa-spin"></i> Загрузка...
                     </div>
@@ -80,9 +82,484 @@
             </div>
         </div>
     </div>
+    
+    <!-- ВКЛАДКИ: ВСЕ ПРЕДМЕТЫ -->
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" id="itemsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-workwear-tab" data-bs-toggle="tab" 
+                            data-bs-target="#all-workwear-pane" type="button" role="tab">
+                        <i class="fas fa-tshirt me-1"></i>Вся спецодежда
+                        <span class="badge bg-primary ms-1" id="workwearTabCount">0</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="all-other-tab" data-bs-toggle="tab" 
+                            data-bs-target="#all-other-pane" type="button" role="tab">
+                        <i class="fas fa-box me-1"></i>Все прочие предметы
+                        <span class="badge bg-secondary ms-1" id="otherTabCount">0</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="itemsTabsContent">
+                
+                <!-- СПЕЦОДЕЖДА -->
+                <div class="tab-pane fade show active" id="all-workwear-pane" role="tabpanel">
+                    <!-- Фильтры -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control form-control-sm" 
+                                   id="workwearSearch" placeholder="Поиск по ФИО или наименованию...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" id="workwearStatusFilter">
+                                <option value="">Все статусы</option>
+                                <option value="active">Активные</option>
+                                <option value="expiring">Истекает срок</option>
+                                <option value="expired">Просрочены</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" id="workwearDepartmentFilter">
+                                <option value="">Все отделы</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetWorkwearFilters()">
+                                <i class="fas fa-undo"></i> Сброс
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Сотрудник</th>
+                                    <th>Наименование</th>
+                                    <th>Категория</th>
+                                    <th>Размер</th>
+                                    <th>Дата выдачи</th>
+                                    <th>Срок истечения</th>
+                                    <th>Статус</th>
+                                    <th>Автор</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workwearTableBody">
+                                <tr><td colspan="8" class="text-center py-3">
+                                    <div class="spinner-border spinner-border-sm"></div> Загрузка...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- ПРОЧИЕ ПРЕДМЕТЫ -->
+                <div class="tab-pane fade" id="all-other-pane" role="tabpanel">
+                    <!-- Фильтры -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-5">
+                            <input type="text" class="form-control form-control-sm" 
+                                   id="otherSearch" placeholder="Поиск по ФИО или наименованию предмета...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" id="otherDepartmentFilter">
+                                <option value="">Все отделы</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetOtherFilters()">
+                                <i class="fas fa-undo"></i> Сброс
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Сотрудник</th>
+                                    <th>Наименование</th>
+                                    <th>Кол-во</th>
+                                    <th>Дата выдачи</th>
+                                    <th>Примечания</th>
+                                    <th>Автор</th>
+                                </tr>
+                            </thead>
+                            <tbody id="otherTableBody">
+                                <tr><td colspan="6" class="text-center py-3">
+                                    <div class="spinner-border spinner-border-sm"></div> Загрузка...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workwear/js/dashboard.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// ============================================================
+// ========== CSRF-ТОКЕН ======================================
+// ============================================================
+function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    let chart = null;
+    let allWorkwearItems = [];  // кэш для фильтрации
+    let allOtherItems = [];     // кэш для фильтрации
+    
+    // ============================================================
+    // ========== СТАТИСТИКА ======================================
+    // ============================================================
+    async function loadStats() {
+        try {
+            const response = await fetch('/workwear/api/dashboard/stats/');
+            const stats = await response.json();
+            
+            document.getElementById('totalEmployees').textContent = stats.total_employees || 0;
+            document.getElementById('totalWorkwear').textContent = stats.total_workwear || 0;
+            document.getElementById('expiringItems').textContent = stats.expiring_items || 0;
+            document.getElementById('expiredItems').textContent = stats.expired_items || 0;
+            
+            createChart(stats);
+        } catch (error) {
+            console.error('❌ Error loading stats:', error);
+        }
+    }
+    
+    function createChart(stats) {
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        
+        if (chart) chart.destroy();
+        
+        chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Активные', 'Истекает срок', 'Просрочены'],
+                datasets: [{
+                    data: [
+                        (stats.total_workwear || 0) - (stats.expiring_items || 0) - (stats.expired_items || 0),
+                        stats.expiring_items || 0,
+                        stats.expired_items || 0
+                    ],
+                    backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+    
+    // ============================================================
+    // ========== СПИСОК ИСТЕКАЮЩИХ ==============================
+    // ============================================================
+    async function loadExpiringEmployees() {
+        try {
+            const response = await fetch('/workwear/api/expiring-items/');
+            const items = await response.json();
+            
+            const container = document.getElementById('expiringEmployeesList');
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-success py-3">
+                        <i class="fas fa-check-circle"></i> Все сотрудники в порядке
+                    </div>
+                `;
+                return;
+            }
+            
+            const employees = {};
+            items.forEach(item => {
+                if (!employees[item.employee]) {
+                    employees[item.employee] = {
+                        id: item.employee,
+                        name: item.employee_name,
+                        items: []
+                    };
+                }
+                employees[item.employee].items.push(item);
+            });
+            
+            let html = '<div class="list-group list-group-flush">';
+            Object.values(employees).forEach(emp => {
+                const days = Math.min(...emp.items.map(i => i.days_until_expiration));
+                const statusClass = days <= 7 ? 'danger' : days <= 15 ? 'warning' : 'info';
+                
+                html += `
+                    <a href="/workwear/employees/${emp.id}/" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${emp.name}</strong>
+                                <span class="badge bg-${statusClass} ms-2">${emp.items.length} предметов</span>
+                            </div>
+                            <div>
+                                <span class="text-${statusClass}">
+                                    <i class="fas fa-clock"></i> ${days} дней
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-1">
+                            ${emp.items.map(item => `
+                                <span class="badge bg-light text-dark me-1">
+                                    ${item.name_display || item.name} (до ${item.expiration_date})
+                                </span>
+                            `).join('')}
+                        </div>
+                    </a>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('❌ Error loading expiring employees:', error);
+        }
+    }
+    
+    // ============================================================
+    // ========== ВСЯ СПЕЦОДЕЖДА ==================================
+    // ============================================================
+    async function loadAllWorkwear() {
+        try {
+            const response = await fetch('/workwear/api/workwear-items/?page_size=5000');
+            const data = await response.json();
+            
+            allWorkwearItems = data.results || data;
+            document.getElementById('workwearTabCount').textContent = allWorkwearItems.length;
+            
+            // Заполняем фильтр по отделам
+            const departments = new Set();
+            allWorkwearItems.forEach(item => {
+                // В item нет напрямую department, но есть employee_name
+                // Можно добавить в сериализатор employee_department
+            });
+            
+            renderAllWorkwear(allWorkwearItems);
+        } catch (error) {
+            console.error('❌ Error loading workwear:', error);
+            document.getElementById('workwearTableBody').innerHTML = `
+                <tr><td colspan="8" class="text-center text-danger py-3">
+                    Ошибка загрузки данных
+                </td></tr>
+            `;
+        }
+    }
+    
+    function renderAllWorkwear(items) {
+        const tbody = document.getElementById('workwearTableBody');
+        
+        if (items.length === 0) {
+            tbody.innerHTML = `
+                <tr><td colspan="8" class="text-center py-3 text-muted">
+                    <i class="fas fa-tshirt fa-2x d-block mb-2"></i>
+                    Спецодежда не найдена
+                </td></tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        items.slice(0, 500).forEach(item => {
+            const statusMap = {
+                'active': { class: 'status-active', text: 'Активна' },
+                'expiring': { class: 'status-expiring', text: 'Истекает' },
+                'expiring_soon': { class: 'status-expiring', text: 'Истекает' },
+                'expired': { class: 'status-expired', text: 'Просрочена' }
+            };
+            const status = statusMap[item.status] || statusMap.active;
+            const itemName = item.name_display || (item.name && item.name.name) || item.name || '';
+            
+            html += `
+                <tr class="${item.status === 'expired' ? 'table-danger' : item.status === 'expiring' || item.status === 'expiring_soon' ? 'table-warning' : ''}">
+                    <td>
+                        <a href="/workwear/employees/${item.employee}/" class="text-decoration-none">
+                            ${item.employee_name}
+                        </a>
+                    </td>
+                    <td>${itemName}</td>
+                    <td>${item.category_name || '-'}</td>
+                    <td>${item.size || '-'}</td>
+                    <td>${item.issue_date}</td>
+                    <td>${item.expiration_date}</td>
+                    <td><span class="status-badge ${status.class}">${status.text}</span></td>
+                    <td><span class="badge bg-info">${item.created_by_name || 'Система'}</span></td>
+                </tr>
+            `;
+        });
+        
+        if (items.length > 500) {
+            html += `<tr><td colspan="8" class="text-center text-muted">
+                Показано 500 из ${items.length}. Используйте фильтры для уточнения.
+            </td></tr>`;
+        }
+        
+        tbody.innerHTML = html;
+    }
+    
+    // ============================================================
+    // ========== ВСЕ ПРОЧИЕ ПРЕДМЕТЫ =============================
+    // ============================================================
+    async function loadAllOtherItems() {
+        try {
+            const response = await fetch('/workwear/api/other-items/');
+            const items = await response.json();
+            
+            allOtherItems = items;
+            document.getElementById('otherTabCount').textContent = items.length;
+            
+            renderAllOtherItems(allOtherItems);
+        } catch (error) {
+            console.error('❌ Error loading other items:', error);
+            document.getElementById('otherTableBody').innerHTML = `
+                <tr><td colspan="6" class="text-center text-danger py-3">
+                    Ошибка загрузки данных
+                </td></tr>
+            `;
+        }
+    }
+    
+    function renderAllOtherItems(items) {
+        const tbody = document.getElementById('otherTableBody');
+        
+        if (items.length === 0) {
+            tbody.innerHTML = `
+                <tr><td colspan="6" class="text-center py-3 text-muted">
+                    <i class="fas fa-box fa-2x d-block mb-2"></i>
+                    Прочие предметы не найдены
+                </td></tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        items.forEach(item => {
+            html += `
+                <tr>
+                    <td>
+                        <a href="/workwear/employees/${item.employee}/" class="text-decoration-none">
+                            ${item.employee_name}
+                        </a>
+                    </td>
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.quantity}</td>
+                    <td>${item.issue_date}</td>
+                    <td>${item.notes || '-'}</td>
+                    <td><span class="badge bg-info">${item.created_by_name || 'Система'}</span></td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+    
+    // ============================================================
+    // ========== ФИЛЬТРАЦИЯ ======================================
+    // ============================================================
+    
+    // Фильтр спецодежды
+    function filterWorkwear() {
+        const search = document.getElementById('workwearSearch').value.toLowerCase().trim();
+        const status = document.getElementById('workwearStatusFilter').value;
+        
+        let filtered = allWorkwearItems;
+        
+        if (search) {
+            filtered = filtered.filter(item => {
+                const empName = (item.employee_name || '').toLowerCase();
+                const itemName = (item.name_display || item.name || '').toLowerCase();
+                return empName.includes(search) || itemName.includes(search);
+            });
+        }
+        
+        if (status) {
+            if (status === 'expiring') {
+                filtered = filtered.filter(i => i.status === 'expiring' || i.status === 'expiring_soon');
+            } else {
+                filtered = filtered.filter(i => i.status === status);
+            }
+        }
+        
+        renderAllWorkwear(filtered);
+    }
+    
+    // Фильтр прочих предметов
+    function filterOther() {
+        const search = document.getElementById('otherSearch').value.toLowerCase().trim();
+        
+        let filtered = allOtherItems;
+        
+        if (search) {
+            filtered = filtered.filter(item => {
+                const empName = (item.employee_name || '').toLowerCase();
+                const itemName = (item.name || '').toLowerCase();
+                return empName.includes(search) || itemName.includes(search);
+            });
+        }
+        
+        renderAllOtherItems(filtered);
+    }
+    
+    // Глобальные функции сброса
+    window.resetWorkwearFilters = function() {
+        document.getElementById('workwearSearch').value = '';
+        document.getElementById('workwearStatusFilter').value = '';
+        renderAllWorkwear(allWorkwearItems);
+    };
+    
+    window.resetOtherFilters = function() {
+        document.getElementById('otherSearch').value = '';
+        renderAllOtherItems(allOtherItems);
+    };
+    
+    // Обработчики ввода (debounce)
+    let workwearTimeout;
+    document.getElementById('workwearSearch')?.addEventListener('input', () => {
+        clearTimeout(workwearTimeout);
+        workwearTimeout = setTimeout(filterWorkwear, 250);
+    });
+    
+    document.getElementById('workwearStatusFilter')?.addEventListener('change', filterWorkwear);
+    
+    let otherTimeout;
+    document.getElementById('otherSearch')?.addEventListener('input', () => {
+        clearTimeout(otherTimeout);
+        otherTimeout = setTimeout(filterOther, 250);
+    });
+    
+    // ============================================================
+    // ========== ИНИЦИАЛИЗАЦИЯ ===================================
+    // ============================================================
+    await loadStats();
+    await loadExpiringEmployees();
+    await loadAllWorkwear();
+    await loadAllOtherItems();
+});
+</script>
 {% endblock %}

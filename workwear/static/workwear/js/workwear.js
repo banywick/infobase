@@ -433,11 +433,31 @@ class WorkwearPage {
             const days = item.days_until_expiration || 0;
             const daysColor = days <= 7 ? 'text-danger' : days <= 15 ? 'text-warning' : 'text-success';
             
-            // ✅ Показываем полный текст примечаний
+            // ✅ Примечания
             const notes = item.notes ? item.notes.trim() : '';
             const notesHtml = notes 
                 ? `<div class="notes-cell">${notes}</div>`
                 : '<span class="text-muted">—</span>';
+            
+            // ✅ Получаем имя (FK на WorkwearName)
+            const itemName = item.name_display || (item.name && item.name.name) || item.name || '';
+            const safeName = String(itemName).replace(/'/g, "\\'");
+            
+            // ✅ Кнопки только если can_edit
+            const actionsHtml = item.can_edit ? `
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-success" 
+                            onclick="workwearPage.returnItem(${item.id})" 
+                            title="Вернуть">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" 
+                            onclick="workwearPage.deleteItem(${item.id}, '${safeName}')" 
+                            title="Списать">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            ` : '<span class="text-muted small">Нет прав</span>';
             
             html += `
                 <tr class="${item.status === 'expired' ? 'table-danger' : item.status === 'expiring' || item.status === 'expiring_soon' ? 'table-warning' : ''}">
@@ -446,24 +466,15 @@ class WorkwearPage {
                             ${item.employee_name}
                         </a>
                     </td>
-                    <td><strong>${item.name_display || item.name}</strong></td>
-                    <td>${item.category_name}</td>
+                    <td><strong>${itemName}</strong></td>
+                    <td>${item.category_name || '-'}</td>
                     <td>${item.size || '-'}</td>
                     <td>${item.issue_date}</td>
                     <td>${item.expiration_date}</td>
                     <td>${notesHtml}</td>
                     <td><span class="status-badge ${status.class}">${status.text}</span></td>
                     <td class="${daysColor}">${days > 0 ? days + ' дн.' : '-'}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-success" onclick="workwearPage.returnItem(${item.id})" title="Вернуть">
-                                <i class="fas fa-undo"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="workwearPage.deleteItem(${item.id})" title="Списать">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
+                    <td>${actionsHtml}</td>
                 </tr>
             `;
         });
