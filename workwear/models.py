@@ -203,6 +203,12 @@ class WorkwearItem(models.Model):
         return self.expiration_date <= today + timedelta(days=30) and not self.is_expired()
 
 
+    class Meta:
+        verbose_name = "Спецодежда в эксплуатации"
+        verbose_name_plural = "Спецодежда в эксплуатации"
+        ordering = ['-created_at']
+
+
 class WorkwearHistory(models.Model):
     """История изменений спецодежды"""
     ACTION_CHOICES = [

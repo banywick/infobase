@@ -277,7 +277,7 @@ class WorkwearItemListAPIView(APIView):
         search = request.query_params.get('search', None)
         if search:
             queryset = queryset.filter(
-                Q(name__icontains=search) |
+                Q(name__name__icontains=search) |
                 Q(employee__first_name__icontains=search) |
                 Q(employee__last_name__icontains=search) |
                 Q(employee__patronymic__icontains=search)

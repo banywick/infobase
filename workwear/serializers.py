@@ -79,6 +79,10 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
     days_until_expiration = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()  # ✅ добавить
     can_edit = serializers.SerializerMethodField()         # ✅ добавить
+
+    # ✅ ДОБАВИТЬ:
+    issue_date = serializers.DateField(format="%d.%m.%Y")
+    expiration_date = serializers.DateField(format="%d.%m.%Y")
     
     class Meta:
         model = WorkwearItem
@@ -126,6 +130,8 @@ class OtherItemSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()  # ✅
     can_edit = serializers.SerializerMethodField()         # ✅
+
+    issue_date = serializers.DateField(format="%d.%m.%Y")
     
     class Meta:
         model = OtherItem
@@ -185,6 +191,8 @@ class WorkwearHistorySerializer(serializers.ModelSerializer):
     previous_employee_name = serializers.SerializerMethodField()
     new_employee_name = serializers.SerializerMethodField()
     action_display = serializers.SerializerMethodField()
+
+    created_at = serializers.DateTimeField(format="%d.%m.%Y", read_only=True)
     
     class Meta:
         model = WorkwearHistory
