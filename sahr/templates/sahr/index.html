@@ -8,6 +8,7 @@
     <link rel="icon" href="{% static 'shared/img/favicon/favicon.ico' %}" type="image/x-icon">
     <title>САХР</title>
     <link rel="stylesheet" href="{% static 'sahr/css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'sahr/css/navbar-heder.css' %}" />
   </head>
   <body>
     <div class="app-container">
@@ -15,8 +16,12 @@
       <nav class="navbar">
         <div class="nav-container">
           <div class="nav-brand">
-            <a href="{% url 'home_finder' %}"><<<</a>
-            <h1>INFOBASE САХР</h1>
+            <a href="{% url 'home_finder' %}" class="navbar-brand d-flex align-items-center">
+              <img src="{% static 'finder/icon/logo_white.svg' %}" 
+                  alt="Логотип" 
+                  class="logo-icon me-2">
+          </a>
+            <h1>САХР</h1>
             <span class="nav-subtitle">Система адресного хранения</span>
           </div>
 

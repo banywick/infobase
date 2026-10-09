@@ -60,6 +60,8 @@
     display: flex;
     margin-top: 18px;
     gap: 17px;
+    margin-bottom: 16px;
+    align-items: flex-end;
 }
 
 .container_header {

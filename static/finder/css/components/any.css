@@ -43,10 +43,26 @@
     height: 100%;
     
 }
-
 #search_icon {
+    width: 20px;
+    height: 20px;
     cursor: pointer;
+    transition: filter 0.3s ease, transform 0.3s ease;
+    /* По умолчанию — приглушённая, серо-синяя */
+    filter: invert(60%) sepia(8%) saturate(500%) hue-rotate(200deg);
 }
+
+#search_icon:hover {
+    transform: scale(1.15) rotate(8deg);
+    /* Перекрашиваем в индиго + свечение */
+    filter:
+        invert(37%) sepia(68%) saturate(2333%) hue-rotate(228deg)
+        brightness(97%) contrast(94%)
+        drop-shadow(0 0 4px rgba(102, 126, 234, 0.9))
+        drop-shadow(0 0 12px rgba(102, 126, 234, 0.6));
+}
+
+
 
 .check_box {
     cursor: pointer;
@@ -169,149 +185,107 @@
     align-items: initial;
 }
 
-.auto_button {
-    flex-direction: column;
-    height: 68px;
-    margin-left: 20px;
-    margin-bottom: -10px;
-}
-
-/*Магическая кнопка     */
-#magic_button {
-    align-items: center;
-    margin-top: 13px;
-}
-
-/* CSS для анимированной кнопки с переливающимися границами */
-/* Основные стили */
-.auto_button {
-    
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-#magic_button {
-    position: relative;
-    background: white;
-    border: 2px solid #e0e0e0;
-    border-radius: 50px;
-    padding: 0;
-    cursor: pointer;
-    min-width: 180px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-left: 24px;
-    padding-right: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
-    z-index: 1;
-}
-
-/* Эффект увеличения при наведении */
-#magic_button:hover {
-    transform: scale(1.05);
-    border-color: #667eea;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
-}
-
-/* Активное состояние */
-#magic_button:active {
-    transform: scale(0.98);
-}
-
-/* Контент кнопки */
-.button-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    z-index: 2;
-}
-
-/* Иконка поиска */
-.search-icon {
-    width: 20px;
-    height: 20px;
-    position: relative;
-    transition: transform 0.3s ease;
-}
-
-.search-icon::before {
-    content: '';
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    border: 2px solid #667eea;
-    border-radius: 50%;
-    left: 0;
-    top: 0;
-}
-
-.search-icon::after {
-    content: '';
-    position: absolute;
-    width: 8px;
-    height: 2px;
-    background: #667eea;
-    border-radius: 0;
-    top: 15px;
-    left: 11px;
-    transform: rotate(45deg);
-    transform-origin: left center;
-}
-
-#magic_button:hover .search-icon {
-    transform: scale(1.1) rotate(10deg);
-}
-
-/* Текст кнопки */
-.button-content span {
-    color: #333;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    transition: color 0.3s ease;
-}
-
-#magic_button:hover .button-content span {
-    color: #667eea;
-}
-
-/* Инфо-значок */
-.info-sign {
-    width: 20px;
-    height: 20px;
-    background: #f5f5f5;
-    color: #666;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: bold;
-    margin-left: 8px;
-    cursor: help;
-    transition: all 0.3s ease;
-    z-index: 2;
-    border: 1px solid #e0e0e0;
-}
-
-.info-sign:hover {
-    background: #667eea;
-    color: white;
-    transform: scale(1.2);
-    border-color: #667eea;
-}
-
-.info-note {
-    color: #ff0000; /* Красный цвет */
-    font-size: 12px;
-    border-bottom: 1px dashed #ffcccc; /* Необязательно: легкая пунктирная граница */
-}
-
-
 #reset_all_pin {
     width: 20px;
 }
 
+
+
+
+
+.auto_and_address {
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin-left: 20px;
+    margin-top: 12px;
+}
+
+/* ============ АвтоПоиск — неон-индиго ============ */
+#magic_button {
+    /* position: relative; */
+    display: inline-flex;
+    align-items: center;
+    /* justify-content: space-between; */
+    gap: 12px;
+    /* min-width: 180px; */
+    height: 45px;
+    padding: 0 12px 0 20px;
+    background: #ffffff;
+    border: 2px solid #667eea;
+    border-radius: 50px;
+    /* cursor: pointer; */
+    /* box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 2px 8px rgba(102, 126, 234, 0.12); */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#magic_button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 0 0 5px rgba(102, 126, 234, 0.15),
+        0 0 20px rgba(102, 126, 234, 0.35),
+        0 0 40px rgba(102, 126, 234, 0.15);
+}
+
+.button-content { display: flex; align-items: center; gap: 10px; }
+.button-content span { color: #667eea; font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+
+.search-icon { position: relative; width: 18px; height: 18px; }
+.search-icon::before { content: ''; position: absolute; width: 12px; height: 12px; border: 2px solid #667eea; border-radius: 50%; }
+.search-icon::after {
+    content: ''; position: absolute; width: 7px; height: 2px; background: #667eea; border-radius: 2px;
+    top: 13px; left: 11px; transform: rotate(45deg); transform-origin: left center;
+}
+#magic_button:hover .search-icon { transform: scale(1.15) rotate(12deg); transition: transform 0.3s ease; }
+
+.info-sign {
+    width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: #eef1fa; color: #667eea; border: 1px solid #c7cfff; border-radius: 50%;
+    font-size: 12px; font-weight: 700; font-style: italic; cursor: help; transition: all 0.3s ease;
+}
+.info-sign:hover {
+    background: #667eea; color: #fff; transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2), 0 0 15px rgba(102, 126, 234, 0.4);
+}
+
+/* ============ Найти адрес — неон-изумруд (контраст) ============ */
+.button_find_address {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 45px;
+    padding: 0 20px 0 14px;
+    background: #ffffff;
+    border: 2px solid #2ecc71;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow:
+        0 0 0 4px rgba(46, 204, 113, 0.1),
+        0 2px 8px rgba(46, 204, 113, 0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 10px;
+}
+
+.button_find_address:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 0 0 5px rgba(46, 204, 113, 0.15),
+        0 0 20px rgba(46, 204, 113, 0.35),
+        0 0 40px rgba(46, 204, 113, 0.15);
+}
+
+.button_find_address img {
+    width: 20px; height: 20px;
+    filter: invert(65%) sepia(50%) saturate(585%) hue-rotate(85deg) brightness(95%) contrast(88%);
+    transition: transform 0.3s ease;
+}
+.button_find_address:hover img { transform: scale(1.1) rotate(-6deg); }
+
+.button_find_address .open-btn {
+    color: #2ecc71;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}

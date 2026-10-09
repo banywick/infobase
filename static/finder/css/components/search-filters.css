@@ -1,38 +1,3 @@
-/* Специфичные стили поиска и фильтров */
-.find_container {
-    margin-left: 50px;
-    width: 375px;
-    height: 96px;
-}
-
-.filter_container {
-    width: 373px;
-    height: 45px;
-    padding: 4px;
-    background: #0006fc1a;
-    border-radius: 6px;
-}
-
-.filters {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 16px;
-}
-
-.filters {
-    margin-bottom: 20px;
-}
-
-.filters span {
-    background-color: #e74c3c;
-    color: white;
-    padding: 5px 10px;
-    margin-right: 5px;
-    border-radius: 5px;
-}
-
-
 .filter_project_container {
     margin-left: 291px;
     min-height: 73px;
@@ -41,4 +6,158 @@
     padding: 11px;
     margin-top: 11px;
     align-items: center;
+}
+/* Специфичные стили поиска и фильтров */
+.find_container {
+    margin-left: 50px;
+    width: 375px;
+    height: 96px;
+}
+
+/* ============ Контейнер — мягкий фон ============ */
+.filter_container {
+    width: 373px;
+    min-height: 45px;
+    padding: 4px 8px;
+    background: linear-gradient(135deg, #fafbff 0%, #f2f4fb 100%);
+    border: 1px solid #e8ecf5;
+    border-radius: 12px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 10px rgba(140, 150, 200, 0.08);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.filter_container:hover {
+    border-color: #dde3f0;
+    box-shadow: 0 4px 16px rgba(140, 150, 200, 0.12);
+}
+
+/* ============ Список фильтров ============ */
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2px;
+    min-height: 37px;
+}
+
+/* ============ Цветовые переменные для каждого пункта ============ */
+.check_box_container[data-color="blue"] {
+    --c: #4a90e2;
+    --c-soft: rgba(74, 144, 226, 0.15);
+    --c-glow: rgba(74, 144, 226, 0.45);
+}
+.check_box_container[data-color="green"] {
+    --c: #2ecc71;
+    --c-soft: rgba(46, 204, 113, 0.15);
+    --c-glow: rgba(46, 204, 113, 0.45);
+}
+.check_box_container[data-color="purple"] {
+    --c: #9b59b6;
+    --c-soft: rgba(155, 89, 182, 0.15);
+    --c-glow: rgba(155, 89, 182, 0.45);
+}
+.check_box_container[data-color="orange"] {
+    --c: #e67e22;
+    --c-soft: rgba(230, 126, 34, 0.15);
+    --c-glow: rgba(230, 126, 34, 0.45);
+}
+
+/* ============ Обёртка чекбокса ============ */
+.check_box_container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.check_box_container:hover {
+    background-color: var(--c-soft);
+}
+
+/* ============ Скрываем нативный чекбокс ============ */
+.check_box {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* ============ Подпись ============ */
+.check_box_container label {
+    cursor: pointer;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s ease, font-weight 0.2s ease;
+    user-select: none;
+}
+
+/* ============ Квадрат чекбокса ============ */
+.check_box_container label::before {
+    content: '';
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    border: 2px solid #cbd0da;
+    border-radius: 4px;
+    background: #ffffff;
+    box-sizing: border-box;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============ ВЫБРАНО: мягкое свечение своим цветом ============ */
+.check_box:checked + label::before {
+    background-color: var(--c);
+    border-color: var(--c);
+    transform: scale(1.08);
+    box-shadow:
+        0 0 0 3px var(--c-soft),      /* мягкое кольцо вокруг */
+        0 0 10px var(--c-glow),       /* свечение ближнее */
+        0 0 20px var(--c-glow),       /* свечение дальнее */
+        0 2px 8px rgba(0, 0, 0, 0.08);/* лёгкая тень */
+}
+
+/* ============ Галочка ============ */
+.check_box_container label::after {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 7px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-1px) rotate(45deg) scale(0);
+    transform-origin: center;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    left: 12px;
+    top: 50%;
+    margin-top: -4px;
+}
+
+.check_box:checked + label::after {
+    transform: translateY(-1px) rotate(45deg) scale(1);
+}
+
+/* ============ Текст при выборе ============ */
+.check_box:checked + label {
+    color: var(--c);
+    font-weight: 600;
+}
+
+/* ============ Фокус (клавиатура) ============ */
+.check_box:focus-visible + label::before {
+    outline: 2px solid var(--c);
+    outline-offset: 3px;
 }

@@ -25,26 +25,26 @@
                                     </div>
                                     <img id="search_icon" src="{% static '/finder/icon/lupa_input.png' %}" alt="Иконка поиска">
                                 </div>
-                                <div class="filter_container"> 
+                                <div class="filter_container">
                                     <div class="filters">
-                                        <div class="check_box_container">
-                                            <input class='check_box' type="checkbox" id="search_by_code" name="search_by_code" value="true">
-                                            <label for="search_by_code">искать по коду</label>
+                                        <div class="check_box_container" data-color="blue">
+                                            <input class="check_box" type="checkbox" id="search_by_code" name="search_by_code" value="true">
+                                            <label for="search_by_code">По коду</label>
                                         </div>
-                                        <div class="check_box_container">
-                                            <input class='check_box' type="checkbox" id="search_by_comment" name="search_by_comment" value="true">
-                                            <label for="search_by_comment">искать по комментарию</label>
+                                        <div class="check_box_container" data-color="green">
+                                            <input class="check_box" type="checkbox" id="search_by_comment" name="search_by_comment" value="true">
+                                            <label for="search_by_comment">По комментарию</label>
                                         </div>
-                                        <div class="check_box_container">
-                                            <input class='check_box' type="checkbox" id="search_by_analog" name="search_by_analog" value="true">
-                                            <label for="search_by_comment">искать аналоги</label>
+                                        <div class="check_box_container" data-color="purple">
+                                            <input class="check_box" type="checkbox" id="search_by_analog" name="search_by_analog" value="true">
+                                            <label for="search_by_analog">Аналоги</label>
                                         </div>
-                                        <div class="check_box_container">
-                                            <input class='check_box' type="checkbox" id="search_by_kd" name="search_by_kd" value="true">
+                                        <div class="check_box_container" data-color="orange">
+                                            <input class="check_box" type="checkbox" id="search_by_kd" name="search_by_kd" value="true">
                                             <label for="search_by_kd">КД\ТН</label>
                                         </div>
                                     </div>
-                                </div> 
+                                </div>
                             </form>    
                         </div>
                     </div> 
@@ -56,18 +56,16 @@
                                     <span>АвтоПоиск</span>
                                 </div>
                                 <div class="info-sign" 
-                                title="
-                                Кнопка работает с болтами и винтами.
-                                Преобразовывает полное название
-                                в нужную структуру для поиска.
-                                Копируйте полную позицию и нажимайте на эту кнопку">i</div>
+                                    title="Кнопка работает с болтами и винтами.
+                    Преобразовывает полное название в нужную структуру для поиска.
+                    Копируйте полную позицию и нажимайте на эту кнопку">i</div>
                             </button>
                         </div>
-
-                        <div class="button_find_address ">
+                    
+                        <div class="button_find_address">
                             <img src="{% static '/comers/icons/icon_add_data.png' %}" alt="Внести данные">  
                             <div class="open-btn" data-popup="find_address">Найти адрес</div>
-                        </div>    
+                        </div>
 
                         <div id="find_address" class="my-popup">
                             <div class="popup-content">
