@@ -11,31 +11,8 @@
     <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
     <link rel="stylesheet" href="{% static 'vendor/datatables/css/dataTables.bootstrap5.min.css' %}">
     <link rel="stylesheet" href="{% static 'workwear/css/style.css' %}">
-    
-    {% comment %} <style>
-        .logo-icon {
-            height: 40px;
-            width: auto;
-            transition: transform 0.2s;
-        }
-        .logo-icon:hover {
-            transform: scale(1.05);
-        }
-        .navbar {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-        .navbar .nav-link {
-            color: rgba(255, 255, 255, 0.85) !important;
-            transition: color 0.2s;
-        }
-        .navbar .nav-link:hover {
-            color: #ffffff !important;
-        }
-        .navbar .navbar-brand {
-            color: #ffffff !important;
-            font-weight: 600;
-        }
-    </style> {% endcomment %}
+    <link rel="icon" href="{% static 'shared/img/favicon/favicon.ico' %}" type="image/x-icon">
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -44,8 +21,8 @@
         <div class="container-fluid">
             <a href="{% url 'home_finder' %}" class="navbar-brand d-flex align-items-center">
                 <img src="{% static 'finder/icon/logo_finder.svg' %}" 
-                     alt="Логотип" 
-                     class="logo-icon me-2">
+                    alt="Логотип" 
+                    class="logo-icon me-2">
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
