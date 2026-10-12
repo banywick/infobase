@@ -79,6 +79,7 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
     days_until_expiration = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()  # ✅ добавить
     can_edit = serializers.SerializerMethodField()         # ✅ добавить
+    
 
     # ✅ ДОБАВИТЬ:
     issue_date = serializers.DateField(format="%d.%m.%Y")
@@ -92,6 +93,7 @@ class WorkwearItemSerializer(serializers.ModelSerializer):
             'expiration_date', 'is_active', 'notes', 'status',
             'days_until_expiration',
             'created_by', 'created_by_name', 'can_edit',  # ✅ добавить
+            'is_ordered', 'ordered_at',  # ✅ ДОБАВИТЬ
             'created_at', 'updated_at'
         ]
     

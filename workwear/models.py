@@ -159,6 +159,8 @@ class WorkwearItem(models.Model):
     notes = models.TextField(blank=True, verbose_name="Примечания")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_ordered = models.BooleanField(default=False, verbose_name="Заказано")
+    ordered_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата заказа")
 
     # ✅ Автор записи
     created_by = models.ForeignKey(

@@ -157,16 +157,24 @@
                     <button id="whats_button" class="open-btn" data-popup="window_what_new">Что нового?</button>
                 </div>    
                 <div class="info_update">
-                    <div>Пользователь:</div>
-                    {% if user.is_authenticated %}
-                    <div>{{user.username}}</div>
-                    {% else %}
-                    <div>Гость</div>
-                    {% endif %}
-
-                    <br>
-                    <div>База обновлена</div>
-                    <div>{{file_name}}</div>
+                    <!-- Пользователь -->
+                    <div class="info-row">
+                        <span class="info-label">Пользователь:</span>
+                        <span class="info-value">
+                            {% if user.is_authenticated %}
+                                {{ user.get_full_name|default:user.username }}
+                            {% else %}
+                                Гость
+                            {% endif %}
+                        </span>
+                    </div>
+                
+                    <!-- База обновлена -->
+                    <div class="info-row info-row--status {% if 'не обновлена' in file_name %}is-error{% else %}is-ok{% endif %}">
+                        <span class="info-label">База:</span>
+                        <span class="info-value">{{ file_name|default:"—" }}</span>
+                        <span class="status-dot"></span>
+                    </div>
                 </div>
             </div>
 

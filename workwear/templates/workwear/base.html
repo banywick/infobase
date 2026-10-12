@@ -53,6 +53,15 @@
                     </li>
                 </ul>
                 <ul class="navbar-nav">
+                    <!-- ✅ Ссылка на админку для staff-пользователей -->
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/" target="_blank" title="Панель администратора">
+                            <i class="fas fa-cog"></i> Админка
+                        </a>
+                    </li>
+                    {% endif %}
+                    
                     <li class="nav-item">
                         <span class="nav-link text-light">
                             <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}

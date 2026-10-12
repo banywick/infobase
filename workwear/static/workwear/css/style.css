@@ -308,3 +308,203 @@ body {
 .logo-icon:hover {
     transform: scale(1.05);
 }
+
+
+/* ============================================================
+   Список истекающих предметов
+   ============================================================ */
+   .expiring-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.expiring-card {
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #fff;
+    border-left: 4px solid #ddd;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.expiring-card:hover {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+/* Уровни срочности */
+.expiring-card.urgency-high {
+    border-left-color: #dc3545;
+    background: linear-gradient(to right, #fff5f5 0%, #fff 40%);
+}
+
+.expiring-card.urgency-medium {
+    border-left-color: #ffc107;
+    background: linear-gradient(to right, #fffef5 0%, #fff 40%);
+}
+
+.expiring-card.urgency-low {
+    border-left-color: #17a2b8;
+    background: linear-gradient(to right, #f5fdff 0%, #fff 40%);
+}
+
+/* Заказанные — приглушённые */
+.expiring-card.is-ordered {
+    opacity: 0.65;
+    background: #f8f9fa;
+    border-left-color: #28a745;
+}
+
+/* Шапка карточки */
+.expiring-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.employee-link {
+    color: #1a237e;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+}
+
+.employee-link:hover {
+    color: #0d47a1;
+    text-decoration: underline;
+}
+
+.employee-link i {
+    font-size: 16px;
+    color: #5c6bc0;
+}
+
+.items-count {
+    font-size: 11px;
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+/* Бейджи статуса заказа */
+.order-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.order-badge.order-done {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.order-badge.order-partial {
+    background: #cce5ff;
+    color: #004085;
+    border: 1px solid #99d0ff;
+}
+
+/* Счётчик дней */
+.days-left {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.days-left i {
+    font-size: 13px;
+}
+
+/* Чипы предметов */
+.expiring-card-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.item-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f1f3f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.item-chip:hover {
+    background: #e3f2fd;
+    border-color: #90caf9;
+    transform: translateY(-1px);
+}
+
+.chip-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.chip-date {
+    color: #888;
+    font-size: 11px;
+}
+
+.chip-icon {
+    color: #28a745;
+    font-size: 12px;
+}
+
+.chip-icon-hover {
+    color: #1976d2;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.item-chip:hover .chip-icon-hover {
+    opacity: 1;
+}
+
+/* Заказанный чип */
+.item-chip.chip-ordered {
+    background: #d4edda;
+    border-color: #a3d9b1;
+    color: #155724;
+    cursor: default;
+}
+
+.item-chip.chip-ordered:hover {
+    transform: none;
+    background: #d4edda;
+    border-color: #a3d9b1;
+}
+
+.item-chip.chip-ordered .chip-name {
+    color: #155724;
+}
+
+.item-chip.chip-ordered .chip-date {
+    color: #4a7856;
+}

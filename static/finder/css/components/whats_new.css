@@ -67,3 +67,93 @@
     color: #0056b3;
     text-decoration: underline;
 }
+
+
+/* ============================================================
+   КНОПКА "Что нового?" — Soft Neon Outline
+   ============================================================ */
+   #whats_button {
+    /* 🎨 Меняйте здесь — и вся кнопка перекрасится */
+    --neon: #4a6bff;
+    --neon-rgb: 74, 107, 255;
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    height: 45px;
+    padding: 0 22px;
+
+    background: #ffffff;
+    color: var(--neon);
+    border: 2px solid var(--neon);
+    border-radius: 50px;
+
+    font-family: var(--font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+
+    cursor: pointer;
+    box-sizing: border-box;
+    overflow: hidden;
+
+    box-shadow:
+        0 0 0 4px rgba(var(--neon-rgb), 0.1),
+        0 2px 8px rgba(var(--neon-rgb), 0.15);
+
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Блик при hover */
+#whats_button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(var(--neon-rgb), 0.2), transparent);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+#whats_button:hover {
+    transform: translateY(-2px);
+    background: #ffffff;
+    color: var(--neon);
+    box-shadow:
+        0 0 0 5px rgba(var(--neon-rgb), 0.15),
+        0 0 20px rgba(var(--neon-rgb), 0.5),
+        0 0 40px rgba(var(--neon-rgb), 0.25);
+}
+
+#whats_button:hover::before {
+    left: 100%;
+}
+
+#whats_button:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+        0 0 0 4px rgba(var(--neon-rgb), 0.12),
+        0 2px 8px rgba(var(--neon-rgb), 0.25);
+}
+
+/* Иконка */
+#whats_button i {
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+#whats_button:hover i {
+    transform: scale(1.15) rotate(-10deg);
+    filter: drop-shadow(0 0 5px rgba(var(--neon-rgb), 0.9));
+}
+
+/* Текст */
+#whats_button span {
+    white-space: nowrap;
+}

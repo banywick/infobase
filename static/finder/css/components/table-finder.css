@@ -16,6 +16,8 @@
 }
 .table-header, .table-row {
     display: table-row;
+    font-family: 'Inter', sans-serif;
+    color: #1f3a55
 }
 .table-cell {
     display: table-cell;

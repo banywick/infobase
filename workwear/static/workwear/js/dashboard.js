@@ -126,3 +126,4 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
     new Dashboard();
 });
+

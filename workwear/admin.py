@@ -307,13 +307,26 @@ class WorkwearCategoryAdmin(admin.ModelAdmin):
 @admin.register(WorkwearItem)
 class WorkwearItemAdmin(admin.ModelAdmin):
     list_display = [
-        'name', 'employee', 'category', 
-        'issue_date', 'expiration_date', 'get_status_display_colored'
+        'name', 
+        'employee', 
+        'category', 
+        'issue_date', 
+        'expiration_date', 
+        'get_status_display_colored',
+        'is_ordered_display',      # ✅ Новое поле
+        'created_by_name',         # ✅ Бонус: автор
     ]
-    list_filter = ['category', 'is_active', 'employee__department', 'name']
+    list_filter = [
+        'category', 
+        'is_active', 
+        'is_ordered',              # ✅ Фильтр по заказу
+        'employee__department', 
+        'name'
+    ]
     search_fields = ['name__name', 'employee__last_name', 'employee__first_name']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'ordered_at']
     date_hierarchy = 'expiration_date'
+    # list_editable = ['is_ordered']
     
     fieldsets = (
         ('Основная информация', {
@@ -324,6 +337,9 @@ class WorkwearItemAdmin(admin.ModelAdmin):
         }),
         ('Сроки', {
             'fields': ('issue_date', 'expiration_date')
+        }),
+        ('Заказ', {                              # ✅ Новая секция
+            'fields': ('is_ordered', 'ordered_at')
         }),
         ('Дополнительно', {
             'fields': ('is_active', 'notes')
@@ -349,6 +365,42 @@ class WorkwearItemAdmin(admin.ModelAdmin):
         )
     get_status_display_colored.short_description = 'Статус'
     get_status_display_colored.admin_order_field = 'expiration_date'
+    
+    # ✅ Метод для отображения "Заказано" в списке
+    def is_ordered_display(self, obj):
+        if obj.is_ordered:
+            return format_html(
+                '<span style="background:#28a745; color:white; padding:4px 10px; '
+                'border-radius:10px; font-size:12px; font-weight:600;">'
+                '<i class="fas fa-check"></i> Заказано</span>'
+            )
+        return format_html(
+            '<span style="background:#e9ecef; color:#6c757d; padding:4px 10px; '
+            'border-radius:10px; font-size:12px;">Не заказано</span>'
+        )
+    is_ordered_display.short_description = 'Заказ'
+    is_ordered_display.admin_order_field = 'is_ordered'
+    
+    # ✅ Автор записи
+    def created_by_name(self, obj):
+        if obj.created_by:
+            full_name = obj.created_by.get_full_name()
+            return full_name if full_name else obj.created_by.username
+        return '—'
+    created_by_name.short_description = 'Кто создал'
+    created_by_name.admin_order_field = 'created_by'
+    
+    # ✅ Автоматически устанавливаем дату заказа при изменении флага
+    def save_model(self, request, obj, form, change):
+        # Если флаг изменился на True и дата ещё не установлена
+        if obj.is_ordered and not obj.ordered_at:
+            from django.utils import timezone
+            obj.ordered_at = timezone.now()
+        # Если флаг сняли — очищаем дату
+        elif not obj.is_ordered:
+            obj.ordered_at = None
+        
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(WorkwearHistory)

@@ -90,7 +90,7 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="all-workwear-tab" data-bs-toggle="tab" 
                             data-bs-target="#all-workwear-pane" type="button" role="tab">
-                        <i class="fas fa-tshirt me-1"></i>Вся спецодежда
+                        <i class="fas fa-tshirt me-1"></i>Спецодежда
                         <span class="badge bg-primary ms-1" id="workwearTabCount">0</span>
                     </button>
                 </li>
@@ -116,15 +116,9 @@
                         </div>
                         <div class="col-md-3">
                             <select class="form-select form-select-sm" id="workwearStatusFilter">
-                                <option value="">Все статусы</option>
-                                <option value="active">Активные</option>
+                                <option value="">Все срочные</option>
                                 <option value="expiring">Истекает срок</option>
                                 <option value="expired">Просрочены</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select form-select-sm" id="workwearDepartmentFilter">
-                                <option value="">Все отделы</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -145,6 +139,7 @@
                                     <th>Дата выдачи</th>
                                     <th>Срок истечения</th>
                                     <th>Статус</th>
+                                    <th>Заказ</th>  
                                     <th>Автор</th>
                                 </tr>
                             </thead>
@@ -277,7 +272,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // ============================================================
     // ========== СПИСОК ИСТЕКАЮЩИХ ==============================
-    // ============================================================
     async function loadExpiringEmployees() {
         try {
             const response = await fetch('/workwear/api/expiring-items/');
@@ -294,6 +288,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
             
+            // Группировка по сотрудникам
             const employees = {};
             items.forEach(item => {
                 if (!employees[item.employee]) {
@@ -306,36 +301,72 @@ document.addEventListener('DOMContentLoaded', async function() {
                 employees[item.employee].items.push(item);
             });
             
-            let html = '<div class="list-group list-group-flush">';
+            let html = '<div class="expiring-list">';
+            
             Object.values(employees).forEach(emp => {
                 const days = Math.min(...emp.items.map(i => i.days_until_expiration));
-                const statusClass = days <= 7 ? 'danger' : days <= 15 ? 'warning' : 'info';
+                const allOrdered = emp.items.every(i => i.is_ordered);
+                const someOrdered = emp.items.some(i => i.is_ordered);
+                
+                // Цвет по срочности
+                let urgencyClass = 'urgency-low';
+                let urgencyColor = '#17a2b8';
+                if (days <= 7) {
+                    urgencyClass = 'urgency-high';
+                    urgencyColor = '#dc3545';
+                } else if (days <= 14) {
+                    urgencyClass = 'urgency-medium';
+                    urgencyColor = '#ffc107';
+                }
+                
+                // Бейдж статуса заказа
+                let orderBadge = '';
+                if (allOrdered) {
+                    orderBadge = `<span class="order-badge order-done">
+                        <i class="fas fa-check-circle"></i> Всё заказано
+                    </span>`;
+                } else if (someOrdered) {
+                    const cnt = emp.items.filter(i => i.is_ordered).length;
+                    orderBadge = `<span class="order-badge order-partial">
+                        <i class="fas fa-shopping-cart"></i> ${cnt}/${emp.items.length} заказано
+                    </span>`;
+                }
                 
                 html += `
-                    <a href="/workwear/employees/${emp.id}/" class="list-group-item list-group-item-action">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>${emp.name}</strong>
-                                <span class="badge bg-${statusClass} ms-2">${emp.items.length} предметов</span>
+                    <div class="expiring-card ${urgencyClass} ${allOrdered ? 'is-ordered' : ''}">
+                        <div class="expiring-card-header">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <a href="/workwear/employees/${emp.id}/" class="employee-link">
+                                    <i class="fas fa-user-circle"></i>
+                                    ${emp.name}
+                                </a>
+                              
                             </div>
-                            <div>
-                                <span class="text-${statusClass}">
-                                    <i class="fas fa-clock"></i> ${days} дней
-                                </span>
+                            <div class="days-left" style="color: ${urgencyColor};">
+                                <i class="fas fa-clock"></i>
+                                <strong>${days}</strong> дн.
                             </div>
                         </div>
-                        <div class="mt-1">
-                            ${emp.items.map(item => `
-                                <span class="badge bg-light text-dark me-1">
-                                    ${item.name_display || item.name} (до ${item.expiration_date})
-                                </span>
-                            `).join('')}
+                        <div class="expiring-card-items">
+                            ${emp.items.map(item => {
+                                const itemName = item.name_display || item.name || '';
+                                const ordered = item.is_ordered;
+                                return `
+                                    <div class="item-chip ${ordered ? 'chip-ordered' : ''}"
+                                         onclick="${ordered ? '' : `orderItem(${item.id})`}"
+                                         title="${ordered ? 'Заказано' : 'Нажмите, чтобы заказать'}">
+                                        <span class="chip-name">${itemName}</span>
+                                        <span class="chip-date">до ${item.expiration_date}</span>
+                                        ${ordered ? '<i class="fas fa-check-circle chip-icon"></i>' : '<i class="fas fa-cart-plus chip-icon-hover"></i>'}
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
-                    </a>
+                    </div>
                 `;
             });
-            html += '</div>';
             
+            html += '</div>';
             container.innerHTML = html;
         } catch (error) {
             console.error('❌ Error loading expiring employees:', error);
@@ -347,27 +378,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     // ============================================================
     async function loadAllWorkwear() {
         try {
-            const response = await fetch('/workwear/api/workwear-items/?page_size=5000');
-            const data = await response.json();
+            const [expiringRes, expiredRes] = await Promise.all([
+                fetch('/workwear/api/expiring-items/'),
+                fetch('/workwear/api/expired-items/')
+            ]);
             
-            allWorkwearItems = data.results || data;
-            document.getElementById('workwearTabCount').textContent = allWorkwearItems.length;
+            const expiring = await expiringRes.json();
+            const expired = await expiredRes.json();
             
-            // Заполняем фильтр по отделам
-            const departments = new Set();
-            allWorkwearItems.forEach(item => {
-                // В item нет напрямую department, но есть employee_name
-                // Можно добавить в сериализатор employee_department
+            allWorkwearItems = [...expiring, ...expired];
+            
+            // ✅ Сортировка: просроченные → истекающие, заказанные в конце
+            allWorkwearItems.sort((a, b) => {
+                // Заказанные в самый низ
+                if (a.is_ordered && !b.is_ordered) return 1;
+                if (!a.is_ordered && b.is_ordered) return -1;
+                // Просроченные впереди
+                if (a.status === 'expired' && b.status !== 'expired') return -1;
+                if (a.status !== 'expired' && b.status === 'expired') return 1;
+                return new Date(a.expiration_date) - new Date(b.expiration_date);
             });
             
+            document.getElementById('workwearTabCount').textContent = allWorkwearItems.length;
+            document.getElementById('workwearStatusFilter').value = '';
             renderAllWorkwear(allWorkwearItems);
         } catch (error) {
             console.error('❌ Error loading workwear:', error);
-            document.getElementById('workwearTableBody').innerHTML = `
-                <tr><td colspan="8" class="text-center text-danger py-3">
-                    Ошибка загрузки данных
-                </td></tr>
-            `;
         }
     }
     
@@ -376,27 +412,47 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         if (items.length === 0) {
             tbody.innerHTML = `
-                <tr><td colspan="8" class="text-center py-3 text-muted">
-                    <i class="fas fa-tshirt fa-2x d-block mb-2"></i>
-                    Спецодежда не найдена
+                <tr><td colspan="9" class="text-center py-3">
+                    <i class="fas fa-check-circle fa-2x d-block mb-2 text-success"></i>
+                    <span class="text-success fw-bold">Все в порядке!</span>
+                    <div class="text-muted mt-1">Нет истекающих или просроченных записей</div>
                 </td></tr>
             `;
             return;
         }
         
         let html = '';
-        items.slice(0, 500).forEach(item => {
+        items.forEach(item => {
             const statusMap = {
-                'active': { class: 'status-active', text: 'Активна' },
-                'expiring': { class: 'status-expiring', text: 'Истекает' },
-                'expiring_soon': { class: 'status-expiring', text: 'Истекает' },
-                'expired': { class: 'status-expired', text: 'Просрочена' }
+                'expiring': { class: 'status-expiring', text: '⏰ Истекает' },
+                'expiring_soon': { class: 'status-expiring', text: '⏰ Истекает' },
+                'expired': { class: 'status-expired', text: '❌ Просрочена' }
             };
-            const status = statusMap[item.status] || statusMap.active;
+            const status = statusMap[item.status] || { class: 'status-expiring', text: item.status };
             const itemName = item.name_display || (item.name && item.name.name) || item.name || '';
+            const days = item.days_until_expiration || 0;
+            const isExpired = item.status === 'expired';
+            
+            // ✅ Колонка "Статус заказа"
+            let orderCellHtml = '';
+            if (item.is_ordered) {
+                orderCellHtml = `
+                    <span class="badge bg-success" style="font-size: 13px; padding: 6px 12px;">
+                        <i class="fas fa-check-circle"></i> Заказано
+                    </span>
+                `;
+            } else {
+                orderCellHtml = `
+                    <button class="btn btn-sm btn-outline-primary" 
+                            onclick="orderItem(${item.id})" 
+                            title="Отметить как заказано">
+                        <i class="fas fa-shopping-cart"></i> Заказать
+                    </button>
+                `;
+            }
             
             html += `
-                <tr class="${item.status === 'expired' ? 'table-danger' : item.status === 'expiring' || item.status === 'expiring_soon' ? 'table-warning' : ''}">
+                <tr class="${isExpired ? 'table-danger' : 'table-warning'} ${item.is_ordered ? 'opacity-75' : ''}">
                     <td>
                         <a href="/workwear/employees/${item.employee}/" class="text-decoration-none">
                             ${item.employee_name}
@@ -406,18 +462,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <td>${item.category_name || '-'}</td>
                     <td>${item.size || '-'}</td>
                     <td>${item.issue_date}</td>
-                    <td>${item.expiration_date}</td>
+                    <td>
+                        <strong>${item.expiration_date}</strong>
+                        ${!isExpired && days > 0 ? `<br><small class="text-danger">осталось ${days} дн.</small>` : ''}
+                        ${isExpired ? '<br><small class="text-danger fw-bold">ПРОСРОЧЕНО</small>' : ''}
+                    </td>
                     <td><span class="status-badge ${status.class}">${status.text}</span></td>
+                    <td>${orderCellHtml}</td>
                     <td><span class="badge bg-info">${item.created_by_name || 'Система'}</span></td>
                 </tr>
             `;
         });
-        
-        if (items.length > 500) {
-            html += `<tr><td colspan="8" class="text-center text-muted">
-                Показано 500 из ${items.length}. Используйте фильтры для уточнения.
-            </td></tr>`;
-        }
         
         tbody.innerHTML = html;
     }
@@ -477,6 +532,62 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         tbody.innerHTML = html;
     }
+
+        // ============================================================
+    // ========== ЗАКАЗАТЬ ПРЕДМЕТ ================================
+    // ============================================================
+    window.orderItem = async function(id) {
+        if (!confirm('Отметить предмет как заказанный?')) return;
+        
+        try {
+            const response = await fetch(`/workwear/api/workwear-items/${id}/order/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Ошибка заказа');
+            }
+            
+            // Обновляем данные в локальном кэше
+            const item = allWorkwearItems.find(i => i.id === id);
+            if (item) {
+                item.is_ordered = true;
+            }
+            
+            // Перерисовываем
+            renderAllWorkwear(allWorkwearItems);
+            
+            // Показываем уведомление
+            showNotification('✅ Отмечено как заказано', 'success');
+            
+        } catch (error) {
+            console.error('❌ Ошибка:', error);
+            alert('Ошибка при отметке заказа');
+        }
+    };
+
+    // ============================================================
+    // ========== УВЕДОМЛЕНИЕ =====================================
+    // ============================================================
+    function showNotification(message, type = 'info') {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        alert.style.zIndex = '9999';
+        alert.style.maxWidth = '350px';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3000);
+    }
+
+
     
     // ============================================================
     // ========== ФИЛЬТРАЦИЯ ======================================

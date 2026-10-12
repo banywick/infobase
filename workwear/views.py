@@ -675,3 +675,27 @@ class OtherItemDetailAPIView(APIView):
         item.is_active = False
         item.save()
         return Response({'status': 'success', 'message': 'Запись удалена'})        
+
+
+
+
+# ============================================================
+# ========== API: ДАШБОРД / Заказать ======================
+# ============================================================
+
+class WorkwearItemOrderAPIView(APIView):
+    """Отметить предмет как заказанный"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request, pk):
+        item = get_object_or_404(WorkwearItem, pk=pk)
+        
+        item.is_ordered = True
+        item.ordered_at = timezone.now()
+        item.save()
+        
+        return Response({
+            'success': True,
+            'message': 'Отмечено как заказано',
+            'is_ordered': True
+        })
