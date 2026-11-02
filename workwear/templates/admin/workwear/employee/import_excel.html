@@ -1,0 +1,157 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .import-container { max-width: 800px; margin: 20px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .import-header { border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; margin-bottom: 25px; }
+    .import-header h1 { font-size: 24px; font-weight: 600; color: #333; margin: 0; }
+    .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 40px; text-align: center; transition: all 0.3s; cursor: pointer; background: #fafafa; margin: 20px 0; }
+    .upload-area:hover { border-color: #79aec8; background: #f8f9fa; }
+    .upload-icon { font-size: 48px; color: #79aec8; margin-bottom: 15px; }
+    .upload-text { font-size: 16px; color: #666; }
+    .upload-hint { font-size: 14px; color: #999; margin-top: 10px; }
+    .btn-upload { background: #79aec8; color: white; border: none; padding: 12px 40px; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background 0.3s; display: inline-block; }
+    .btn-upload:hover { background: #609ab6; }
+    .btn-submit { background: #28a745; color: white; border: none; padding: 12px 50px; border-radius: 4px; font-size: 18px; cursor: pointer; transition: background 0.3s; margin-top: 20px; }
+    .btn-submit:hover { background: #218838; }
+    .btn-back { background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 4px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-back:hover { background: #5a6268; color: white; text-decoration: none; }
+    .requirements { margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #79aec8; }
+    .requirements h3 { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 10px; }
+    .requirements ul { margin: 0; padding-left: 20px; }
+    .requirements ul li { margin: 5px 0; color: #555; }
+    .example { background: #fff; padding: 10px; border-radius: 4px; margin-top: 10px; font-family: monospace; font-size: 13px; border: 1px solid #ddd; white-space: pre-wrap; }
+    .messages .messagelist li { padding: 10px 15px; border-radius: 4px; margin-bottom: 5px; list-style: none; }
+    .messages .messagelist li.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .messages .messagelist li.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .messages .messagelist li.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .messages .messagelist li.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="import-container">
+    <div class="import-header">
+        <h1>📥 Импорт сотрудников из Excel</h1>
+        <p style="color: #666; margin-top: 5px;">
+            Загрузите Excel файл для массового добавления сотрудников
+        </p>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        <ul class="messagelist">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                {{ message|linebreaksbr }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- ВОТ ЗДЕСЬ ДОЛЖНА БЫТЬ ФОРМА -->
+    <form method="post" enctype="multipart/form-data" action="/admin/workwear/employee/process-excel/">
+        {% csrf_token %}
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">Перетащите Excel файл сюда или нажмите для выбора</div>
+            <div class="upload-hint">Поддерживаются файлы .xlsx и .xls</div>
+            <div style="margin: 20px 0;">
+                <input type="file" name="excel_file" id="excelFile" accept=".xlsx,.xls" required style="display: none;">
+                <label for="excelFile" class="btn-upload" id="fileLabel" style="cursor: pointer;">
+                    Выбрать файл
+                </label>
+                <span id="fileName" style="margin-left: 15px; color: #666;"></span>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button type="submit" class="btn-submit">📊 Начать импорт</button>
+            <br><br>
+            <a href="/admin/workwear/employee/" class="btn-back">
+                ← Вернуться к списку
+            </a>
+        </div>
+    </form>
+
+    <div class="requirements">
+        <h3>📋 Требования к файлу:</h3>
+        <ul>
+            <li><strong>Обязательные колонки:</strong> Фамилия, Имя</li>
+            <li><strong>Опциональные колонки:</strong> Отчество, Отдел, Должность</li>
+            <li><strong>Дубликаты:</strong> Существующие сотрудники (по ФИО) будут пропущены</li>
+            <li><strong>Кодировка:</strong> UTF-8</li>
+        </ul>
+        <div class="example">
+<strong>Пример структуры Excel:</strong>
+
+| Фамилия | Имя    | Отчество  | Отдел          | Должность       |
+|---------|--------|-----------|----------------|-----------------|
+| Иванов  | Иван   | Иванович  | Бухгалтерия    | Бухгалтер       |
+| Петров  | Петр   | Петрович  | IT-отдел       | Программист     |
+| Сидоров | Сидор  | Сидорович | Отдел кадров   | Специалист      |
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('excelFile');
+    const fileName = document.getElementById('fileName');
+    const fileLabel = document.getElementById('fileLabel');
+
+    uploadArea.addEventListener('click', function(e) {
+        if (e.target === uploadArea || 
+            e.target.classList.contains('upload-text') || 
+            e.target.classList.contains('upload-icon') || 
+            e.target.classList.contains('upload-hint')) {
+            fileInput.click();
+        }
+    });
+
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.style.borderColor = '#79aec8';
+        this.style.background = '#e8f0fe';
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.style.borderColor = '#ddd';
+        this.style.background = '#fafafa';
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.style.borderColor = '#ddd';
+        this.style.background = '#fafafa';
+        
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            updateFileName(fileInput.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) {
+            updateFileName(this.files[0]);
+        }
+    });
+
+    function updateFileName(file) {
+        if (file) {
+            const size = (file.size / 1024).toFixed(1);
+            fileName.textContent = `✅ ${file.name} (${size} KB)`;
+            fileLabel.style.background = '#28a745';
+            fileLabel.textContent = '✅ Файл выбран';
+        }
+    }
+});
+</script>
+{% endblock %}

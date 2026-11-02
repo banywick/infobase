@@ -16,4 +16,5 @@ urlpatterns = [
     path('sahr_find_archive/', views.SahrFindFilterArchive.as_view(), name='sahr_find_archive'),
     path('archive_remove_positions/', views.AllArchiveRemovePosition.as_view(), name='archive_remove_positions'),
     path('backup/', views.SahrBackupView.as_view(), name='backup'),
+    path('bulk_replace_address/', views.BulkReplaceAddressView.as_view(), name='bulk_replace_address'),
 ]

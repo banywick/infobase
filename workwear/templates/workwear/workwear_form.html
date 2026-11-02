@@ -1,0 +1,150 @@
+{% extends 'workwear/base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Редактировать{% else %}Добавить{% endif %} спецодежду - Учет спецодежды{% endblock %}
+
+{% block content %}
+<div class="workwear-form-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-tshirt me-2"></i>
+            {% if object %}Редактирование спецодежды{% else %}Добавление спецодежды{% endif %}
+        </h2>
+        <a href="{% url 'workwear:workwear_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.employee.id_for_label }}" class="form-label">
+                            Сотрудник <span class="text-danger">*</span>
+                        </label>
+                        <select name="{{ form.employee.name }}" 
+                                id="{{ form.employee.id_for_label }}" 
+                                class="form-select"
+                                required>
+                            <option value="">Выберите сотрудника</option>
+                            {% for employee in employees %}
+                                <option value="{{ employee.id }}" 
+                                        {% if form.employee.value == employee.id %}selected{% endif %}>
+                                    {{ employee.get_full_name }} ({{ employee.department }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">
+                            Категория <span class="text-danger">*</span>
+                        </label>
+                        <select name="{{ form.category.name }}" 
+                                id="{{ form.category.id_for_label }}" 
+                                class="form-select"
+                                required>
+                            <option value="">Выберите категорию</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        data-lifespan="{{ category.standard_lifespan }}"
+                                        {% if form.category.value == category.id %}selected{% endif %}>
+                                    {{ category.name }} ({{ category.standard_lifespan }} дней)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-8 mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            Наименование <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               name="{{ form.name.name }}" 
+                               id="{{ form.name.id_for_label }}" 
+                               class="form-control"
+                               value="{{ form.name.value|default:'' }}"
+                               required>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.size.id_for_label }}" class="form-label">Размер</label>
+                        <input type="text" 
+                               name="{{ form.size.name }}" 
+                               id="{{ form.size.id_for_label }}" 
+                               class="form-control"
+                               value="{{ form.size.value|default:'' }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.color.id_for_label }}" class="form-label">Цвет</label>
+                        <input type="text" 
+                               name="{{ form.color.name }}" 
+                               id="{{ form.color.id_for_label }}" 
+                               class="form-control"
+                               value="{{ form.color.value|default:'' }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.issue_date.id_for_label }}" class="form-label">
+                            Дата выдачи <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" 
+                               name="{{ form.issue_date.name }}" 
+                               id="{{ form.issue_date.id_for_label }}" 
+                               class="form-control"
+                               value="{{ form.issue_date.value|date:'Y-m-d'|default:'' }}"
+                               required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.expiration_date.id_for_label }}" class="form-label">
+                            Дата истечения
+                        </label>
+                        <input type="date" 
+                               name="{{ form.expiration_date.name }}" 
+                               id="{{ form.expiration_date.id_for_label }}" 
+                               class="form-control"
+                               value="{{ form.expiration_date.value|date:'Y-m-d'|default:'' }}">
+                        <small class="text-muted">Оставьте пустым для авто-расчета</small>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <div class="form-check form-switch mt-4">
+                            <input type="checkbox" 
+                                   name="{{ form.is_active.name }}" 
+                                   id="{{ form.is_active.id_for_label }}" 
+                                   class="form-check-input"
+                                   {% if form.is_active.value %}checked{% endif %}>
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Активна
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Примечания</label>
+                        <textarea name="{{ form.notes.name }}" 
+                                  id="{{ form.notes.id_for_label }}" 
+                                  class="form-control"
+                                  rows="3">{{ form.notes.value|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'workwear:workwear_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 
+                        {% if object %}Сохранить{% else %}Добавить{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

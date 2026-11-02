@@ -13,17 +13,17 @@
 
         <div class="filter-section">
             <div class="navigate_back_page">
-                <div class="arrow_back_page">
-                    <img  src="{% static '/comers/icons/arrow_back.png' %}" alt="<">  
-                        <a href="/">На главную</a>
-                </div>
+                <a href="{% url 'home_finder' %}" class="navbar-brand d-flex align-items-center">
+                    <img src="{% static 'finder/icon/logo_white.svg' %}" 
+                        alt="Логотип" 
+                        class="logo-icon me-2">
+                </a>
                         <div>   
                             <div>Пользователь:</div>
                             <div>{{user.username}}</div>    
                         </div>     
                 </div>
                 <div class="info_sting_report ">
-                        <p class="set_filters">Установка фильтров</p>
                         <div class="button button--white ">
                             <img src="{% static '/comers/icons/icon_report.png' %}" alt="Скачать отчет">  
                             <div class="open-btn" data-popup="popup4" >Скачать отчет</div>

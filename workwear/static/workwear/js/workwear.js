@@ -1,0 +1,714 @@
+// Workwear page logic
+class WorkwearPage {
+    constructor() {
+        this.currentPage = 1;
+        this.pageSize = 50;
+        this.filters = {
+            search: '',
+            status: '',
+            category: '',
+            expiration_from: '',
+            expiration_to: ''
+        };
+        this.categories = [];
+        this.selectedEmployeeId = null;
+        this.searchAbortController = null;
+        this.init();
+    }
+    
+    async init() {
+        this.bindEvents();
+        await this.loadCategories();
+        await this.loadWorkwearNames();
+        await this.loadWorkwear();
+        this.initEmployeeSearch();
+        this.initDateAutoFill();
+    }
+    
+    // ============================================================
+    // ========== ОБРАБОТЧИКИ СОБЫТИЙ =============================
+    // ============================================================
+    
+    bindEvents() {
+        let searchTimeout;
+        
+        document.getElementById('searchInput')?.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.filters.search = e.target.value;
+                this.currentPage = 1;
+                this.loadWorkwear();
+            }, 300);
+        });
+        
+        document.getElementById('statusFilter')?.addEventListener('change', (e) => {
+            this.filters.status = e.target.value;
+            this.currentPage = 1;
+            this.loadWorkwear();
+        });
+        
+        document.getElementById('categoryFilter')?.addEventListener('change', (e) => {
+            this.filters.category = e.target.value;
+            this.currentPage = 1;
+            this.loadWorkwear();
+        });
+        
+        document.getElementById('expirationFrom')?.addEventListener('change', (e) => {
+            this.filters.expiration_from = e.target.value;
+            this.currentPage = 1;
+            this.loadWorkwear();
+        });
+        
+        document.getElementById('expirationTo')?.addEventListener('change', (e) => {
+            this.filters.expiration_to = e.target.value;
+            this.currentPage = 1;
+            this.loadWorkwear();
+        });
+        
+        document.getElementById('resetFilters')?.addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('expirationFrom').value = '';
+            document.getElementById('expirationTo').value = '';
+            this.filters = { search: '', status: '', category: '', expiration_from: '', expiration_to: '' };
+            this.currentPage = 1;
+            this.loadWorkwear();
+        });
+        
+        document.getElementById('saveWorkwearBtn')?.addEventListener('click', () => {
+            this.saveWorkwear();
+        });
+    }
+    
+    // ============================================================
+    // ========== ЗАГРУЗКА КАТЕГОРИЙ ==============================
+    // ============================================================
+    
+    async loadCategories() {
+        try {
+            const categories = await API.getCategories();
+            this.categories = categories;
+            
+            const filterSelect = document.getElementById('categoryFilter');
+            if (filterSelect) {
+                categories.forEach(cat => {
+                    if (cat.is_active) {
+                        const opt = document.createElement('option');
+                        opt.value = cat.id;
+                        opt.textContent = cat.name;
+                        filterSelect.appendChild(opt);
+                    }
+                });
+            }
+            
+            const formSelect = document.getElementById('categorySelect');
+            if (formSelect) {
+                categories.forEach(cat => {
+                    if (cat.is_active) {
+                        const opt = document.createElement('option');
+                        opt.value = cat.id;
+                        opt.textContent = `${cat.name} (${cat.standard_lifespan} дней)`;
+                        opt.dataset.lifespan = cat.standard_lifespan;
+                        formSelect.appendChild(opt);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('❌ Error loading categories:', error);
+        }
+    }
+    
+    // ============================================================
+    // ========== ПОИСК СОТРУДНИКОВ ЧЕРЕЗ API ====================
+    // ============================================================
+    
+    initEmployeeSearch() {
+        const searchInput = document.getElementById('employeeSearch');
+        const hiddenInput = document.getElementById('employeeId');
+        const suggestionsBox = document.getElementById('employeeSuggestions');
+        const selectedInfo = document.getElementById('employeeSelected');
+        
+        if (!searchInput || !suggestionsBox) {
+            console.warn('⚠️ Элементы поиска сотрудников не найдены');
+            return;
+        }
+        
+        let searchTimeout = null;
+        
+        const searchEmployees = async (query) => {
+            if (!query || query.length < 2) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+            
+            if (this.searchAbortController) {
+                this.searchAbortController.abort();
+            }
+            this.searchAbortController = new AbortController();
+            
+            try {
+                suggestionsBox.innerHTML = `
+                    <div class="list-group-item text-center text-muted">
+                        <span class="spinner-border spinner-border-sm"></span> Поиск...
+                    </div>
+                `;
+                suggestionsBox.style.display = 'block';
+                
+                const response = await fetch(
+                    `/workwear/api/employees/search/?q=${encodeURIComponent(query)}`,
+                    { signal: this.searchAbortController.signal }
+                );
+                const data = await response.json();
+                
+                console.log(`🔍 Найдено ${data.count || 0} сотрудников по запросу "${query}"`);
+                renderSuggestions(data.results || []);
+            } catch (error) {
+                if (error.name === 'AbortError') return;
+                console.error('❌ Ошибка поиска сотрудников:', error);
+                suggestionsBox.innerHTML = `
+                    <div class="list-group-item text-danger text-center">
+                        Ошибка поиска. Попробуйте ещё раз.
+                    </div>
+                `;
+            }
+        };
+        
+        const renderSuggestions = (items) => {
+            if (!items.length) {
+                suggestionsBox.innerHTML = `
+                    <div class="list-group-item text-muted text-center">
+                        Ничего не найдено
+                    </div>
+                `;
+                suggestionsBox.style.display = 'block';
+                return;
+            }
+            
+            let html = '';
+            items.forEach(emp => {
+                html += `
+                    <div class="list-group-item" data-id="${emp.id}" data-name="${emp.full_name}">
+                        <div class="emp-name">${emp.full_name}</div>
+                        <div class="emp-dept">
+                            ${emp.department || 'Отдел не указан'}
+                            ${emp.position ? '• ' + emp.position : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            suggestionsBox.innerHTML = html;
+            suggestionsBox.style.display = 'block';
+            
+            suggestionsBox.querySelectorAll('.list-group-item[data-id]').forEach(item => {
+                item.addEventListener('click', () => {
+                    this.selectEmployee(item.dataset.id, item.dataset.name);
+                });
+            });
+        };
+        
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            if (!query) {
+                hiddenInput.value = '';
+                selectedInfo.style.display = 'none';
+                searchInput.classList.remove('is-valid', 'is-invalid');
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+            
+            hiddenInput.value = '';
+            searchInput.classList.remove('is-valid');
+            selectedInfo.style.display = 'none';
+            
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchEmployees(query);
+            }, 250);
+        });
+        
+        searchInput.addEventListener('keydown', function(e) {
+            const items = suggestionsBox.querySelectorAll('.list-group-item[data-id]');
+            const active = suggestionsBox.querySelector('.list-group-item.active');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!items.length) return;
+                if (!active) items[0].classList.add('active');
+                else {
+                    active.classList.remove('active');
+                    (active.nextElementSibling || items[0]).classList.add('active');
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!items.length) return;
+                if (!active) items[items.length - 1].classList.add('active');
+                else {
+                    active.classList.remove('active');
+                    (active.previousElementSibling || items[items.length - 1]).classList.add('active');
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (active) active.click();
+            } else if (e.key === 'Escape') {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#employeeSearch') && 
+                !e.target.closest('#employeeSuggestions')) {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+    }
+    
+    // ============================================================
+    // ========== ВЫБОР СОТРУДНИКА ================================
+    // ============================================================
+    
+    selectEmployee(id, name) {
+        this.selectedEmployeeId = id;
+        
+        const hiddenInput = document.getElementById('employeeId');
+        const searchInput = document.getElementById('employeeSearch');
+        const suggestionsBox = document.getElementById('employeeSuggestions');
+        const selectedInfo = document.getElementById('employeeSelected');
+        
+        hiddenInput.value = id;
+        searchInput.value = name;
+        suggestionsBox.style.display = 'none';
+        selectedInfo.textContent = `✅ Выбран: ${name} (ID: ${id})`;
+        selectedInfo.style.display = 'block';
+        searchInput.classList.remove('is-invalid');
+        searchInput.classList.add('is-valid');
+        
+        console.log(`✅ Сотрудник выбран: ${name} (ID: ${id})`);
+    }
+    
+    // ============================================================
+    // ========== АВТО-ЗАПОЛНЕНИЕ ДАТЫ ИСТЕЧЕНИЯ ==================
+    // ============================================================
+    
+    initDateAutoFill() {
+        const categorySelect = document.getElementById('categorySelect');
+        const form = document.getElementById('addWorkwearForm');
+        if (!form) return;
+        
+        const issueDateInput = form.querySelector('input[name="issue_date"]');
+        const expirationDateInput = form.querySelector('input[name="expiration_date"]');
+        
+        if (!categorySelect || !issueDateInput || !expirationDateInput) return;
+        
+        const calculateExpiration = () => {
+            const categoryId = parseInt(categorySelect.value);
+            const issueDate = issueDateInput.value;
+            
+            if (!categoryId || !issueDate) return;
+            
+            const category = this.categories.find(c => c.id === categoryId);
+            if (!category || !category.standard_lifespan) return;
+            
+            if (expirationDateInput.value && expirationDateInput.dataset.manual === 'true') {
+                return;
+            }
+            
+            const date = new Date(issueDate);
+            date.setDate(date.getDate() + category.standard_lifespan);
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            expirationDateInput.value = `${year}-${month}-${day}`;
+            expirationDateInput.style.borderColor = '#28a745';
+            setTimeout(() => {
+                expirationDateInput.style.borderColor = '';
+            }, 1500);
+        };
+        
+        expirationDateInput.addEventListener('change', () => {
+            expirationDateInput.dataset.manual = 'true';
+        });
+        
+        categorySelect.addEventListener('change', calculateExpiration);
+        issueDateInput.addEventListener('change', calculateExpiration);
+    }
+
+     // ===========================================================
+    // ========== Загрузка наименования ===========================
+    // ============================================================
+    async loadWorkwearNames() {
+        try {
+            const response = await fetch('/workwear/api/workwear-names/');
+            const names = await response.json();
+            console.log(`✅ Загружено ${names.length} наименований`);
+            
+            const select = document.getElementById('nameSelect');
+            if (select) {
+                select.innerHTML = '<option value="">Выберите наименование</option>';
+                names.forEach(n => {
+                    const opt = document.createElement('option');
+                    opt.value = n.id;
+                    opt.textContent = n.name;
+                    select.appendChild(opt);
+                });
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки наименований:', error);
+        }
+    }
+
+
+
+
+
+    
+    // ============================================================
+    // ========== ЗАГРУЗКА СПИСКА СПЕЦОДЕЖДЫ ======================
+    // ============================================================
+    
+    async loadWorkwear() {
+        try {
+            const params = {
+                page: this.currentPage,
+                page_size: this.pageSize,
+                ...this.filters
+            };
+            
+            Object.keys(params).forEach(key => {
+                if (!params[key]) delete params[key];
+            });
+            
+            const response = await API.getWorkwearItems(params);
+            this.renderWorkwear(response.results || []);
+            this.renderPagination(response);
+        } catch (error) {
+            console.error('❌ Error loading workwear:', error);
+            const tbody = document.getElementById('workwearTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-3 text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Ошибка загрузки данных
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    }
+    
+    // ============================================================
+    // ========== РЕНДЕР ТАБЛИЦЫ ==================================
+    // ============================================================
+    
+    renderWorkwear(items) {
+        const container = document.getElementById('workwearTableBody');
+        if (!container) return;
+        
+        if (items.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="10" class="text-center py-3 text-muted">
+                        <i class="fas fa-tshirt fa-2x d-block mb-2"></i>
+                        Спецодежда не найдена
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        items.forEach(item => {
+            const statusMap = {
+                'active': { class: 'status-active', text: 'Активна' },
+                'expiring': { class: 'status-expiring', text: 'Истекает' },
+                'expiring_soon': { class: 'status-expiring', text: 'Истекает' },
+                'expired': { class: 'status-expired', text: 'Просрочена' }
+            };
+            const status = statusMap[item.status] || statusMap.active;
+            
+            const days = item.days_until_expiration || 0;
+            const daysColor = days <= 7 ? 'text-danger' : days <= 15 ? 'text-warning' : 'text-success';
+            
+            // ✅ Примечания
+            const notes = item.notes ? item.notes.trim() : '';
+            const notesHtml = notes 
+                ? `<div class="notes-cell">${notes}</div>`
+                : '<span class="text-muted">—</span>';
+            
+            // ✅ Получаем имя (FK на WorkwearName)
+            const itemName = item.name_display || (item.name && item.name.name) || item.name || '';
+            const safeName = String(itemName).replace(/'/g, "\\'");
+            
+            // ✅ Кнопки только если can_edit
+            const actionsHtml = item.can_edit ? `
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-success" 
+                            onclick="workwearPage.returnItem(${item.id})" 
+                            title="Вернуть">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" 
+                            onclick="workwearPage.deleteItem(${item.id}, '${safeName}')" 
+                            title="Списать">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            ` : '<span class="text-muted small">Нет прав</span>';
+            
+            html += `
+                <tr class="${item.status === 'expired' ? 'table-danger' : item.status === 'expiring' || item.status === 'expiring_soon' ? 'table-warning' : ''}">
+                    <td>
+                        <a href="/workwear/employees/${item.employee}/" class="text-decoration-none">
+                            ${item.employee_name}
+                        </a>
+                    </td>
+                    <td><strong>${itemName}</strong></td>
+                    <td>${item.category_name || '-'}</td>
+                    <td>${item.size || '-'}</td>
+                    <td>${item.issue_date}</td>
+                    <td>${item.expiration_date}</td>
+                    <td>${notesHtml}</td>
+                    <td><span class="status-badge ${status.class}">${status.text}</span></td>
+                    <td class="${daysColor}">${days > 0 ? days + ' дн.' : '-'}</td>
+                    <td>${actionsHtml}</td>
+                </tr>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    // ============================================================
+    // ========== ПАГИНАЦИЯ =======================================
+    // ============================================================
+    
+    renderPagination(data) {
+        const container = document.getElementById('paginationContainer');
+        if (!container) return;
+        
+        if (!data || data.count <= this.pageSize) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        const totalPages = Math.ceil(data.count / this.pageSize);
+        let html = '<nav><ul class="pagination">';
+        
+        html += `<li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${this.currentPage - 1}">«</a>
+        </li>`;
+        
+        const startPage = Math.max(1, this.currentPage - 2);
+        const endPage = Math.min(totalPages, this.currentPage + 2);
+        
+        if (startPage > 1) {
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>`;
+            if (startPage > 2) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<li class="page-item ${i === this.currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>`;
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a></li>`;
+        }
+        
+        html += `<li class="page-item ${this.currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${this.currentPage + 1}">»</a>
+        </li>`;
+        
+        html += '</ul></nav>';
+        container.innerHTML = html;
+        
+        container.querySelectorAll('.page-link[data-page]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = parseInt(e.target.dataset.page);
+                if (page > 0 && page <= totalPages && page !== this.currentPage) {
+                    this.currentPage = page;
+                    this.loadWorkwear();
+                }
+            });
+        });
+    }
+    
+    // ============================================================
+    // ========== СОХРАНЕНИЕ СПЕЦОДЕЖДЫ ===========================
+    // ============================================================
+    
+    async saveWorkwear() {
+        const form = document.getElementById('addWorkwearForm');
+        if (!form) return;
+        
+        const hiddenEmployeeId = document.getElementById('employeeId');
+        if (!hiddenEmployeeId || !hiddenEmployeeId.value) {
+            alert('⚠️ Пожалуйста, выберите сотрудника из списка подсказок');
+            const searchInput = document.getElementById('employeeSearch');
+            if (searchInput) {
+                searchInput.classList.add('is-invalid');
+                searchInput.focus();
+            }
+            return;
+        }
+        
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        data.employee = parseInt(hiddenEmployeeId.value);
+        data.category = parseInt(data.category);
+        data.is_active = data.is_active === 'on' || data.is_active === 'true';
+        
+        const requiredFields = {
+            'employee': 'Сотрудник',
+            'category': 'Категория',
+            'name': 'Наименование',
+            'issue_date': 'Дата выдачи',
+            'expiration_date': 'Дата истечения'
+        };
+        
+        const missingFields = [];
+        for (const [field, label] of Object.entries(requiredFields)) {
+            if (!data[field] || data[field] === '') {
+                missingFields.push(label);
+            }
+        }
+        
+        if (missingFields.length > 0) {
+            alert(`⚠️ Заполните обязательные поля:\n• ${missingFields.join('\n• ')}`);
+            return;
+        }
+        
+        const issueDate = new Date(data.issue_date);
+        const expirationDate = new Date(data.expiration_date);
+        
+        if (expirationDate < issueDate) {
+            alert('⚠️ Дата истечения не может быть раньше даты выдачи');
+            return;
+        }
+        
+        console.log('📤 Отправка данных:', data);
+        
+        try {
+            const saveBtn = document.getElementById('saveWorkwearBtn');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Сохранение...';
+            }
+            
+            await API.createWorkwearItem(data);
+            
+            const modalEl = document.getElementById('addWorkwearModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            
+            form.reset();
+            if (hiddenEmployeeId) hiddenEmployeeId.value = '';
+            
+            const searchInput = document.getElementById('employeeSearch');
+            if (searchInput) {
+                searchInput.classList.remove('is-valid', 'is-invalid');
+            }
+            
+            const selectedInfo = document.getElementById('employeeSelected');
+            if (selectedInfo) selectedInfo.style.display = 'none';
+            
+            const expirationInput = form.querySelector('input[name="expiration_date"]');
+            if (expirationInput) {
+                delete expirationInput.dataset.manual;
+            }
+            
+            this.currentPage = 1;
+            await this.loadWorkwear();
+            
+            this.showNotification('✅ Спецодежда успешно добавлена', 'success');
+            
+        } catch (error) {
+            console.error('❌ Error saving workwear:', error);
+            
+            let errorMsg = 'Ошибка при добавлении спецодежды';
+            if (error.message) {
+                errorMsg += `: ${error.message}`;
+            }
+            
+            this.showNotification(errorMsg, 'danger');
+        } finally {
+            const saveBtn = document.getElementById('saveWorkwearBtn');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = 'Сохранить';
+            }
+        }
+    }
+    
+    // ============================================================
+    // ========== ВОЗВРАТ =========================================
+    // ============================================================
+    
+    async returnItem(id) {
+        if (!confirm('Вы уверены, что хотите вернуть эту спецодежду?')) return;
+        
+        try {
+            await API.returnWorkwearItem(id);
+            await this.loadWorkwear();
+            this.showNotification('✅ Спецодежда возвращена', 'success');
+        } catch (error) {
+            console.error('❌ Error returning workwear:', error);
+            this.showNotification('Ошибка при возврате спецодежды', 'danger');
+        }
+    }
+    
+    // ============================================================
+    // ========== СПИСАНИЕ ========================================
+    // ============================================================
+    
+    async deleteItem(id) {
+        if (!confirm('Вы уверены, что хотите списать эту спецодежду?')) return;
+        
+        try {
+            await API.deleteWorkwearItem(id);
+            await this.loadWorkwear();
+            this.showNotification('✅ Спецодежда списана', 'success');
+        } catch (error) {
+            console.error('❌ Error deleting workwear:', error);
+            this.showNotification('Ошибка при списании спецодежды', 'danger');
+        }
+    }
+    
+    // ============================================================
+    // ========== УВЕДОМЛЕНИЯ =====================================
+    // ============================================================
+    
+    showNotification(message, type = 'info') {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        alert.style.zIndex = '9999';
+        alert.style.maxWidth = '400px';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 5000);
+    }
+}
+
+// ============================================================
+// ========== ИНИЦИАЛИЗАЦИЯ ===================================
+// ============================================================
+
+let workwearPage;
+document.addEventListener('DOMContentLoaded', () => {
+    workwearPage = new WorkwearPage();
+});

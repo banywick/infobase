@@ -1,0 +1,152 @@
+{% extends 'workwear/base.html' %}
+{% load static %}
+
+{% block title %}Сотрудники - Учет спецодежды{% endblock %}
+
+{% block content %}
+<div class="employees-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users me-2"></i>Сотрудники</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+            <i class="fas fa-plus"></i> Добавить сотрудника
+        </button>
+    </div>
+    
+    <!-- Фильтры -->
+    <div class="filter-section">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Поиск</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Имя, фамилия, отдел...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Отдел</label>
+                <input type="text" class="form-control" id="departmentFilter" placeholder="Отдел">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Статус спецодежды</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">Все</option>
+                    <option value="ok">В порядке</option>
+                    <option value="expiring">Истекает срок</option>
+                    <option value="expired">Просрочено</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                    <i class="fas fa-undo"></i> Сбросить
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Карточки сотрудников -->
+    <div class="row g-4" id="employeesContainer">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted">Загрузка сотрудников...</p>
+        </div>
+    </div>
+    
+    <!-- Пагинация -->
+    <div class="pagination-container" id="paginationContainer"></div>
+</div>
+
+<!-- Модальное окно добавления сотрудника -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>Добавить сотрудника
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addEmployeeForm">
+                    <div class="row">
+                        <!-- Фамилия -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Фамилия <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="last_name" 
+                                   placeholder="Иванов"
+                                   required>
+                        </div>
+
+                        <!-- Имя -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Имя <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="first_name" 
+                                   placeholder="Иван"
+                                   required>
+                        </div>
+
+                        <!-- Отчество -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Отчество</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="patronymic" 
+                                   placeholder="Иванович">
+                        </div>
+
+                        <!-- Отдел -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Отдел</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="department" 
+                                   placeholder="Например: IT-отдел">
+                        </div>
+
+                        <!-- Должность -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Должность</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="position" 
+                                   placeholder="Например: Программист">
+                        </div>
+
+                        <!-- Активен -->
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" 
+                                       class="form-check-input" 
+                                       name="is_active" 
+                                       id="isActiveAdd"
+                                       checked>
+                                <label class="form-check-label" for="isActiveAdd">
+                                    Активен
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+                <button type="button" class="btn btn-primary" id="saveEmployeeBtn">
+                    <i class="fas fa-save"></i> Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'workwear/js/employees.js' %}"></script>
+{% endblock %}

@@ -41,3 +41,8 @@ uritemplate==4.1.1
 vine==5.1.0
 wcwidth==0.2.13
 whitenoise==6.11.0
+djangorestframework-simplejwt>=5.0
+ldap3>=2.9
+django-celery-beat>=2.2
+django-cors-headers>=3.10
+django-filter==24.3

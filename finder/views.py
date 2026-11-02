@@ -702,7 +702,7 @@ class CheckTaskStatus(APIView):
             else:
                 # Если задача завершена с ошибкой
                 result = str(task_result.result)  # Преобразуем исключение в строку
-                connect_redis().set('file_name', 'База не обновлена!')
+                connect_redis().set('file_name', 'не обновлена!')
         else:
             # Если задача еще не завершена
             result = 'Выполняется'

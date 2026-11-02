@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Учет спецодежды{% endblock %}</title>
+    
+    <!-- ✅ ЛОКАЛЬНЫЕ СТИЛИ (без интернета) -->
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/datatables/css/dataTables.bootstrap5.min.css' %}">
+    <link rel="stylesheet" href="{% static 'workwear/css/style.css' %}">
+    <link rel="icon" href="{% static 'shared/img/favicon/favicon.ico' %}" type="image/x-icon">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1F3A55;">
+        <div class="container-fluid">
+            <a href="{% url 'home_finder' %}" class="navbar-brand d-flex align-items-center">
+                <img src="{% static 'finder/icon/logo_finder.svg' %}" 
+                    alt="Логотип" 
+                    class="logo-icon me-2">
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'workwear:dashboard' %}">
+                            <i class="fas fa-chart-pie"></i> Дашборд
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'workwear:employees' %}">
+                            <i class="fas fa-users"></i> Сотрудники
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'workwear:workwear_list' %}">
+                            <i class="fas fa-tshirt"></i> Спецодежда
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'workwear:expiring_items' %}">
+                            <i class="fas fa-clock text-warning"></i> Истекает срок
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <!-- ✅ Ссылка на админку для staff-пользователей -->
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/" target="_blank" title="Панель администратора">
+                            <i class="fas fa-cog"></i> Админка
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="nav-item">
+                        <span class="nav-link text-light">
+                            <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- ✅ ЛОКАЛЬНЫЕ СКРИПТЫ (без интернета) -->
+    <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendor/axios/axios.min.js' %}"></script>
+    <script src="{% static 'vendor/chartjs/chart.min.js' %}"></script>
+    <script src="{% static 'vendor/datatables/js/dataTables.bootstrap5.min.js' %}"></script>
+    
+    <script>
+        // CSRF-токен
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        
+        if (typeof axios !== 'undefined') {
+            axios.defaults.headers.common['X-CSRFToken'] = csrftoken;
+        }
+    </script>
+    
+    <script src="{% static 'workwear/js/api.js' %}"></script>
+    <script src="{% static 'workwear/js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
