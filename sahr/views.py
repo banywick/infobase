@@ -10,6 +10,10 @@ from .models import *
 from rest_framework.response import Response
 from .utils.backup_utils import *
 from common.utils.access_mixin import UserGroupRequiredMixin
+from django.db import transaction
+from django.utils import timezone
+import itertools
+import re
 
 
 
@@ -409,3 +413,105 @@ class SahrBackupView(APIView):
 
         # Использование функции из другого модуля для обработки скачивания
         return handle_backup_download(file_path, filename)
+
+
+
+
+
+# Словарь похожих символов (латиница <-> кириллица)
+LAYOUT_MAP = {
+    'A': ['A', 'А'], 'B': ['B', 'В'], 'C': ['C', 'С'], 'E': ['E', 'Е'],
+    'H': ['H', 'Н'], 'K': ['K', 'К'], 'M': ['M', 'М'], 'O': ['O', 'О'],
+    'P': ['P', 'Р'], 'T': ['T', 'Т'], 'X': ['X', 'Х'], 'Y': ['Y', 'У'],
+    'a': ['a', 'а'], 'b': ['b', 'в'], 'c': ['c', 'с'], 'e': ['e', 'е'],
+    'h': ['h', 'н'], 'k': ['k', 'к'], 'm': ['m', 'м'], 'o': ['o', 'о'],
+    'p': ['p', 'р'], 't': ['t', 'т'], 'x': ['x', 'х'], 'y': ['y', 'у']
+}
+
+def get_address_variants(address_str):
+    """Генерирует все возможные варианты написания адреса (латиница/кириллица)"""
+    if not address_str:
+        return []
+    
+    # Разбиваем строку на символы
+    chars = list(address_str.upper())
+    options = []
+    
+    for c in chars:
+        if c in LAYOUT_MAP:
+            options.append(LAYOUT_MAP[c])
+        else:
+            options.append([c])
+            
+    # Генерируем все комбинации (декартово произведение)
+    variants = [''.join(p) for p in itertools.product(*options)]
+    return variants
+
+
+class BulkReplaceAddressView(APIView):
+    def post(self, request, *args, **kwargs):
+        old_address = (request.data.get('old_address') or '').strip()
+        new_address = (request.data.get('new_address') or '').strip()
+
+        if not old_address or not new_address:
+            return Response({"error": "Укажите оба адреса"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Валидация нового адреса (только латиница и цифры)
+        if re.search(r'[А-Яа-яЁё]', new_address):
+            return Response(
+                {"error": "Новый адрес должен содержать только латинские буквы и цифры. Пожалуйста, переключите раскладку."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Генерируем все варианты старого адреса (вдруг там кириллица)
+        old_variants = get_address_variants(old_address)
+        
+        # Ищем позиции по всем возможным вариантам написания
+        positions = Data_Table.objects.filter(address__in=old_variants)
+        count = positions.count()
+        
+        if count == 0:
+            return Response({"error": f"Позиции с адресом '{old_address}' (включая кириллицу) не найдены"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Проверка конфликтов на новом адресе
+        # (Создаем варианты и для нового адреса, чтобы проверить, нет ли там кириллицы)
+        new_variants = get_address_variants(new_address)
+        existing_parties_on_new = set(Data_Table.objects.filter(address__in=new_variants).values_list('party', flat=True))
+        
+        conflicts = [{"id": p.id, "article": p.article, "party": p.party} for p in positions if p.party in existing_parties_on_new]
+
+        if conflicts:
+            return Response({
+                "error": "На новом адресе уже есть позиции с такими же партиями",
+                "conflicts": conflicts
+            }, status=status.HTTP_409_CONFLICT)
+
+        now = timezone.now()
+        with transaction.atomic():
+            history_entries = []
+            for pos in positions:
+                old_comment = pos.comment or ''
+                # В историю пишем реальный старый адрес этой позиции
+                history_comment = f"[Массовая замена] {pos.address} → {new_address}. " + old_comment
+                
+                history_entries.append(
+                    History(
+                        data_table=pos,
+                        article=pos.article,
+                        party=pos.party,
+                        title=pos.title,
+                        comment=history_comment,
+                        address=pos.address,
+                        date=now,
+                    )
+                )
+            
+            History.objects.bulk_create(history_entries)
+            
+            # Обновляем адреса на новый (латинский)
+            updated = positions.update(address=new_address)
+
+        return Response({
+            "message": f"Адрес заменён у {updated} позиций",
+            "updated_count": updated
+        }, status=status.HTTP_200_OK)

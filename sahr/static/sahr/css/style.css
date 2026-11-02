@@ -34,6 +34,12 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100vh;
+    overflow: hidden; /* Отключаем прокрутку всей страницы, скролл будет только в таблице */
+    margin: 0;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-primary);
@@ -42,19 +48,16 @@ body {
 }
 
 .app-container {
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
 }
-
-
-
 
 /* Основной контент */
 .main-content {
     display: flex;
     flex: 1;
-    overflow: hidden;
+    overflow: hidden; /* Обрезаем контент, чтобы работал внутренний скролл */
     max-width: 100%;
     gap: 1.5rem;
     padding: 1.5rem;
@@ -331,6 +334,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-width: 0; /* Важно: позволяет flex-элементу сжиматься */
 }
 
 .content-header {
@@ -381,34 +385,35 @@ body {
     background: var(--bg-secondary);
 }
 
+/* --- Таблица с фиксацией --- */
 .table-container {
     flex: 1;
-    overflow: auto;
+    overflow: auto; /* Включает прокрутку по вертикали и горизонтали */
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
+    position: relative; /* Чтобы sticky элементы правильно позиционировались */
 }
 
 .data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate; /* Обязательно separate для sticky-ячеек */
+    border-spacing: 0;         /* Убираем отступы между ячейками */
     min-width: 1200px;
 }
 
-.data-table thead {
-    background: rgba(158, 236, 160, 1);
+/* Залипающая шапка */
+.data-table thead th {
     position: sticky;
     top: 0;
-    z-index: 10;
-}
-
-.data-table th {
+    z-index: 20; /* Шапка выше обычных ячеек */
+    background: rgba(158, 236, 160, 1);
     padding: 0.875rem 1rem;
     text-align: left;
     font-weight: 600;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color:  #1F3A55;;
+    color: #1F3A55;
     border-bottom: 2px solid var(--border-color);
     cursor: pointer;
     user-select: none;
@@ -416,7 +421,7 @@ body {
 }
 
 .data-table th:hover {
-    background: var(--border-color);
+    background: #8be38e;
 }
 
 .data-table th i {
@@ -424,18 +429,35 @@ body {
     opacity: 0.5;
 }
 
+/* Залипающий первый столбец (Артикул) */
+.data-table thead th:first-child {
+    left: 0;
+    z-index: 30; /* Самый высокий приоритет — угол всегда сверху */
+}
+
+.data-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: var(--bg-secondary); /* Непрозрачный фон */
+    border-right: 1px solid var(--border-color); /* Визуальный разделитель */
+}
+
+/* Прочие ячейки */
 .data-table td {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.875rem;
     white-space: nowrap;
+    background: var(--bg-secondary); /* Непрозрачный фон обязателен для всех ячеек */
 }
 
 .data-table tbody tr {
-    transition: var(--transition);
+    transition: background-color 0.2s ease;
 }
 
-.data-table tbody tr:hover {
+/* Hover-эффект: применяем ко всем ячейкам строки, включая зафиксированную */
+.data-table tbody tr:hover td {
     background: var(--bg-tertiary);
 }
 
@@ -459,29 +481,42 @@ body {
     color: #991b1b;
 }
 
+.status-unknown {
+    background: #fef3c7;
+    color: #92400e;
+}
+
 .actions-cell {
     display: flex;
     gap: 0.5rem;
     min-width: 120px;
+    justify-content: center;
 }
 
-.action-btn {
-    width: 2rem;
-    height: 2rem;
-    border: none;
-    border-radius: var(--radius-sm);
+.action-btn, .edit_invoice_button {
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
     background: transparent;
+    border: none;
+    width: 2rem;
+    height: 2rem;
     color: var(--text-secondary);
 }
 
-.action-btn:hover {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
+.action-btn:hover, .edit_invoice_button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.action-btn img, .edit_invoice_button img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
 }
 
 .action-btn.edit:hover {
@@ -573,6 +608,8 @@ body {
     max-height: 90vh;
     overflow: hidden;
     animation: modalSlideIn 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes modalSlideIn {
@@ -623,7 +660,7 @@ body {
 .modal-body {
     padding: 1.5rem;
     overflow-y: auto;
-    max-height: 60vh;
+    flex: 1;
 }
 
 .modal-footer {
@@ -634,30 +671,99 @@ body {
     gap: 0.75rem;
 }
 
+/* История изменений */
 .history-list {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 
-.history-item {
+.history-header {
+    padding: 1rem;
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
-    padding: 1rem;
-    border-left: 4px solid var(--primary-color);
+    margin-bottom: 1rem;
 }
 
-.history-meta {
+.history-position-info {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0.5rem 0;
+}
+
+.history-count {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.history-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
+}
+
+.history-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.history-item-header {
     display: flex;
     justify-content: space-between;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.history-changes {
+.history-change-type {
+    font-weight: 600;
     font-size: 0.875rem;
-    color: var(--text-primary);
+    color: var(--primary-color);
+    padding: 0.25rem 0.5rem;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.history-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.history-content {
+    font-size: 0.875rem;
+}
+
+.history-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.history-field {
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-field strong {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.history-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
 }
 
 /* Уведомления */
@@ -706,6 +812,89 @@ body {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+/* Утилиты */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.error-text {
+    color: var(--danger-color);
+    border-color: var(--danger-color) !important;
+}
+
+.form-input.error,
+.form-select.error,
+.form-textarea.error {
+    border-color: var(--danger-color) !important;
+}
+
+/* Массовая замена адреса */
+.bulk-replace-warning {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #fff4e5;
+    color: #8a5300;
+    border: 1px solid #ffd699;
+    font-size: 14px;
+    display: none;
+}
+
+.bulk-replace-warning.visible {
+    display: block;
+}
+
+.bulk-replace-warning.is-danger {
+    background: #fdecea;
+    color: #a4282a;
+    border-color: #f5c2c0;
+}
+
+.btn-warning {
+    background: #f0ad4e;
+    color: #fff;
+    border: none;
+}
+
+.btn-warning:hover {
+    background: #ec971f;
+}
+
+/* Стили для кнопки истории с пульсацией */
+@keyframes history-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(255, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+}
+
+.edit_invoice_button.edit_status_button.has-history {
+    position: relative;
+    animation: history-pulse 2s infinite;
+}
+
+.edit_invoice_button.edit_status_button.has-history::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background-color: #ff4444;
+    border-radius: 50%;
+    border: 1px solid white;
 }
 
 /* Адаптивность */
@@ -804,154 +993,7 @@ body {
     animation: spin 1s linear infinite;
 }
 
-/* Утилиты */
-.text-truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 200px;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.hidden {
-    display: none !important;
-}
-
-
-.error-text {
-    color: var(--danger-color);
-    border-color: var(--danger-color) !important;
-}
-
-/* Обновите селекторы для лучшего отображения ошибок */
-.form-input.error,
-.form-select.error,
-.form-textarea.error {
-    border-color: var(--danger-color) !important;
-}
-
-
-/* В раздел со стилями статусов добавьте: */
-.status-unknown {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-/* Или более яркий вариант: */
-.status-unknown {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-/* Стили для истории изменений */
-.history-header {
-    padding: 1rem;
-    background: var(--bg-tertiary);
-    border-radius: var(--radius-md);
-    margin-bottom: 1rem;
-}
-
-.history-position-info {
-    font-weight: 500;
-    color: var(--text-primary);
-    margin: 0.5rem 0;
-}
-
-.history-count {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.history-item {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-    transition: var(--transition);
-}
-
-.history-item:hover {
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-sm);
-}
-
-.history-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.history-change-type {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: var(--primary-color);
-    padding: 0.25rem 0.5rem;
-    background: rgba(37, 99, 235, 0.1);
-    border-radius: var(--radius-sm);
-}
-
-.history-date {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-.history-content {
-    font-size: 0.875rem;
-}
-
-.history-fields {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.history-field {
-    padding: 0.5rem;
-    background: var(--bg-tertiary);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.history-field strong {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.25rem;
-}
-
-.history-changes {
-    padding: 0.75rem;
-    background: #fff3cd;
-    border-left: 3px solid #ffc107;
-    border-radius: var(--radius-sm);
-    margin: 0.75rem 0;
-    font-size: 0.875rem;
-}
-
-.history-user {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-align: right;
-    margin-top: 0.5rem;
-}
-
-.history-empty {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-muted);
-}
-
-/* Стили для архивного режима */
+/* Архивный режим */
 .archive-mode .actions-cell {
     display: none;
 }
@@ -960,108 +1002,7 @@ body {
     display: none;
 }
 
-/* Индикатор архивной записи */
 .archive-indicator {
     color: var(--warning-color);
     font-size: 1.25rem;
 }
-
-
-/* Стиль для активной кнопки истории */
-.action-btn.history .history-active {
-    color: #ff4444 !important;
-    text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
-}
-
-.action-btn.history:hover .history-active {
-    color: #ff0000 !important;
-    text-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
-}
-
-/* Анимация для кнопки с историей */
-@keyframes history-pulse {
-    0% {
-        text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
-    }
-    50% {
-        text-shadow: 0 0 8px rgba(255, 68, 68, 0.8);
-    }
-    100% {
-        text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
-    }
-}
-
-.action-btn.history .history-active {
-    animation: history-pulse 2s infinite;
-}
-
-
-/* Стили для кнопок действий */
-.actions-cell {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-.action-btn, .edit_invoice_button {
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-}
-
-.action-btn:hover, .edit_invoice_button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    transform: translateY(-1px);
-}
-
-.action-btn img, .edit_invoice_button img {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-}
-
-/* Подсветка для кнопки истории */
-.edit_invoice_button.edit_status_button.has-history img {
-    filter: brightness(0) saturate(100%) invert(25%) sepia(100%) saturate(3000%) hue-rotate(350deg) brightness(90%) contrast(100%);
-}
-
-/* Анимация пульсации для кнопки с историей */
-@keyframes history-pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 6px rgba(255, 68, 68, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
-    }
-}
-
-.edit_invoice_button.edit_status_button.has-history {
-    position: relative;
-    animation: history-pulse 2s infinite;
-}
-
-/* Красная точка-индикатор */
-.edit_invoice_button.edit_status_button.has-history::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 8px;
-    height: 8px;
-    background-color: #ff4444;
-    border-radius: 50%;
-    border: 1px solid white;
-}
-
-
-
-

@@ -162,6 +162,10 @@
                         <i class="fas fa-sync-alt"></i>
                         Обновить
                     </button>
+                    <button class="btn btn-warning" id="bulkReplaceBtn" title="Массовая замена адреса">
+                      <i class="fas fa-exchange-alt"></i>
+                      Заменить адрес
+                  </button>
                     <div class="table-controls">
                         <input type="text" 
                                id="tableFilter" 
@@ -291,6 +295,52 @@
         </div>
       </div>
 
+      <!-- Модальное окно массовой замены адреса -->
+      <div class="modal" id="bulkReplaceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exchange-alt"></i> Массовая замена адреса</h3>
+                <button class="modal-close" onclick="closeBulkReplaceModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="bulkReplaceForm">
+                    <div class="form-group">
+                        <label for="bulkOldAddress">Исходный адрес</label>
+                        <input type="text"
+                              id="bulkOldAddress"
+                              name="old_address"
+                              class="form-input"
+                              placeholder="Например: H334"
+                              autocomplete="off"
+                              required>
+                        <div class="form-help">Все позиции с этим адресом будут перенесены</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bulkNewAddress">Новый адрес</label>
+                        <input type="text"
+                              id="bulkNewAddress"
+                              name="new_address"
+                              class="form-input"
+                              placeholder="Например: H442"
+                              autocomplete="off"
+                              required>
+                    </div>
+
+                    <div class="bulk-replace-warning" id="bulkReplacePreview"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBulkReplaceModal()">Отмена</button>
+                <button class="btn btn-danger" id="bulkReplaceConfirmBtn">
+                    <i class="fas fa-check"></i> Заменить адрес
+                </button>
+            </div>
+        </div>
+      </div>
+
       <div class="modal" id="historyModal">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
@@ -330,6 +380,8 @@
             </div>
         </div>
     </div>
+
+    
 
     <!-- Уведомления -->
       <div class="notifications" id="notifications"></div>
